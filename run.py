@@ -15,6 +15,7 @@ DATA_DIR = Path('data')
 OUTPUT_DIR = Path('outputs')
 
 CHUNK_SIZE = 1500
+SEED = 42
 OVERLAP = 0
 DEBUG = False
 
@@ -148,6 +149,7 @@ def extract_entities(chunk, stream=DEBUG):
 
     options = {
         "temperature":0,
+        "seed": SEED,
         # "stop":["\n\n"]
     }
 
@@ -156,7 +158,7 @@ def extract_entities(chunk, stream=DEBUG):
         format=Schema.model_json_schema(),
         messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}],
         stream=stream,
-        options=options
+        options=options,
     )
 
     return res if DEBUG else res["message"]["content"]
@@ -258,7 +260,7 @@ if __name__ == "__main__":
 
     text = extract_text(test_data)
     cleaned_text = clean_html(text)
-    chunks = smart_chunk(cleaned_text)
+    chunks = smart_chunk(cleaned_text) # chunk_text(cleaned_text)
     #%%
 
     entities = process_chunks(chunks)
