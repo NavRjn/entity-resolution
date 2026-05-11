@@ -51,6 +51,6 @@ if __name__ == "__main__":
         pred = json.load(f)
 
     result = evaluate_extraction(pred, truth)
-    with open(METRICS_DIR / run_name) as f:
+    with open(METRICS_DIR / run_name, "w") as f:
         json.dump(result, f, indent=2)
     pretty_print_metrics(result)

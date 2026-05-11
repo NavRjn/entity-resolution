@@ -26,8 +26,8 @@ SYSTEM_PROMPT = """
     Schema:
     [
       {
-        "entity": string,
-        "type": string,
+        "entity_name": string,
+        "entity_type": string,
         "evidence": string
       }
     ]
@@ -106,12 +106,12 @@ def clean_html(html):
     for tag in soup(["script", "style"]):
         tag.decompose()
 
-    text = soup.get_text(separator=" ")
+    text_from_soup = soup.get_text(separator=" ")
 
     # collapse whitespace
-    text = " ".join(text.split())
+    text_collapsed = " ".join(text_from_soup.split())
 
-    return text
+    return text_collapsed
 
 
 def chunk_text(text, size=CHUNK_SIZE):
@@ -248,8 +248,6 @@ def evaluate_extraction(pred_json: list[dict], truth_json: list[dict]) -> Dict:
     }
 
 
-
-            
             
 if __name__ == "__main__":
     #%%
