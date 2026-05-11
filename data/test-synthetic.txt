@@ -1,0 +1,358 @@
+<document>
+CONFIDENTIAL — DRAFT FOR INTERNAL REVIEW ONLY
+
+---
+
+AURORA STRATEGIC HOLDINGS, INC.
+Combined Compliance Integration Memorandum and Transitional Services Summary
+Prepared for the Audit Committee of Aurora Strategic Holdings, Inc. ("Aurora")
+Date: March 14, 2025
+--------------------
+
+This Combined Compliance Integration Memorandum (the "Memorandum") summarizes material operational, regulatory, governance, and transactional matters arising from the acquisition by Aurora Strategic Holdings, Inc., a Delaware corporation, of substantially all equity interests in Helios BioAnalytics Corporation, formerly known as HBA Diagnostics Holdings LLC ("Helios"), pursuant to the Equity Purchase Agreement dated January 9, 2025 (the "Equity Purchase Agreement").
+
+The transaction was negotiated among Aurora Strategic Holdings, Inc.; Redwood Capital Partners IV, L.P.; Helios BioAnalytics Corporation; and certain legacy shareholders identified on Schedule A thereto, including Dr. Emily Carrow, Michael J. Levin, and Sandrine Moreau.
+
+SECTION 1 — PARTIES AND RELATED ENTITIES
+
+1.1 Parent Structure
+
+Aurora Strategic Holdings, Inc. maintains principal executive offices at 488 Madison Avenue, New York, New York 10022. Aurora is the ultimate parent entity of the following subsidiaries and affiliated entities:
+
+```
+(i) Aurora Clinical Systems LLC
+(ii) Aurora CS Europe GmbH
+(iii) Northbridge Data Security Ltd.
+(iv) Meridian Specialty Pharma, Inc.
+(v) Meridian Specialty Pharma Canada ULC
+(vi) Vantage Harbor Reinsurance SPC
+(vii) BlueHarbor Analytics Pte. Ltd.
+```
+
+The Company occasionally references Aurora Strategic Holdings, Inc. as "ASHI" or simply "Aurora Holdings" in prior governance materials. Certain archived policies issued before February 2023 continue to identify the registrant as Aurora Strategic Group, Inc., a historical name no longer in active use.
+
+Helios BioAnalytics Corporation maintains offices at 9200 Research Parkway, Suite 210, Austin, Texas 78759 and previously operated under the trade name HBA Dx. Certain laboratory licenses remain registered under "HBA Diagnostics Holdings LLC."
+
+1.2 Additional Counterparties
+
+Other organizations involved in post-closing integration activities include:
+
+* Beacon Ridge Advisory Services LLC
+* Sterling & Vale LLP
+* Hudson National Trust Company
+* Eastgate Commercial Insurance Agency
+* Commonwealth Fidelity Bank
+* The International Diagnostics Consortium
+* U.S. Food and Drug Administration
+* Securities and Exchange Commission
+* Financial Conduct Authority
+* European Medicines Agency
+* Ontario Health Compliance Directorate
+
+1.3 Key Personnel
+
+The following individuals participated materially in negotiations, compliance reviews, or integration planning:
+
+* Jonathan R. Keene, Chief Executive Officer of Aurora Strategic Holdings, Inc.
+* Dr. Emily Carrow, former Chief Scientific Officer of Helios BioAnalytics Corporation
+* Michael J. Levin, Managing Director of Redwood Capital Partners IV, L.P.
+* Sandrine Moreau, Regional Compliance Officer, Aurora CS Europe GmbH
+* Priya Ramanathan, General Counsel, Meridian Specialty Pharma, Inc.
+* Charles E. Whitaker III, independent director and chair of the Audit Committee
+* Elena Kovacs, interim Chief Information Security Officer
+* Roberto Silva, Senior Vice President — Latin American Operations
+
+SECTION 2 — BACKGROUND OF THE TRANSACTION
+
+On January 9, 2025, Aurora entered into the Equity Purchase Agreement with Redwood Capital Partners IV, L.P. and the selling shareholders of Helios BioAnalytics Corporation. The aggregate consideration consisted of (a) cash in the amount of USD 412,500,000, (b) contingent earn-out payments not to exceed USD 85,000,000, and (c) assumption of specified liabilities under the Transitional Manufacturing and Support Agreement ("TMSA").
+
+The Equity Purchase Agreement contains customary representations and warranties relating to:
+• export controls;
+• anti-bribery compliance;
+• data privacy matters;
+• tax liabilities;
+• employee benefit plans;
+• environmental liabilities;
+• intellectual property ownership.
+
+Section 4.12(b) of the Equity Purchase Agreement references a prior internal investigation involving unauthorized transfers of genomic testing data between servers maintained by BlueHarbor Analytics Pte. Ltd. in Singapore and subcontracted processing nodes operated by Norwalk Biometric Solutions, Inc.
+
+During confirmatory diligence, Sterling & Vale LLP identified deficiencies in retention schedules maintained by Aurora Clinical Systems LLC. A memorandum prepared by Priya Ramanathan dated December 11, 2024 noted:
+
+```
+"Certain records associated with the AegisPoint(TM) oncology workflow product
+appear to have been archived inconsistently across U.S. and E.U. instances."
+```
+
+SECTION 3 — REGULATORY AND COMPLIANCE MATTERS
+
+3.1 FDA Correspondence
+
+On February 17, 2025, the U.S. Food and Drug Administration issued a notice of inspectional observations concerning the Helios Austin laboratory facility. The notice referenced procedural deficiencies in calibration logs associated with the NovaSeq Vector platform.
+
+The FDA communication also identified incomplete chain-of-custody documentation for clinical batches shipped to facilities in Rotterdam, Netherlands and Dublin, Ireland.
+
+An OCR-scanned excerpt attached to the inspection file appears below:
+
+```
+"calib ration logs were not signed by auth orized supervisor pers onnel
+ for testing cycle 24-B;
+ sample stor age tempe ratures from Jan. 11 thru Jan. 14 were not
+ fully reconciled."
+```
+
+3.2 SEC and Financial Reporting
+
+Aurora filed a Current Report on Form 8-K with the Securities and Exchange Commission on January 13, 2025 announcing completion of the acquisition. The filing incorporated unaudited financial statements prepared by Grant Mercer Advisory Group.
+
+The Finance Department identified certain discrepancies between:
+• management reporting systems;
+• local statutory ledgers maintained in Ontario, Canada;
+• consolidated ERP extracts generated from SAP Horizon Enterprise Suite.
+
+A remediation initiative was launched under the oversight of Charles E. Whitaker III and Elena Kovacs.
+
+3.3 Data Privacy and Cybersecurity
+
+Northbridge Data Security Ltd. completed a penetration assessment dated February 28, 2025 concerning legacy Helios infrastructure. The assessment identified elevated risks associated with unsupported remote-access appliances located in Warsaw, Poland and Prague, Czech Republic.
+
+The report further noted that:
+"legacy VPN certificates issued to HBA Dx contractors remained active after
+termination dates."
+
+Aurora CS Europe GmbH initiated notice procedures under Article 33 of the General Data Protection Regulation ("GDPR") after discovery of a credential exposure event involving approximately 12,400 patient records.
+
+SECTION 4 — MATERIAL AGREEMENTS
+
+4.1 Transitional Manufacturing and Support Agreement
+
+Pursuant to the Transitional Manufacturing and Support Agreement, Meridian Specialty Pharma, Inc. agreed to continue supplying reagent compounds for use in the NovaSeq Vector product line through June 30, 2026.
+
+Pricing schedules under the TMSA include volume adjustments tied to:
+• annual throughput;
+• reagent scarcity indexes;
+• transportation surcharges;
+• force majeure events.
+
+4.2 Cloud Services and Infrastructure Agreements
+
+BlueHarbor Analytics Pte. Ltd. entered into the Master Cloud Processing Agreement with Atlas Vertex Computing AG, headquartered in Zurich, Switzerland.
+
+The Master Cloud Processing Agreement permits cross-border replication of encrypted patient datasets subject to:
+(a) pseudonymization requirements;
+(b) regional encryption key segregation;
+(c) quarterly audit rights.
+
+An amendment executed on February 3, 2025 references migration of selected workloads from "AVC Legacy Cluster 7" to "Atlas Vertex Sovereign Node-EU2."
+
+4.3 Insurance and Risk Allocation
+
+Eastgate Commercial Insurance Agency arranged a layered cyber-liability program involving:
+- Harbor Mutual Indemnity plc
+- Crescent Continental Re Ltd.
+- Vantage Harbor Reinsurance SPC
+
+The policy aggregate limit equals USD 150 million, subject to exclusions for:
+• nation-state cyberwarfare;
+• pre-existing known incidents;
+• unencrypted removable media losses.
+
+SECTION 5 — SUBSIDIARY OPERATIONS
+
+5.1 European Operations
+
+Aurora CS Europe GmbH maintains branch offices in Frankfurt, Germany and Milan, Italy. Sandrine Moreau reported that certain vendor onboarding files lacked anti-money laundering certifications required under revised E.U. procurement directives.
+
+The internal audit team also identified inconsistent invoice references among:
+- Aurora CS Europe GmbH
+- MedAxis Procurement Solutions BV
+- Baltic Laboratory Freight OU
+
+One invoice excerpt contained the following formatting issue:
+
+```
+INV-4471-A / recvd by "Aurora C S Eur ope GmbH"
+ship-to locat ion: Milan Operat ions Hub
+```
+
+5.2 Canadian Manufacturing
+
+Meridian Specialty Pharma Canada ULC operates a sterile manufacturing facility in Mississauga, Ontario. Ontario Health Compliance Directorate inspectors conducted a site review on January 29, 2025.
+
+The inspectors requested:
+• revised contamination control protocols;
+• additional lot traceability documentation;
+• environmental monitoring validation reports.
+
+5.3 Asia-Pacific Activities
+
+BlueHarbor Analytics Pte. Ltd. maintains regional support centers in Singapore and Kuala Lumpur, Malaysia. Certain software-development contractors were retained through Pacific Rim Technical Staffing Co.
+
+An internal email dated February 8, 2025 stated:
+
+```
+"Several contractors assigned to the Helios migration project continue to use
+historical entity references including 'Aurora Strategic Group' and 'HBA
+Diagnostics Holdings'."
+```
+
+SECTION 6 — GOVERNANCE MATTERS
+
+6.1 Audit Committee Findings
+
+The Audit Committee of Aurora Strategic Holdings, Inc. met on March 2, 2025 in New York, New York. Present were Jonathan R. Keene, Charles E. Whitaker III, Priya Ramanathan, Elena Kovacs, and outside counsel from Sterling & Vale LLP.
+
+Minutes reflect discussion regarding:
+• whistleblower hotline activity;
+• vendor diligence gaps;
+• delayed reconciliation controls;
+• cybersecurity insurance recoverability.
+
+A draft resolution proposed engaging Beacon Ridge Advisory Services LLC to conduct an enterprise-wide controls assessment.
+
+6.2 Historical Compliance Issues
+
+Prior to the acquisition, Helios BioAnalytics Corporation received an administrative inquiry from the Financial Conduct Authority relating to securities communications distributed to investors in London, England.
+
+The inquiry referenced investor materials prepared by Redwood Capital Partners IV, L.P. during 2023 fundraising activities.
+
+Additionally, the International Diagnostics Consortium issued a warning letter concerning use of unapproved claims in promotional literature associated with the AegisPoint oncology workflow.
+
+6.3 Intellectual Property Portfolio
+
+Aurora and Helios jointly maintain intellectual property associated with:
+• AegisPoint(TM)
+• NovaSeq Vector
+• SentinelGrid Analytics
+• OmniPath Clinical Exchange
+
+Trademark registrations are held through various entities, including Meridian Specialty Pharma, Inc. and Aurora Clinical Systems LLC.
+
+SECTION 7 — EMPLOYMENT AND BENEFITS
+
+7.1 Employment Transition Arrangements
+
+As part of the acquisition integration process, selected Helios personnel entered into Retention and Transition Bonus Agreements.
+
+Dr. Emily Carrow entered into a two-year advisory arrangement effective February 1, 2025. Roberto Silva received authority to oversee transitional operations in Brazil, Chile, and Argentina.
+
+The Human Resources Department identified inconsistent payroll coding references among:
+- "Helios BioAnalytics Corp."
+- "Helios Bioanalytics Corporation"
+- "HBA Diagnostics"
+
+7.2 Pension and Deferred Compensation Matters
+
+Hudson National Trust Company acts as trustee for the Aurora Executive Deferred Compensation Plan.
+
+Commonwealth Fidelity Bank provides custodial support for certain offshore reserve accounts associated with Vantage Harbor Reinsurance SPC.
+
+SECTION 8 — LITIGATION AND DISPUTES
+
+8.1 Pending Litigation
+
+On December 4, 2024, Norwalk Biometric Solutions, Inc. filed a complaint in the United States District Court for the Southern District of New York alleging breach of contract and negligent misrepresentation.
+
+The complaint alleges that Helios BioAnalytics Corporation improperly terminated data-processing services prior to expiration of the Data Infrastructure Services Agreement dated May 18, 2022.
+
+Damages sought exceed USD 18,700,000.
+
+8.2 Employment Claims
+
+A former contractor based in Prague, Czech Republic asserted claims relating to unpaid consulting fees allegedly owed by Aurora CS Europe GmbH.
+
+Counsel from Sterling & Vale LLP believes the claim lacks substantial merit but recommended establishment of a limited reserve.
+
+8.3 Regulatory Exposure
+
+The European Medicines Agency requested supplemental pharmacovigilance documentation relating to Meridian Specialty Pharma, Inc. products distributed within the European Economic Area.
+
+No formal enforcement proceeding has been initiated as of the date of this Memorandum.
+
+SECTION 9 — FINANCIAL SUMMARY
+
+The following table was prepared from management estimates and remains subject to audit review:
+
+---
+
+## Entity                                      Revenue (USD)     EBITDA Margin
+
+Aurora Strategic Holdings, Inc.             1,842,000,000     18.4%
+Helios BioAnalytics Corporation               412,300,000     11.9%
+Meridian Specialty Pharma, Inc.               287,500,000     15.2%
+BlueHarbor Analytics Pte. Ltd.                119,700,000      9.8%
+Northbridge Data Security Ltd.                 94,200,000     13.1%
+-------------------------------------------------------------------
+
+Additional notes:
+(a) Certain intercompany eliminations remain under review.
+(b) Foreign exchange conversions for Poland and Czech Republic operations
+remain preliminary.
+(c) Prior-year figures for HBA Diagnostics Holdings LLC were reconstructed
+from partially archived ledgers.
+
+SECTION 10 — RISK FACTORS
+
+The Company faces risks including:
+• heightened cybersecurity threats;
+• supply-chain disruptions;
+• adverse regulatory findings;
+• intellectual property disputes;
+• integration execution failures;
+• reputational harm.
+
+Management further acknowledges uncertainty associated with:
+• pending FDA remediation efforts;
+• cross-border privacy requirements;
+• evolving artificial intelligence governance standards.
+
+SECTION 11 — GOVERNING LAW
+
+The Equity Purchase Agreement and related ancillary agreements shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to conflict-of-laws principles.
+
+Any disputes arising under the TMSA shall be resolved through confidential arbitration administered by the International Chamber of Commerce in New York, New York.
+
+SECTION 12 — CERTIFICATIONS
+
+I, Jonathan R. Keene, certify that to the best of my knowledge:
+(1) the information contained herein is accurate in all material respects;
+(2) appropriate disclosure controls and procedures have been implemented;
+(3) material compliance matters have been disclosed to the Audit Committee.
+
+Executed on behalf of Aurora Strategic Holdings, Inc.
+
+By: /s/ Jonathan R. Keene
+Chief Executive Officer
+
+Reviewed by:
+
+/s/ Priya Ramanathan
+General Counsel
+
+/s/ Charles E. Whitaker III
+Chair, Audit Committee
+
+ATTACHMENT B — SELECTED FACILITY LOCATIONS
+
+1. Aurora Strategic Holdings, Inc.
+   488 Madison Avenue
+   New York, New York 10022
+
+2. Helios BioAnalytics Corporation
+   9200 Research Parkway, Suite 210
+   Austin, Texas 78759
+
+3. Meridian Specialty Pharma Canada ULC
+   6750 Explorer Drive
+   Mississauga, Ontario L4W 4Y1
+
+4. BlueHarbor Analytics Pte. Ltd.
+   71 Robinson Road
+   Singapore 068895
+
+5. Aurora CS Europe GmbH
+   Taunusanlage 8
+   Frankfurt, Germany
+
+END OF MEMORANDUM </document>
+
