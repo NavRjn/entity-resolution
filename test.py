@@ -43,7 +43,7 @@ OUTPUT_DIR = Path('outputs')
 METRICS_DIR = Path('metrics')
 
 if __name__ == "__main__":
-    run_name = "baseline_110526.json"
+    run_name = "20260511_212540.json"
     with open(DATA_DIR / "test-gt.json") as f:
         truth = json.load(f)
         truth = [e for e in truth if e["entity_type"] != "location"]

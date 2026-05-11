@@ -1,5 +1,4 @@
 #%%
-
 from pathlib import Path
 import fitz # PyMuPDF
 import ollama
@@ -10,6 +9,7 @@ import json
 import string, re
 from typing import List, Dict
 from collections import Counter
+import datetime
 
 DATA_DIR = Path('data')
 OUTPUT_DIR = Path('outputs')
@@ -50,13 +50,16 @@ PROMPT_TEMPLATE = lambda chunk: """
     <<<
     """+chunk+"\n\t>>>"
 
+
 class Entity(BaseModel):
     entity_name: str
     entity_type: str
     evidence: str
 
+
 class Schema(RootModel[list[Entity]]):
     pass
+
 
 def normalize_text(s: str) -> str:
     """
@@ -78,7 +81,6 @@ def normalize_text(s: str) -> str:
     s = re.sub(r"\s+", " ", s)
 
     return s
-
 
 def extract_text(path):
     text = []
@@ -113,10 +115,11 @@ def clean_html(html):
 
     return text_collapsed
 
-
 def chunk_text(text, size=CHUNK_SIZE):
     text_len = len(text)
-    return [text[i:min(i+size+OVERLAP, text_len-1)] for i in range(0, text_len, size)]
+    chunks = [text[i:min(i+size+OVERLAP, text_len-1)] for i in range(0, text_len, size)]
+    print(f"From {len(text)}: extracted {len(chunks)} chunks with size ~{len(chunks[0])}")
+    return chunks
 
 def smart_chunk(text, max_len=CHUNK_SIZE):
     sentences = re.split(r'(?<=[.!?])\s+', text)
@@ -134,8 +137,8 @@ def smart_chunk(text, max_len=CHUNK_SIZE):
     if current:
         chunks.append(current)
 
+    print(f"From {len(text)}: extracted {len(chunks)} chunks with size ~{len(chunks[0])}")
     return chunks
-
 
 def extract_entities(chunk, stream=DEBUG):
     prompt = PROMPT_TEMPLATE(chunk)
@@ -250,15 +253,16 @@ def evaluate_extraction(pred_json: list[dict], truth_json: list[dict]) -> Dict:
 
             
 if __name__ == "__main__":
+    run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     #%%
 
     text = extract_text(test_data)
     cleaned_text = clean_html(text)
-    chunks = chunk_text(cleaned_text)
+    chunks = smart_chunk(cleaned_text)
     #%%
 
     entities = process_chunks(chunks)
-    with open(OUTPUT_DIR / "test.json", "w") as f:
+    with open(OUTPUT_DIR / f"{run_id}.json", "w") as f:
         json.dump(entities, f, indent=2)
     print(entities)
 
