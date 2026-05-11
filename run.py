@@ -10,6 +10,7 @@ import string, re
 from typing import List, Dict
 from collections import Counter
 import datetime
+from rapidfuzz import fuzz
 
 DATA_DIR = Path('data')
 OUTPUT_DIR = Path('outputs')
@@ -52,13 +53,27 @@ PROMPT_TEMPLATE = lambda chunk: """
     """+chunk+"\n\t>>>"
 
 
+LEGAL_SUFFIXES = {
+    "inc", "corp", "corporation", "llc",
+    "ltd", "limited", "company", "co",
+    "plc", "group", "holdings"
+}
+
+
 class Entity(BaseModel):
     entity_name: str
     entity_type: str
     evidence: str
 
 
-class Schema(RootModel[list[Entity]]):
+class CanonicalEntity(BaseModel):
+    canonical_name: str
+    entity_type: str
+    aliases: list[str] = []
+    evidence: list[str] = []
+
+
+class Schema(RootModel[list[CanonicalEntity]]):
     pass
 
 
@@ -163,13 +178,36 @@ def extract_entities(chunk, stream=DEBUG):
 
     return res if DEBUG else res["message"]["content"]
 
-def process_chunks(chunks: list[str]):
-    output = []
+def process_chunks(chunks):
+    canonical_entities = []
+
     for chunk in tqdm(chunks):
-        entities = json.loads(extract_entities(chunk))
-        output.extend(entities)
-        print(f"Extracted {len(output)} entities")
-    return output
+
+        try:
+            entities = json.loads(extract_entities(chunk))
+        except Exception as e:
+            print("FAILED:", e)
+            continue
+
+        for entity in entities:
+            merge_entity(entity, canonical_entities)
+
+        print(f"Canonical entities: {len(canonical_entities)}")
+
+    return canonical_entities
+
+def get_entity_name(item):
+    if type(item) == dict:
+        name = item.get("entity_name") or item.get("canonical_name")
+        if not name:
+            print(f"name: {name} is None. in {item}")
+            return ""
+        return name
+    elif type(item) == CanonicalEntity:
+        return item.canonical_name
+    else:
+        print(item, "of type ", type(item), " is unknown; returning nothing")
+        return ""
 
 def evaluate_extraction(pred_json: list[dict], truth_json: list[dict]) -> Dict:
     """
@@ -186,7 +224,7 @@ def evaluate_extraction(pred_json: list[dict], truth_json: list[dict]) -> Dict:
     def to_set(data):
         return set(
             (
-                normalize_text(item.get("entity_name", "")),
+                normalize_text(get_entity_name(item)),
                 normalize_text(item.get("entity_type", "")),
             )
             for item in data
@@ -194,7 +232,7 @@ def evaluate_extraction(pred_json: list[dict], truth_json: list[dict]) -> Dict:
 
     def names_only(data):
         return set(
-            normalize_text(item.get("entity_name", ""))
+            normalize_text(get_entity_name(item))
             for item in data
         )
 
@@ -253,6 +291,65 @@ def evaluate_extraction(pred_json: list[dict], truth_json: list[dict]) -> Dict:
     }
 
 
+def normalize_entity_name(name: str) -> str:
+    name = normalize_text(name)
+
+    words = name.split()
+
+    words = [w for w in words if w not in LEGAL_SUFFIXES]
+
+    return " ".join(words)
+
+def is_same_entity(a: str, b: str, threshold=90):
+    a_norm = normalize_entity_name(a)
+    b_norm = normalize_entity_name(b)
+
+    if a_norm == b_norm:
+        return True
+
+    score = fuzz.token_sort_ratio(a_norm, b_norm)
+
+    return score >= threshold
+
+def merge_entity(entity: dict, canonicals: list[CanonicalEntity]):
+    name = get_entity_name(entity)
+    ent_type = entity["entity_type"]
+    evidence = entity["evidence"]
+
+    for c in canonicals:
+
+        # optional:
+        # only compare same/similar types
+        if c.entity_type != ent_type:
+            continue
+
+        candidates = [c.canonical_name] + c.aliases
+
+        for candidate in candidates:
+
+            if is_same_entity(name, candidate):
+
+                # add alias
+                if name not in c.aliases and name != c.canonical_name:
+                    c.aliases.append(name)
+
+                # add evidence
+                if evidence not in c.evidence:
+                    c.evidence.append(evidence)
+
+                return
+
+    # no match found → new canonical
+    canonicals.append(
+        CanonicalEntity(
+            canonical_name=name,
+            entity_type=ent_type,
+            aliases=[],
+            evidence=evidence
+        )
+    )
+
+
             
 if __name__ == "__main__":
     run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -264,17 +361,15 @@ if __name__ == "__main__":
     #%%
 
     entities = process_chunks(chunks)
+    entities_to_dump = [e.model_dump() for e in entities]
     with open(OUTPUT_DIR / f"{run_id}.json", "w") as f:
-        json.dump(entities, f, indent=2)
+        json.dump(entities_to_dump, f, indent=2)
     print(entities)
 
     #%%
 
     with open(DATA_DIR / "test-gt.json", "r") as f:
         gt_json = json.load(f)
-
-    results = evaluate_extraction(entities, gt_json)
-    print(json.dumps(results, indent=2))
 
 
     print("\n\nDone.")

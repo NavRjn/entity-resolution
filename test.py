@@ -43,12 +43,15 @@ OUTPUT_DIR = Path('outputs')
 METRICS_DIR = Path('metrics')
 
 if __name__ == "__main__":
-    run_name = "20260511_214655.json"
+    run_name = "20260511_235135.json"
     with open(DATA_DIR / "test-gt.json") as f:
         truth = json.load(f)
         truth = [e for e in truth if e["entity_type"] != "location"]
     with open(OUTPUT_DIR / run_name) as f:
         pred = json.load(f)
+
+    print("TRUTH: ", [e.get("entity_name") for e in truth])
+    print("PRED: ", [e.get("canonical_name") for e in pred])
 
     result = evaluate_extraction(pred, truth)
     with open(METRICS_DIR / run_name, "w") as f:
