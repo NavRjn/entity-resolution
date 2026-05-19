@@ -1,4 +1,5 @@
 #%%
+from argparse import Namespace
 from pathlib import Path
 import fitz # PyMuPDF
 import ollama
@@ -8,7 +9,6 @@ from tqdm import tqdm
 import json
 import string, re
 from typing import List, Dict
-from collections import Counter
 import datetime
 from rapidfuzz import fuzz
 
@@ -156,7 +156,7 @@ def smart_chunk(text, max_len=CHUNK_SIZE):
     print(f"From {len(text)}: extracted {len(chunks)} chunks with size ~{len(chunks[0])}")
     return chunks
 
-def extract_entities(chunk, stream=DEBUG):
+def extract_entities(chunk, seed=SEED, stream=DEBUG):
     prompt = PROMPT_TEMPLATE(chunk)
     # print("PROMPT: \n", prompt, "\n", "*"*20)
 
@@ -164,7 +164,7 @@ def extract_entities(chunk, stream=DEBUG):
 
     options = {
         "temperature":0,
-        "seed": SEED,
+        "seed": seed,
         # "stop":["\n\n"]
     }
 
@@ -178,13 +178,13 @@ def extract_entities(chunk, stream=DEBUG):
 
     return res if DEBUG else res["message"]["content"]
 
-def process_chunks(chunks):
+def process_chunks(chunks, seed=SEED):
     canonical_entities = []
 
     for chunk in tqdm(chunks):
 
         try:
-            entities = json.loads(extract_entities(chunk))
+            entities = json.loads(extract_entities(chunk, seed=seed))
         except Exception as e:
             print("FAILED:", e)
             continue
@@ -290,7 +290,6 @@ def evaluate_extraction(pred_json: list[dict], truth_json: list[dict]) -> Dict:
         "extra_entities": list(extra),
     }
 
-
 def normalize_entity_name(name: str) -> str:
     name = normalize_text(name)
 
@@ -349,18 +348,35 @@ def merge_entity(entity: dict, canonicals: list[CanonicalEntity]):
         )
     )
 
+def setup_args() -> Namespace:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="LLM Entity Extraction")
+
+    parser.add_argument("--data_path", type=str, default=str(test_data), help="Path to input data (pdf or txt)")
+    parser.add_argument("--run", type=str, default=None, help="Override name of output")
+    parser.add_argument("--chunk_size", type=int, default=CHUNK_SIZE, help="Chunk size for text splitting")
+    parser.add_argument("--overlap", type=int, default=OVERLAP, help="Overlap size for chunking")
+    parser.add_argument("--seed", type=int, default=SEED, help="Random seed for reproducibility")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode with streaming output")
+
+    args = parser.parse_args()
+
+    return args
+
 
             
 if __name__ == "__main__":
-    run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    args = setup_args()
+    run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") if args.run is None else args.run
     #%%
 
-    text = extract_text(test_data)
+    text = extract_text(Path(args.data_path))
     cleaned_text = clean_html(text)
-    chunks = smart_chunk(cleaned_text) # chunk_text(cleaned_text)
+    chunks = smart_chunk(cleaned_text, args.chunk_size) # chunk_text(cleaned_text)
     #%%
 
-    entities = process_chunks(chunks)
+    entities = process_chunks(chunks, seed=args.seed)
     entities_to_dump = [e.model_dump() for e in entities]
     with open(OUTPUT_DIR / f"{run_id}.json", "w") as f:
         json.dump(entities_to_dump, f, indent=2)

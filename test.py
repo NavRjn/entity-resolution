@@ -1,3 +1,5 @@
+from argparse import Namespace
+
 from lxml.html.builder import OUTPUT
 
 from run import evaluate_extraction
@@ -76,13 +78,32 @@ def get_last(path: Path) -> Path | None:
 DATA_DIR = Path('data')
 OUTPUT_DIR = Path('outputs')
 METRICS_DIR = Path('metrics')
+test_data = "test-gt"
+
+
+def setup_args() -> Namespace:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Extraction Test")
+
+    parser.add_argument("--truth", type=str, default=str(test_data), help="Path to ground truth data (json)")
+    parser.add_argument("--run", type=str, default=None, help="which run to test. default=latest in outputs/")
+
+    args = parser.parse_args()
+    print(args.run, args.truth)
+    args.truth = DATA_DIR / (args.truth + ".json")
+    args.run = OUTPUT_DIR / (args.run + ".json") if args.run is not None else args.run
+
+    return args
 
 if __name__ == "__main__":
-    run_name = None
+    args = setup_args()
+
+    run_name = args.run
     run_path = run_name or get_last(OUTPUT_DIR)
     run_name = run_path.name.split(".")[0]
 
-    with open(DATA_DIR / "test-gt.json") as f:
+    with open(args.truth) as f:
         truth = json.load(f)
         truth = [e for e in truth if e["entity_type"] != "location"]
     with open(run_path) as f:
