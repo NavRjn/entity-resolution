@@ -1,7 +1,4 @@
 from argparse import Namespace
-
-from lxml.html.builder import OUTPUT
-
 from run import evaluate_extraction
 from pathlib import Path
 from datetime import datetime
