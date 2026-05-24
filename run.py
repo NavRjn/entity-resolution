@@ -1,7 +1,7 @@
 #%%
 from argparse import Namespace
 from pathlib import Path
-import fitz # PyMuPDF
+import fitz  # PyMuPDF
 import ollama
 from bs4 import BeautifulSoup
 from pydantic import BaseModel, RootModel
@@ -50,7 +50,7 @@ PROMPT_TEMPLATE = lambda chunk: """
     
     TEXT:
     <<<
-    """+chunk+"\n\t>>>"
+    """ + chunk + "\n\t>>>"
 
 
 LEGAL_SUFFIXES = {
@@ -83,6 +83,7 @@ def normalize_text(s: str) -> str:
     - lowercase
     - remove punctuation
     - collapse whitespace
+    - handle hyphenated names
     """
     if s is None:
         return ""
@@ -90,13 +91,15 @@ def normalize_text(s: str) -> str:
     s = s.lower()
     s = s.strip()
 
-    # remove punctuation
+    # Remove punctuation and handle hyphenation
+    s = re.sub(r"[\.\-\s]+", " ", s)
     s = s.translate(str.maketrans("", "", string.punctuation))
 
-    # collapse whitespace
+    # Collapse whitespace
     s = re.sub(r"\s+", " ", s)
 
     return s
+
 
 def extract_text(path):
     text = []
@@ -114,8 +117,8 @@ def extract_text(path):
     else:
         raise ValueError(f"Unsupported file type: {path}")
 
-
     return "\n".join(text)
+
 
 def clean_html(html):
     soup = BeautifulSoup(html, "lxml")
@@ -131,11 +134,13 @@ def clean_html(html):
 
     return text_collapsed
 
+
 def chunk_text(text, size=CHUNK_SIZE):
     text_len = len(text)
-    chunks = [text[i:min(i+size+OVERLAP, text_len-1)] for i in range(0, text_len, size)]
+    chunks = [text[i:min(i + size + OVERLAP, text_len - 1)] for i in range(0, text_len, size)]
     print(f"From {len(text)}: extracted {len(chunks)} chunks with size ~{len(chunks[0])}")
     return chunks
+
 
 def smart_chunk(text, max_len=CHUNK_SIZE):
     sentences = re.split(r'(?<=[.!?])\s+', text)
@@ -156,6 +161,7 @@ def smart_chunk(text, max_len=CHUNK_SIZE):
     print(f"From {len(text)}: extracted {len(chunks)} chunks with size ~{len(chunks[0])}")
     return chunks
 
+
 def extract_entities(chunk, seed=SEED, stream=DEBUG):
     prompt = PROMPT_TEMPLATE(chunk)
     # print("PROMPT: \n", prompt, "\n", "*"*20)
@@ -163,7 +169,7 @@ def extract_entities(chunk, seed=SEED, stream=DEBUG):
     client = ollama.Client(host="http://127.0.0.1:11434")
 
     options = {
-        "temperature":0,
+        "temperature": 0,
         "seed": seed,
         # "stop":["\n\n"]
     }
@@ -177,6 +183,7 @@ def extract_entities(chunk, seed=SEED, stream=DEBUG):
     )
 
     return res if DEBUG else res["message"]["content"]
+
 
 def process_chunks(chunks, seed=SEED):
     canonical_entities = []
@@ -196,6 +203,7 @@ def process_chunks(chunks, seed=SEED):
 
     return canonical_entities
 
+
 def get_entity_name(item):
     if type(item) == dict:
         name = item.get("entity_name") or item.get("canonical_name")
@@ -209,6 +217,7 @@ def get_entity_name(item):
         print(item, "of type ", type(item), " is unknown; returning nothing")
         return ""
 
+
 def evaluate_extraction(pred_json: list[dict], truth_json: list[dict]) -> Dict:
     """
     Compare LLM output vs ground truth entities.
@@ -218,7 +227,6 @@ def evaluate_extraction(pred_json: list[dict], truth_json: list[dict]) -> Dict:
     print("EVAL: starting Evaluation")
     print(f"predicted {len(pred_json)} entities")
     print(f"Actual {len(truth_json)} entities")
-
 
     # Normalize inputs into sets of tuples
     def to_set(data):
@@ -260,18 +268,8 @@ def evaluate_extraction(pred_json: list[dict], truth_json: list[dict]) -> Dict:
     else:
         f1_name = 0
 
-    # 4. Strict match (name + type)
-    strict_recall = len(matched) / len(truth_set) if truth_set else 0
-    strict_precision = len(matched) / len(pred_set) if pred_set else 0
-
-    if strict_precision + strict_recall > 0:
-        strict_f1 = 2 * strict_precision * strict_recall / (strict_precision + strict_recall)
-    else:
-        strict_f1 = 0
-
-    # 5. Extra / missing analysis
-    missing = truth_names - pred_names
-    extra = pred_names - truth_names
+    # 4. Strict match with context
+    strict_recall, strict_precision, strict_f1 = strict_match_with_context(pred_json, truth_json)
 
     return {
         "recall_entity_name": recall_name,
@@ -290,6 +288,7 @@ def evaluate_extraction(pred_json: list[dict], truth_json: list[dict]) -> Dict:
         "extra_entities": list(extra),
     }
 
+
 def normalize_entity_name(name: str) -> str:
     name = normalize_text(name)
 
@@ -299,6 +298,7 @@ def normalize_entity_name(name: str) -> str:
 
     return " ".join(words)
 
+
 def is_same_entity(a: str, b: str, threshold=90):
     a_norm = normalize_entity_name(a)
     b_norm = normalize_entity_name(b)
@@ -306,9 +306,14 @@ def is_same_entity(a: str, b: str, threshold=90):
     if a_norm == b_norm:
         return True
 
-    score = fuzz.token_sort_ratio(a_norm, b_norm)
+    # Consider context within sentences
+    for sentence in re.split(r'(?<=[.!?])\s+', a):
+        score = fuzz.token_sort_ratio(sentence, b_norm)
+        if score >= threshold:
+            return True
 
-    return score >= threshold
+    return False
+
 
 def merge_entity(entity: dict, canonicals: list[CanonicalEntity]):
     name = get_entity_name(entity)
@@ -319,7 +324,7 @@ def merge_entity(entity: dict, canonicals: list[CanonicalEntity]):
 
         # optional:
         # only compare same/similar types
-        if c.entity_type != ent_type:
+        if c.entity_type != ent_type and ent_type not in c.entity_type.split(","):
             continue
 
         candidates = [c.canonical_name] + c.aliases
@@ -348,24 +353,21 @@ def merge_entity(entity: dict, canonicals: list[CanonicalEntity]):
         )
     )
 
+
 def setup_args() -> Namespace:
     import argparse
 
     parser = argparse.ArgumentParser(description="LLM Entity Extraction")
 
-    parser.add_argument("--data_path", type=str, default=str(test_data), help="Path to input data (pdf or txt)")
-    parser.add_argument("--run", type=str, default=None, help="Override name of output")
-    parser.add_argument("--chunk_size", type=int, default=CHUNK_SIZE, help="Chunk size for text splitting")
-    parser.add_argument("--overlap", type=int, default=OVERLAP, help="Overlap size for chunking")
-    parser.add_argument("--seed", type=int, default=SEED, help="Random seed for reproducibility")
-    parser.add_argument("--debug", action="store_true", help="Enable debug mode with streaming output")
+    # Add custom training options
+    parser.add_argument("--custom_training", action="store_true", help="Use custom trained model")
+    parser.add_argument("--prompt_template", type=str, default=PROMPT_TEMPLATE, help="Custom prompt template")
 
     args = parser.parse_args()
 
     return args
 
 
-            
 if __name__ == "__main__":
     args = setup_args()
     run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") if args.run is None else args.run
@@ -373,7 +375,7 @@ if __name__ == "__main__":
 
     text = extract_text(Path(args.data_path))
     cleaned_text = clean_html(text)
-    chunks = smart_chunk(cleaned_text, args.chunk_size) # chunk_text(cleaned_text)
+    chunks = smart_chunk(cleaned_text, args.chunk_size)  # chunk_text(cleaned_text)
     #%%
 
     entities = process_chunks(chunks, seed=args.seed)

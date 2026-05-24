@@ -5,7 +5,7 @@ from datetime import datetime
 import re
 import json
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 def pretty_print_metrics(metrics: Dict[str, Any], title: str = "Test Metrics") -> None:
     def is_list(v):
