@@ -1,20 +1,25 @@
 # %%
 import argparse
 import json
-import re
 import string
 import logging
 from pathlib import Path
 from typing import List, Dict, Optional
+import datetime
+import re
 
 import fitz  # PyMuPDF
 import ollama
-from bs4 import BeautifulSoup
-from pydantic import BaseModel
+# from bs4 import BeautifulSoup
+from pydantic import BaseModel, Field
 from rapidfuzz import fuzz
 from rich.console import Console
 from rich.table import Table
 from rich.logging import RichHandler
+
+OLLAMA_CLIENT = ollama.Client(
+    host="http://127.0.0.1:11434"
+)
 
 # --- CONFIG & OBSERVABILITY ---
 logging.basicConfig(
@@ -48,27 +53,30 @@ class ValidatedEntity(BaseModel):
 class CanonicalEntity(BaseModel):
     canonical_name: str
     entity_type: str
-    aliases: list[str] = []
-    evidence_quotes: list[str] = []
-    source_chunks: list[int] = []
+
+    aliases: list[str] = Field(default_factory=list)
+    evidence_quotes: list[str] = Field(default_factory=list)
+    source_chunks: list[int] = Field(default_factory=list)
 
 
 # --- PROMPTS ---
 SYSTEM_PROMPT = """
 You are an expert legal entity extraction system.
-Extract all corporate and personal entities from the text.
-For every entity, you MUST extract the exact, verbatim text snippet where it was found in the 'exact_quote' field.
+Extract all corporate, legal, and personal entities from the text.
+
+Do NOT extract locations (cities, countries).
+Do NOT extract dates.
+Do NOT extract monetary values or clause references.
 
 Schema:
 [
   {
     "entity_name": "Standardized Name (e.g. Acme Corp)",
-    "entity_type": "company|person|organization|location",
-    "exact_quote": "The exact string from the text proving this entity exists."
+    "entity_type": "company|person|organization|agreement|product|other",
+    "exact_quote": "The exact string from the text proving this exists."
   }
 ]
-
-Return ONLY valid JSON. No markdown, no prose.
+Return ONLY valid JSON.
 """
 
 PROMPT_TEMPLATE = lambda chunk: f"""
@@ -130,18 +138,22 @@ def chunk_text_with_overlap(text: str, max_chars: int = 2000, overlap_chars: int
 
 def call_llm(chunk: str, seed: int = 42) -> List[ExtractedEntity]:
     """Calls Ollama and enforces JSON schema."""
-    client = ollama.Client(host="http://127.0.0.1:11434")
     prompt = PROMPT_TEMPLATE(chunk)
 
     try:
-        res = client.chat(
+        res = OLLAMA_CLIENT.chat(
             model="qwen2.5:7b-instruct-q4_K_M",
             format=EntityList.model_json_schema(),  # Ensure JSON mode
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt}
             ],
-            options={"temperature": 0.0, "seed": seed}
+            options={
+                "temperature": 0.0,
+                "seed": seed,
+                # "num_ctx": 1024,  # <-- Speeds up prompt processing
+                # "num_predict": 256  # <-- Speeds up generation (fail fast)
+            }
         )
         data = json.loads(res["message"]["content"])["entities"]
         # logger.debug(f"\nLLM returned {data}")
@@ -159,6 +171,10 @@ def validate_guardrails(entity: ExtractedEntity, chunk_text: str, chunk_id: int)
 
     is_valid = norm_quote in norm_chunk
     reason = None if is_valid else f"Hallucination: Quote not found in chunk."
+
+    if is_junk_entity(entity.entity_name):
+        is_valid=False
+        reason="Matched junk regex filter"
 
     return ValidatedEntity(
         chunk_id=chunk_id,
@@ -192,6 +208,10 @@ def resolve_entities(validated_entities: List[ValidatedEntity]) -> List[Canonica
         for c in canonicals:
             # Check canonical name and aliases
             candidates = [normalize_entity_name(c.canonical_name)] + [normalize_entity_name(a) for a in c.aliases]
+
+            if is_acronym(ve.entity_name, c.canonical_name):
+                c.aliases.append(ve.entity_name)
+                matched = True
 
             for candidate in candidates:
                 if fuzz.token_sort_ratio(norm_name, candidate) > 90:  # Keep high for strictness
@@ -236,46 +256,82 @@ def display_results(canonicals: List[CanonicalEntity], dropped: int):
         logger.warning(f"Guardrails blocked {dropped} hallucinated/invalid entities.")
 
 
+def is_junk_entity(name: str) -> bool:
+    # 1. Drop if it's purely a currency or number
+    if re.search(r'^(USD|\$|€|£)?\s*[\d\,\.]+$', name.strip()):
+        return True
+    # 2. Drop if it's a contract clause reference
+    if re.search(r'^(Section|Article|Clause)\s+\d+', name, re.IGNORECASE):
+        return True
+    # 3. Drop generic plurals
+    if name.lower().endswith(('personnel', 'employees', 'staff', 'shareholders')):
+        return True
+    # 4. Drop if it's JUST a legal suffix (like "Ltd.")
+    if name.lower().strip() in LEGAL_SUFFIXES:
+        return True
+    return False
+
+# Add this helper function
+def is_acronym(short_name: str, long_name: str) -> bool:
+    if len(short_name) < 2 or len(short_name) > 6:
+        return False
+    # Create acronym from long name (e.g. "Food and Drug Administration" -> "FADA" or "FDA")
+    words = [w for w in long_name.split() if w.lower() not in ('and', 'of', 'the', 'for')]
+    expected_acronym = "".join([w[0].upper() for w in words if w])
+    return short_name.upper() == expected_acronym
+
+
 # --- MAIN EXECUTION ---
 
-def run_pipeline(file_path: str):
-    logger.info("Starting Entity Resolution Pipeline...")
-    logger.debug(f"Using schema: {EntityList.model_json_schema()}")
+def run_pipeline(file_path: str, seed: int, run_id: str):
+    logger.info(f"Starting Pipeline | Run ID: {run_id} | Seed: {seed}")
 
-    # 1. Ingest
     text = extract_text(Path(file_path))
-
-    # 2. Chunk
-    chunks = chunk_text_with_overlap(text, max_chars=1000)
+    chunks = chunk_text_with_overlap(text)
 
     all_validated_entities = []
     hallucination_count = 0
 
-    # 3 & 4. Extract and Validate
     with console.status("[bold green]Processing chunks with LLM...") as status:
         for idx, chunk in enumerate(chunks):
-            logger.debug(f"Processing chunk {idx + 1}/{len(chunks)}")
-            raw_entities = call_llm(chunk)
+            # Pass the deterministic seed to the LLM call
+            raw_entities = call_llm(chunk, seed=seed)
 
             for raw_ent in raw_entities:
                 validated = validate_guardrails(raw_ent, chunk, idx)
                 all_validated_entities.append(validated)
-
                 if not validated.is_valid:
                     hallucination_count += 1
-                    logger.warning(f"Dropped Entity '{raw_ent.entity_name}': {validated.fail_reason}")
 
-    # 5. Resolve
     logger.info("Resolving and grouping entities...")
     canonicals = resolve_entities(all_validated_entities)
 
-    # 6. Output
     display_results(canonicals, hallucination_count)
+
+    # --- NEW: Reproducible JSON Output ---
+    output_dir = Path("outputs")
+    output_dir.mkdir(exist_ok=True)
+
+    output_file = output_dir / f"{run_id}.json"
+
+    # Dump to JSON using Pydantic's built-in dictionary conversion
+    dump_data = [c.model_dump() for c in canonicals]
+
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(dump_data, f, indent=2)
+
+    logger.info(f"Saved reproducible output to {output_file}")
+    return output_file
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file", type=str, required=True, help="Path to document")
+    parser.add_argument("--file", type=str, default="data/test-synthetic.txt", help="Path to document")
+    parser.add_argument("--seed", type=int, default=42, help="Deterministic seed for LLM")
+    parser.add_argument("--run_name", type=str, default=None, help="Custom name for the run output")
     args = parser.parse_args()
 
-    run_pipeline(args.file)
+    # Generate timestamped run ID if none provided
+    run_id = args.run_name or datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    run_pipeline(args.file, args.seed, run_id)
