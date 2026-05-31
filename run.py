@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 import datetime
 import re
-
+from uuid import uuid4
 import fitz  # PyMuPDF
 import ollama
 # from bs4 import BeautifulSoup
@@ -51,12 +51,27 @@ class ValidatedEntity(BaseModel):
 
 
 class CanonicalEntity(BaseModel):
+    entity_id: str
+
     canonical_name: str
     entity_type: str
 
     aliases: list[str] = Field(default_factory=list)
     evidence_quotes: list[str] = Field(default_factory=list)
     source_chunks: list[int] = Field(default_factory=list)
+
+
+class Relationship(BaseModel):
+    source_entity: str
+    target_entity: str
+
+    relationship_type: str
+
+    evidence_quote: str
+    chunk_id: int
+
+class RelationshipList(BaseModel):
+    relationships: list[Relationship]
 
 
 # --- PROMPTS ---
@@ -87,6 +102,37 @@ Schema:
   }
 ]
 Return ONLY valid JSON.
+"""
+
+RELATIONSHIP_SYSTEM_PROMPT = """
+You are an expert legal relationship extraction system.
+
+Identify explicit relationships between entities.
+
+Allowed relationships:
+
+- party_to_agreement
+- acquired_by
+- owns
+- subsidiary_of
+- signatory_for
+- licensed_to
+- transferred_to
+
+Only extract relationships directly supported by the text.
+
+Return JSON:
+
+{
+  "relationships": [
+    {
+      "source_entity": "...",
+      "target_entity": "...",
+      "relationship_type": "...",
+      "evidence_quote": "..."
+    }
+  ]
+}
 """
 
 PROMPT_TEMPLATE = lambda chunk: f"""
@@ -248,13 +294,16 @@ def resolve_entities(validated_entities: List[ValidatedEntity]) -> List[Canonica
                 break
 
         if not matched:
-            canonicals.append(CanonicalEntity(
-                canonical_name=ve.entity_name,
-                entity_type=ve.entity_type,
-                aliases=[],
-                evidence_quotes=[ve.exact_quote],
-                source_chunks=[ve.chunk_id]
-            ))
+            canonicals.append(
+                CanonicalEntity(
+                    entity_id=str(uuid4()),
+                    canonical_name=ve.entity_name,
+                    entity_type=ve.entity_type,
+                    aliases=[],
+                    evidence_quotes=[ve.exact_quote],
+                    source_chunks=[ve.chunk_id],
+                )
+            )
 
     return canonicals
 
