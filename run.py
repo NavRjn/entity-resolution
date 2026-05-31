@@ -68,6 +68,16 @@ Do NOT extract locations (cities, countries).
 Do NOT extract dates.
 Do NOT extract monetary values or clause references.
 
+Agreements:
+- Transitional Manufacturing and Support Agreement
+- Retention and Transition Bonus Agreements
+
+Products:
+- AegisPoint(TM)
+- SentinelGrid Analytics
+- OmniPath Clinical Exchange
+- SAP Horizon Enterprise Suite
+
 Schema:
 [
   {
@@ -173,8 +183,19 @@ def validate_guardrails(entity: ExtractedEntity, chunk_text: str, chunk_id: int)
     reason = None if is_valid else f"Hallucination: Quote not found in chunk."
 
     if is_junk_entity(entity.entity_name):
-        is_valid=False
+        is_valid = False
         reason="Matched junk regex filter"
+    if is_empty_after_normalization(entity.entity_name):
+        is_valid = False
+        reason = "Entity collapsed after normalization"
+    # if not entity_name_in_quote(entity.entity_name, entity.exact_quote):
+    #     is_valid = False
+    #     reason = "Entity name not found in quote"
+    # if entity.entity_type == "person" and looks_incomplete_person(entity.entity_name):
+    #     is_valid = False
+    #     reason = "Incomplete person name"
+
+
 
     return ValidatedEntity(
         chunk_id=chunk_id,
@@ -267,11 +288,13 @@ def is_junk_entity(name: str) -> bool:
     if name.lower().endswith(('personnel', 'employees', 'staff', 'shareholders')):
         return True
     # 4. Drop if it's JUST a legal suffix (like "Ltd.")
-    if name.lower().strip() in LEGAL_SUFFIXES:
+    normalized = normalize_entity_name(name)
+
+    if normalized == "":
         return True
     return False
 
-# Add this helper function
+
 def is_acronym(short_name: str, long_name: str) -> bool:
     if len(short_name) < 2 or len(short_name) > 6:
         return False
@@ -279,6 +302,26 @@ def is_acronym(short_name: str, long_name: str) -> bool:
     words = [w for w in long_name.split() if w.lower() not in ('and', 'of', 'the', 'for')]
     expected_acronym = "".join([w[0].upper() for w in words if w])
     return short_name.upper() == expected_acronym
+
+
+def is_empty_after_normalization(name: str) -> bool:
+    return normalize_entity_name(name).strip() == ""
+
+
+def entity_name_in_quote(entity_name: str, quote: str) -> bool:
+    return entity_name.lower() in quote.lower()
+
+
+def looks_incomplete_person(name: str) -> bool:
+    parts = name.strip().split()
+
+    if len(parts) < 2:
+        return True
+
+    if len(parts[-1]) == 2 and parts[-1].endswith("."):
+        return True
+
+    return False
 
 
 # --- MAIN EXECUTION ---
