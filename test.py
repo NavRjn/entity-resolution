@@ -31,7 +31,7 @@ def evaluate_run(pred_file: Path, truth_file: Path):
     with open(truth_file) as f:
         truth_data = json.load(f)
     with open(pred_file) as f:
-        pred_data_raw = json.load(f)
+        pred_data_raw = json.load(f)["entities"]
 
     # Filter out locations if you only care about orgs/people (based on your old script)
     truth =  [e for e in truth_data if e.get("entity_type") != "location"]
