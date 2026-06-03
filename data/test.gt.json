@@ -1,328 +1,453 @@
-[
-  {
-    "entity_name": "Aurora Strategic Holdings, Inc.",
-    "entity_type": "company",
-    "evidence": "Aurora Strategic Holdings, Inc."
-  },
-  {
-    "entity_name": "Helios BioAnalytics Corporation",
-    "entity_type": "company",
-    "evidence": "Helios BioAnalytics Corporation"
-  },
-  {
-    "entity_name": "HBA Diagnostics Holdings LLC",
-    "entity_type": "company",
-    "evidence": "HBA Diagnostics Holdings LLC"
-  },
-  {
-    "entity_name": "Aurora Clinical Systems LLC",
-    "entity_type": "company",
-    "evidence": "Aurora Clinical Systems LLC"
-  },
-  {
-    "entity_name": "Aurora CS Europe GmbH",
-    "entity_type": "company",
-    "evidence": "Aurora CS Europe GmbH"
-  },
-  {
-    "entity_name": "Northbridge Data Security Ltd.",
-    "entity_type": "company",
-    "evidence": "Northbridge Data Security Ltd."
-  },
-  {
-    "entity_name": "Meridian Specialty Pharma, Inc.",
-    "entity_type": "company",
-    "evidence": "Meridian Specialty Pharma, Inc."
-  },
-  {
-    "entity_name": "Meridian Specialty Pharma Canada ULC",
-    "entity_type": "company",
-    "evidence": "Meridian Specialty Pharma Canada ULC"
-  },
-  {
-    "entity_name": "Vantage Harbor Reinsurance SPC",
-    "entity_type": "company",
-    "evidence": "Vantage Harbor Reinsurance SPC"
-  },
-  {
-    "entity_name": "BlueHarbor Analytics Pte. Ltd.",
-    "entity_type": "company",
-    "evidence": "BlueHarbor Analytics Pte. Ltd."
-  },
-  {
-    "entity_name": "Beacon Ridge Advisory Services LLC",
-    "entity_type": "company",
-    "evidence": "Beacon Ridge Advisory Services LLC"
-  },
-  {
-    "entity_name": "Sterling & Vale LLP",
-    "entity_type": "organization",
-    "evidence": "Sterling & Vale LLP"
-  },
-  {
-    "entity_name": "Hudson National Trust Company",
-    "entity_type": "organization",
-    "evidence": "Hudson National Trust Company"
-  },
-  {
-    "entity_name": "Eastgate Commercial Insurance Agency",
-    "entity_type": "company",
-    "evidence": "Eastgate Commercial Insurance Agency"
-  },
-  {
-    "entity_name": "Commonwealth Fidelity Bank",
-    "entity_type": "organization",
-    "evidence": "Commonwealth Fidelity Bank"
-  },
-  {
-    "entity_name": "The International Diagnostics Consortium",
-    "entity_type": "organization",
-    "evidence": "The International Diagnostics Consortium"
-  },
-  {
-    "entity_name": "U.S. Food and Drug Administration",
-    "entity_type": "organization",
-    "evidence": "U.S. Food and Drug Administration"
-  },
-  {
-    "entity_name": "Securities and Exchange Commission",
-    "entity_type": "organization",
-    "evidence": "Securities and Exchange Commission"
-  },
-  {
-    "entity_name": "Financial Conduct Authority",
-    "entity_type": "organization",
-    "evidence": "Financial Conduct Authority"
-  },
-  {
-    "entity_name": "European Medicines Agency",
-    "entity_type": "organization",
-    "evidence": "European Medicines Agency"
-  },
-  {
-    "entity_name": "Ontario Health Compliance Directorate",
-    "entity_type": "organization",
-    "evidence": "Ontario Health Compliance Directorate"
-  },
-  {
-    "entity_name": "Redwood Capital Partners IV, L.P.",
-    "entity_type": "company",
-    "evidence": "Redwood Capital Partners IV, L.P."
-  },
-  {
-    "entity_name": "Norwalk Biometric Solutions, Inc.",
-    "entity_type": "company",
-    "evidence": "Norwalk Biometric Solutions, Inc."
-  },
-  {
-    "entity_name": "Atlas Vertex Computing AG",
-    "entity_type": "company",
-    "evidence": "Atlas Vertex Computing AG"
-  },
-  {
-    "entity_name": "Harbor Mutual Indemnity plc",
-    "entity_type": "company",
-    "evidence": "Harbor Mutual Indemnity plc"
-  },
-  {
-    "entity_name": "Crescent Continental Re Ltd.",
-    "entity_type": "company",
-    "evidence": "Crescent Continental Re Ltd."
-  },
-  {
-    "entity_name": "MedAxis Procurement Solutions BV",
-    "entity_type": "company",
-    "evidence": "MedAxis Procurement Solutions BV"
-  },
-  {
-    "entity_name": "Baltic Laboratory Freight OU",
-    "entity_type": "company",
-    "evidence": "Baltic Laboratory Freight OU"
-  },
-  {
-    "entity_name": "Pacific Rim Technical Staffing Co.",
-    "entity_type": "company",
-    "evidence": "Pacific Rim Technical Staffing Co."
-  },
-  {
-    "entity_name": "Grant Mercer Advisory Group",
-    "entity_type": "company",
-    "evidence": "Grant Mercer Advisory Group"
-  },
-  {
-    "entity_name": "Jonathan R. Keene",
-    "entity_type": "person",
-    "evidence": "Jonathan R. Keene"
-  },
-  {
-    "entity_name": "Dr. Emily Carrow",
-    "entity_type": "person",
-    "evidence": "Dr. Emily Carrow"
-  },
-  {
-    "entity_name": "Michael J. Levin",
-    "entity_type": "person",
-    "evidence": "Michael J. Levin"
-  },
-  {
-    "entity_name": "Sandrine Moreau",
-    "entity_type": "person",
-    "evidence": "Sandrine Moreau"
-  },
-  {
-    "entity_name": "Priya Ramanathan",
-    "entity_type": "person",
-    "evidence": "Priya Ramanathan"
-  },
-  {
-    "entity_name": "Charles E. Whitaker III",
-    "entity_type": "person",
-    "evidence": "Charles E. Whitaker III"
-  },
-  {
-    "entity_name": "Elena Kovacs",
-    "entity_type": "person",
-    "evidence": "Elena Kovacs"
-  },
-  {
-    "entity_name": "Roberto Silva",
-    "entity_type": "person",
-    "evidence": "Roberto Silva"
-  },
+{
+  "entities": [
+    {
+      "entity_name": "Aurora Strategic Holdings, Inc.",
+      "entity_type": "company",
+      "evidence": "Aurora Strategic Holdings, Inc."
+    },
+    {
+      "entity_name": "Helios BioAnalytics Corporation",
+      "entity_type": "company",
+      "evidence": "Helios BioAnalytics Corporation"
+    },
+    {
+      "entity_name": "HBA Diagnostics Holdings LLC",
+      "entity_type": "company",
+      "evidence": "HBA Diagnostics Holdings LLC"
+    },
+    {
+      "entity_name": "Aurora Clinical Systems LLC",
+      "entity_type": "company",
+      "evidence": "Aurora Clinical Systems LLC"
+    },
+    {
+      "entity_name": "Aurora CS Europe GmbH",
+      "entity_type": "company",
+      "evidence": "Aurora CS Europe GmbH"
+    },
+    {
+      "entity_name": "Northbridge Data Security Ltd.",
+      "entity_type": "company",
+      "evidence": "Northbridge Data Security Ltd."
+    },
+    {
+      "entity_name": "Meridian Specialty Pharma, Inc.",
+      "entity_type": "company",
+      "evidence": "Meridian Specialty Pharma, Inc."
+    },
+    {
+      "entity_name": "Meridian Specialty Pharma Canada ULC",
+      "entity_type": "company",
+      "evidence": "Meridian Specialty Pharma Canada ULC"
+    },
+    {
+      "entity_name": "Vantage Harbor Reinsurance SPC",
+      "entity_type": "company",
+      "evidence": "Vantage Harbor Reinsurance SPC"
+    },
+    {
+      "entity_name": "BlueHarbor Analytics Pte. Ltd.",
+      "entity_type": "company",
+      "evidence": "BlueHarbor Analytics Pte. Ltd."
+    },
+    {
+      "entity_name": "Beacon Ridge Advisory Services LLC",
+      "entity_type": "company",
+      "evidence": "Beacon Ridge Advisory Services LLC"
+    },
+    {
+      "entity_name": "Sterling & Vale LLP",
+      "entity_type": "organization",
+      "evidence": "Sterling & Vale LLP"
+    },
+    {
+      "entity_name": "Hudson National Trust Company",
+      "entity_type": "organization",
+      "evidence": "Hudson National Trust Company"
+    },
+    {
+      "entity_name": "Eastgate Commercial Insurance Agency",
+      "entity_type": "company",
+      "evidence": "Eastgate Commercial Insurance Agency"
+    },
+    {
+      "entity_name": "Commonwealth Fidelity Bank",
+      "entity_type": "organization",
+      "evidence": "Commonwealth Fidelity Bank"
+    },
+    {
+      "entity_name": "The International Diagnostics Consortium",
+      "entity_type": "organization",
+      "evidence": "The International Diagnostics Consortium"
+    },
+    {
+      "entity_name": "U.S. Food and Drug Administration",
+      "entity_type": "organization",
+      "evidence": "U.S. Food and Drug Administration"
+    },
+    {
+      "entity_name": "Securities and Exchange Commission",
+      "entity_type": "organization",
+      "evidence": "Securities and Exchange Commission"
+    },
+    {
+      "entity_name": "Financial Conduct Authority",
+      "entity_type": "organization",
+      "evidence": "Financial Conduct Authority"
+    },
+    {
+      "entity_name": "European Medicines Agency",
+      "entity_type": "organization",
+      "evidence": "European Medicines Agency"
+    },
+    {
+      "entity_name": "Ontario Health Compliance Directorate",
+      "entity_type": "organization",
+      "evidence": "Ontario Health Compliance Directorate"
+    },
+    {
+      "entity_name": "Redwood Capital Partners IV, L.P.",
+      "entity_type": "company",
+      "evidence": "Redwood Capital Partners IV, L.P."
+    },
+    {
+      "entity_name": "Norwalk Biometric Solutions, Inc.",
+      "entity_type": "company",
+      "evidence": "Norwalk Biometric Solutions, Inc."
+    },
+    {
+      "entity_name": "Atlas Vertex Computing AG",
+      "entity_type": "company",
+      "evidence": "Atlas Vertex Computing AG"
+    },
+    {
+      "entity_name": "Harbor Mutual Indemnity plc",
+      "entity_type": "company",
+      "evidence": "Harbor Mutual Indemnity plc"
+    },
+    {
+      "entity_name": "Crescent Continental Re Ltd.",
+      "entity_type": "company",
+      "evidence": "Crescent Continental Re Ltd."
+    },
+    {
+      "entity_name": "MedAxis Procurement Solutions BV",
+      "entity_type": "company",
+      "evidence": "MedAxis Procurement Solutions BV"
+    },
+    {
+      "entity_name": "Baltic Laboratory Freight OU",
+      "entity_type": "company",
+      "evidence": "Baltic Laboratory Freight OU"
+    },
+    {
+      "entity_name": "Pacific Rim Technical Staffing Co.",
+      "entity_type": "company",
+      "evidence": "Pacific Rim Technical Staffing Co."
+    },
+    {
+      "entity_name": "Grant Mercer Advisory Group",
+      "entity_type": "company",
+      "evidence": "Grant Mercer Advisory Group"
+    },
+    {
+      "entity_name": "Jonathan R. Keene",
+      "entity_type": "person",
+      "evidence": "Jonathan R. Keene"
+    },
+    {
+      "entity_name": "Dr. Emily Carrow",
+      "entity_type": "person",
+      "evidence": "Dr. Emily Carrow"
+    },
+    {
+      "entity_name": "Michael J. Levin",
+      "entity_type": "person",
+      "evidence": "Michael J. Levin"
+    },
+    {
+      "entity_name": "Sandrine Moreau",
+      "entity_type": "person",
+      "evidence": "Sandrine Moreau"
+    },
+    {
+      "entity_name": "Priya Ramanathan",
+      "entity_type": "person",
+      "evidence": "Priya Ramanathan"
+    },
+    {
+      "entity_name": "Charles E. Whitaker III",
+      "entity_type": "person",
+      "evidence": "Charles E. Whitaker III"
+    },
+    {
+      "entity_name": "Elena Kovacs",
+      "entity_type": "person",
+      "evidence": "Elena Kovacs"
+    },
+    {
+      "entity_name": "Roberto Silva",
+      "entity_type": "person",
+      "evidence": "Roberto Silva"
+    },
+    {
+      "entity_name": "New York, New York",
+      "entity_type": "location",
+      "evidence": "New York, New York"
+    },
+    {
+      "entity_name": "Austin, Texas",
+      "entity_type": "location",
+      "evidence": "Austin, Texas"
+    },
+    {
+      "entity_name": "Singapore",
+      "entity_type": "location",
+      "evidence": "Singapore"
+    },
+    {
+      "entity_name": "Rotterdam, Netherlands",
+      "entity_type": "location",
+      "evidence": "Rotterdam, Netherlands"
+    },
+    {
+      "entity_name": "Dublin, Ireland",
+      "entity_type": "location",
+      "evidence": "Dublin, Ireland"
+    },
+    {
+      "entity_name": "Warsaw, Poland",
+      "entity_type": "location",
+      "evidence": "Warsaw, Poland"
+    },
+    {
+      "entity_name": "Prague, Czech Republic",
+      "entity_type": "location",
+      "evidence": "Prague, Czech Republic"
+    },
+    {
+      "entity_name": "Zurich, Switzerland",
+      "entity_type": "location",
+      "evidence": "Zurich, Switzerland"
+    },
+    {
+      "entity_name": "Frankfurt, Germany",
+      "entity_type": "location",
+      "evidence": "Frankfurt, Germany"
+    },
+    {
+      "entity_name": "Milan, Italy",
+      "entity_type": "location",
+      "evidence": "Milan, Italy"
+    },
+    {
+      "entity_name": "Mississauga, Ontario",
+      "entity_type": "location",
+      "evidence": "Mississauga, Ontario"
+    },
+    {
+      "entity_name": "Kuala Lumpur, Malaysia",
+      "entity_type": "location",
+      "evidence": "Kuala Lumpur, Malaysia"
+    },
+    {
+      "entity_name": "Brazil",
+      "entity_type": "location",
+      "evidence": "Brazil"
+    },
+    {
+      "entity_name": "Chile",
+      "entity_type": "location",
+      "evidence": "Chile"
+    },
+    {
+      "entity_name": "Argentina",
+      "entity_type": "location",
+      "evidence": "Argentina"
+    },
+    {
+      "entity_name": "Equity Purchase Agreement",
+      "entity_type": "agreement",
+      "evidence": "Equity Purchase Agreement"
+    },
+    {
+      "entity_name": "Transitional Manufacturing and Support Agreement",
+      "entity_type": "agreement",
+      "evidence": "Transitional Manufacturing and Support Agreement"
+    },
+    {
+      "entity_name": "Master Cloud Processing Agreement",
+      "entity_type": "agreement",
+      "evidence": "Master Cloud Processing Agreement"
+    },
+    {
+      "entity_name": "Data Infrastructure Services Agreement",
+      "entity_type": "agreement",
+      "evidence": "Data Infrastructure Services Agreement"
+    },
+    {
+      "entity_name": "Retention and Transition Bonus Agreements",
+      "entity_type": "agreement",
+      "evidence": "Retention and Transition Bonus Agreements"
+    },
+    {
+      "entity_name": "AegisPoint(TM)",
+      "entity_type": "product",
+      "evidence": "AegisPoint(TM)"
+    },
+    {
+      "entity_name": "NovaSeq Vector",
+      "entity_type": "product",
+      "evidence": "NovaSeq Vector"
+    },
+    {
+      "entity_name": "SentinelGrid Analytics",
+      "entity_type": "product",
+      "evidence": "SentinelGrid Analytics"
+    },
+    {
+      "entity_name": "OmniPath Clinical Exchange",
+      "entity_type": "product",
+      "evidence": "OmniPath Clinical Exchange"
+    },
+    {
+      "entity_name": "SAP Horizon Enterprise Suite",
+      "entity_type": "product",
+      "evidence": "SAP Horizon Enterprise Suite"
+    },
+    {
+      "entity_name": "GDPR",
+      "entity_type": "other",
+      "evidence": "GDPR"
+    },
+    {
+      "entity_name": "International Chamber of Commerce",
+      "entity_type": "organization",
+      "evidence": "International Chamber of Commerce"
+    }
+  ],
 
-  {
-    "entity_name": "New York, New York",
-    "entity_type": "location",
-    "evidence": "New York, New York"
-  },
-  {
-    "entity_name": "Austin, Texas",
-    "entity_type": "location",
-    "evidence": "Austin, Texas"
-  },
-  {
-    "entity_name": "Singapore",
-    "entity_type": "location",
-    "evidence": "Singapore"
-  },
-  {
-    "entity_name": "Rotterdam, Netherlands",
-    "entity_type": "location",
-    "evidence": "Rotterdam, Netherlands"
-  },
-  {
-    "entity_name": "Dublin, Ireland",
-    "entity_type": "location",
-    "evidence": "Dublin, Ireland"
-  },
-  {
-    "entity_name": "Warsaw, Poland",
-    "entity_type": "location",
-    "evidence": "Warsaw, Poland"
-  },
-  {
-    "entity_name": "Prague, Czech Republic",
-    "entity_type": "location",
-    "evidence": "Prague, Czech Republic"
-  },
-  {
-    "entity_name": "Zurich, Switzerland",
-    "entity_type": "location",
-    "evidence": "Zurich, Switzerland"
-  },
-  {
-    "entity_name": "Frankfurt, Germany",
-    "entity_type": "location",
-    "evidence": "Frankfurt, Germany"
-  },
-  {
-    "entity_name": "Milan, Italy",
-    "entity_type": "location",
-    "evidence": "Milan, Italy"
-  },
-  {
-    "entity_name": "Mississauga, Ontario",
-    "entity_type": "location",
-    "evidence": "Mississauga, Ontario"
-  },
-  {
-    "entity_name": "Kuala Lumpur, Malaysia",
-    "entity_type": "location",
-    "evidence": "Kuala Lumpur, Malaysia"
-  },
-  {
-    "entity_name": "Brazil",
-    "entity_type": "location",
-    "evidence": "Brazil"
-  },
-  {
-    "entity_name": "Chile",
-    "entity_type": "location",
-    "evidence": "Chile"
-  },
-  {
-    "entity_name": "Argentina",
-    "entity_type": "location",
-    "evidence": "Argentina"
-  },
-  {
-    "entity_name": "Equity Purchase Agreement",
-    "entity_type": "agreement",
-    "evidence": "Equity Purchase Agreement"
-  },
-  {
-    "entity_name": "Transitional Manufacturing and Support Agreement",
-    "entity_type": "agreement",
-    "evidence": "Transitional Manufacturing and Support Agreement"
-  },
-  {
-    "entity_name": "Master Cloud Processing Agreement",
-    "entity_type": "agreement",
-    "evidence": "Master Cloud Processing Agreement"
-  },
-  {
-    "entity_name": "Data Infrastructure Services Agreement",
-    "entity_type": "agreement",
-    "evidence": "Data Infrastructure Services Agreement"
-  },
-  {
-    "entity_name": "Retention and Transition Bonus Agreements",
-    "entity_type": "agreement",
-    "evidence": "Retention and Transition Bonus Agreements"
-  },
-  {
-    "entity_name": "AegisPoint(TM)",
-    "entity_type": "product",
-    "evidence": "AegisPoint(TM)"
-  },
-  {
-    "entity_name": "NovaSeq Vector",
-    "entity_type": "product",
-    "evidence": "NovaSeq Vector"
-  },
-  {
-    "entity_name": "SentinelGrid Analytics",
-    "entity_type": "product",
-    "evidence": "SentinelGrid Analytics"
-  },
-  {
-    "entity_name": "OmniPath Clinical Exchange",
-    "entity_type": "product",
-    "evidence": "OmniPath Clinical Exchange"
-  },
-  {
-    "entity_name": "SAP Horizon Enterprise Suite",
-    "entity_type": "product",
-    "evidence": "SAP Horizon Enterprise Suite"
-  },
-  {
-    "entity_name": "GDPR",
-    "entity_type": "other",
-    "evidence": "GDPR"
-  },
-  {
-    "entity_name": "International Chamber of Commerce",
-    "entity_type": "organization",
-    "evidence": "International Chamber of Commerce"
-  }
-]
+  "relationships": [
+    {
+      "source": "Helios BioAnalytics Corporation",
+      "relationship": "acquired_by",
+      "target": "Aurora Strategic Holdings, Inc."
+    },
+
+    {
+      "source": "Aurora Strategic Holdings, Inc.",
+      "relationship": "owns",
+      "target": "Aurora Clinical Systems LLC"
+    },
+    {
+      "source": "Aurora Clinical Systems LLC",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
+    },
+
+    {
+      "source": "Aurora Strategic Holdings, Inc.",
+      "relationship": "owns",
+      "target": "Aurora CS Europe GmbH"
+    },
+    {
+      "source": "Aurora CS Europe GmbH",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
+    },
+
+    {
+      "source": "Aurora Strategic Holdings, Inc.",
+      "relationship": "owns",
+      "target": "Northbridge Data Security Ltd."
+    },
+    {
+      "source": "Northbridge Data Security Ltd.",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
+    },
+
+    {
+      "source": "Aurora Strategic Holdings, Inc.",
+      "relationship": "owns",
+      "target": "Meridian Specialty Pharma, Inc."
+    },
+    {
+      "source": "Meridian Specialty Pharma, Inc.",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
+    },
+
+    {
+      "source": "Aurora Strategic Holdings, Inc.",
+      "relationship": "owns",
+      "target": "Meridian Specialty Pharma Canada ULC"
+    },
+    {
+      "source": "Meridian Specialty Pharma Canada ULC",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
+    },
+
+    {
+      "source": "Aurora Strategic Holdings, Inc.",
+      "relationship": "owns",
+      "target": "Vantage Harbor Reinsurance SPC"
+    },
+    {
+      "source": "Vantage Harbor Reinsurance SPC",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
+    },
+
+    {
+      "source": "Aurora Strategic Holdings, Inc.",
+      "relationship": "owns",
+      "target": "BlueHarbor Analytics Pte. Ltd."
+    },
+    {
+      "source": "BlueHarbor Analytics Pte. Ltd.",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
+    },
+
+    {
+      "source": "Aurora Strategic Holdings, Inc.",
+      "relationship": "party_to_agreement",
+      "target": "Equity Purchase Agreement"
+    },
+    {
+      "source": "Redwood Capital Partners IV, L.P.",
+      "relationship": "party_to_agreement",
+      "target": "Equity Purchase Agreement"
+    },
+    {
+      "source": "Helios BioAnalytics Corporation",
+      "relationship": "party_to_agreement",
+      "target": "Equity Purchase Agreement"
+    },
+
+    {
+      "source": "Meridian Specialty Pharma, Inc.",
+      "relationship": "party_to_agreement",
+      "target": "Transitional Manufacturing and Support Agreement"
+    },
+
+    {
+      "source": "BlueHarbor Analytics Pte. Ltd.",
+      "relationship": "party_to_agreement",
+      "target": "Master Cloud Processing Agreement"
+    },
+    {
+      "source": "Atlas Vertex Computing AG",
+      "relationship": "party_to_agreement",
+      "target": "Master Cloud Processing Agreement"
+    },
+
+    {
+      "source": "Jonathan R. Keene",
+      "relationship": "signatory_for",
+      "target": "Aurora Strategic Holdings, Inc."
+    }
+  ]
+}

@@ -18,7 +18,8 @@ from rich.table import Table
 from rich.logging import RichHandler
 
 OLLAMA_CLIENT = ollama.Client(
-    host="http://127.0.0.1:11434"
+    host="http://127.0.0.1:11434",
+    timeout=180
 )
 
 # --- CONFIG & OBSERVABILITY ---
@@ -251,10 +252,46 @@ def _call_llm(user_prompt: str, system_prompt: str, schema: dict, seed: int = 42
         return {}
 
 
+import concurrent.futures
+import threading
+
+def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed: int = 42, timeout: int = None) -> dict:
+    """Call the LLM in a separate thread so Ctrl+C works."""
+    def call():
+        return OLLAMA_CLIENT.chat(
+            model="qwen2.5:7b-instruct-q4_K_M",
+            format=schema,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            options={
+                "temperature": 0.0,
+                "seed": seed,
+            }
+        )
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(call)
+        try:
+            res = future.result(timeout=timeout)  # Can add timeout in seconds
+            return json.loads(res["message"]["content"])
+        except concurrent.futures.TimeoutError:
+            logger.warning("LLM call timed out")
+            return {}
+        except KeyboardInterrupt:
+            logger.info("Ctrl+C pressed! Cancelling LLM call...")
+            future.cancel()
+            raise
+        except Exception as e:
+            logger.error(f"LLM Call failed: {e}")
+            return {}
+
+
 def extract_entities(chunk: str, seed: int = 42) -> List[ExtractedEntity]:
     """Extracts entities using the generic LLM caller."""
     prompt = ENTITY_PROMPT_TEMPLATE(chunk)
-    data = _call_llm(prompt, SYSTEM_PROMPT, EntityList.model_json_schema(), seed)
+    data = _call_llm_threaded(prompt, SYSTEM_PROMPT, EntityList.model_json_schema(), seed)
     entities = data.get("entities", [])
     return [ExtractedEntity(**item) for item in entities]
 
@@ -262,7 +299,7 @@ def extract_entities(chunk: str, seed: int = 42) -> List[ExtractedEntity]:
 def extract_relationships(chunk: str, entities: List[Dict], chunk_id: int, seed: int = 42) -> List[Relationship]:
     """Extracts relationships using the generic LLM caller."""
     prompt = relationship_prompt_template(chunk, entities)
-    data = _call_llm(prompt, RELATIONSHIP_SYSTEM_PROMPT, RelationshipList.model_json_schema(), seed)
+    data = _call_llm_threaded(prompt, RELATIONSHIP_SYSTEM_PROMPT, RelationshipList.model_json_schema(), seed)
     relationships = data.get("relationships", [])
 
     return [

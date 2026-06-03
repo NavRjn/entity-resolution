@@ -20,6 +20,20 @@ def normalize(text: str) -> str:
     return re.sub(r'[^a-z0-9]', '', str(text).lower())
 
 
+def canon(text: str) -> str:
+    """
+    Canonicalize text for relationship evaluation:
+    - Lowercase
+    - Strip parenthetical suffixes like (CTSA), (FICB)
+    - Remove non-alphanumeric characters
+    """
+    if not text:
+        return ""
+    text = text.lower()
+    text = re.sub(r'\(.*?\)', '', text)  # Remove parentheses content
+    return re.sub(r'[^a-z0-9]', '', text)
+
+
 def get_latest_run() -> Path:
     files = list(OUTPUT_DIR.glob("*.json"))
     if not files:
@@ -38,7 +52,6 @@ def evaluate_run(pred_file: Path, truth_file: Path):
     #
     # ENTITIES
     truth_entities = truth_data["entities"]
-
     pred_entities = pred_data["entities"]
 
     matched_truth = set()
@@ -51,14 +64,7 @@ def evaluate_run(pred_file: Path, truth_file: Path):
             if p_idx in matched_preds: continue
 
             candidates = [p_ent["canonical_name"]] + p_ent.get("aliases", [])
-
-            found = False
-            for candidate in candidates:
-                if fuzz.ratio(t_norm, normalize(candidate)) > 90:
-                    found = True
-                    break
-
-            if found:
+            if any(fuzz.ratio(t_norm, normalize(c)) > 90 for c in candidates):
                 matched_truth.add(t_idx)
                 matched_preds.add(p_idx)
                 break
@@ -68,69 +74,52 @@ def evaluate_run(pred_file: Path, truth_file: Path):
     entity_fp = len(pred_entities) - len(matched_preds)
 
     entity_precision = entity_tp / (entity_tp + entity_fp) if (entity_tp + entity_fp) else 0
-    entity_recall = entity_tp / (entity_tp + entity_fn) if (entity_tp + entity_fn)else 0
-
+    entity_recall = entity_tp / (entity_tp + entity_fn) if (entity_tp + entity_fn) else 0
     entity_f1 = (
         2 * entity_precision * entity_recall / (entity_precision + entity_recall)
-        if (entity_precision + entity_recall)
-        else 0
+        if (entity_precision + entity_recall) else 0
     )
 
     #
     # RELATIONSHIPS
     #
+    pred_id_to_name = {ent["entity_id"]: ent["canonical_name"] for ent in pred_entities}
 
-    pred_id_to_name = {}
+    # Truth edges: use canonical form
+    truth_edges = set(
+        (canon(rel["source"]), rel["relationship"].lower(), canon(rel["target"]))
+        for rel in truth_data.get("relationships", [])
+    )
 
-    for ent in pred_entities:
-        pred_id_to_name[ent["entity_id"]] = ent["canonical_name"]
-
-    truth_edges = set()
-
-    for rel in truth_data.get("relationships", []):
-        truth_edges.add((
-            normalize(rel["source"]),
-            rel["relationship"].lower(),
-            normalize(rel["target"])
-        ))
-
+    # Predicted edges: use canonical form
     pred_edges = set()
-
     for rel in pred_data.get("relationships", []):
-
         src_id = rel["source_entity_id"].strip("[]")
         tgt_id = rel["target_entity_id"].strip("[]")
-
         source_name = pred_id_to_name.get(src_id)
         target_name = pred_id_to_name.get(tgt_id)
-
         if not source_name or not target_name:
             continue
-
         pred_edges.add((
-            normalize(source_name),
+            canon(source_name),
             rel["relationship_type"].lower(),
-            normalize(target_name)
+            canon(target_name)
         ))
 
     rel_tp = len(truth_edges & pred_edges)
     rel_fp = len(pred_edges - truth_edges)
     rel_fn = len(truth_edges - pred_edges)
 
-    rel_precision = rel_tp / (rel_tp + rel_fp) if (rel_tp + rel_fp)else 0
+    rel_precision = rel_tp / (rel_tp + rel_fp) if (rel_tp + rel_fp) else 0
     rel_recall = rel_tp / (rel_tp + rel_fn) if (rel_tp + rel_fn) else 0
-
-    rel_f1 = 2 * rel_precision * rel_recall / (rel_precision + rel_recall)if (rel_precision + rel_recall) else 0
-
+    rel_f1 = 2 * rel_precision * rel_recall / (rel_precision + rel_recall) if (rel_precision + rel_recall) else 0
 
     #
     # REPORT
     #
-
     console.print(Panel(f"Evaluation Report: [bold cyan]{pred_file.name}[/bold cyan]", expand=False))
 
     table = Table()
-
     table.add_column("Metric")
     table.add_column("Score", justify="right")
     table.add_row("Entity Precision", f"{entity_precision:.2%}")
@@ -148,7 +137,6 @@ def evaluate_run(pred_file: Path, truth_file: Path):
         f"[yellow]FP:[/yellow] {entity_fp}  "
         f"[red]FN:[/red] {entity_fn}"
     )
-
     console.print(
         f"[green]Relationship TP:[/green] {rel_tp}  "
         f"[yellow]FP:[/yellow] {rel_fp}  "
@@ -157,7 +145,7 @@ def evaluate_run(pred_file: Path, truth_file: Path):
 
     report = {
         "run_file": pred_file.name,
-        "predicted_entities": len(pred_data),
+        "predicted_entities": len(pred_entities),
         "true_positives": rel_tp,
         "false_positives": rel_fp,
         "false_negatives": rel_fn,
@@ -167,7 +155,6 @@ def evaluate_run(pred_file: Path, truth_file: Path):
     }
 
     metrics_file = METRICS_DIR / f"{pred_file.stem}.json"
-
     with open(metrics_file, "w") as f:
         json.dump(report, f, indent=2)
 
