@@ -28,94 +28,159 @@ def get_latest_run() -> Path:
 
 
 def evaluate_run(pred_file: Path, truth_file: Path):
+
     with open(truth_file) as f:
         truth_data = json.load(f)
-    with open(pred_file) as f:
-        pred_data_raw = json.load(f)["entities"]
 
-    # Filter out locations if you only care about orgs/people (based on your old script)
-    truth =  [e for e in truth_data if e.get("entity_type") != "location"]
-    # Filter out locations if you only care about orgs/people (based on your old script)
-    pred_data =  [e for e in pred_data_raw if e.get("entity_type") != "location"]
+    with open(pred_file) as f:
+        pred_data = json.load(f)
+
+    #
+    # ENTITIES
+    truth_entities = truth_data["entities"]
+
+    pred_entities = pred_data["entities"]
 
     matched_truth = set()
     matched_preds = set()
 
-    # Evaluation Logic: Check if ground truth exists in Canonical Names OR Aliases
-    for t_idx, t_ent in enumerate(truth):
+    for t_idx, t_ent in enumerate(truth_entities):
         t_norm = normalize(t_ent["entity_name"])
 
-        for p_idx, p_ent in enumerate(pred_data):
+        for p_idx, p_ent in enumerate(pred_entities):
             if p_idx in matched_preds: continue
 
-            # Check canonical name and all aliases
             candidates = [p_ent["canonical_name"]] + p_ent.get("aliases", [])
 
+            found = False
             for candidate in candidates:
                 if fuzz.ratio(t_norm, normalize(candidate)) > 90:
-                    matched_truth.add(t_idx)
-                    matched_preds.add(p_idx)
+                    found = True
                     break
 
-            if t_idx in matched_truth:
+            if found:
+                matched_truth.add(t_idx)
+                matched_preds.add(p_idx)
                 break
 
-    # Calculate Metrics
-    tp = len(matched_truth)
-    fn = len(truth) - tp
-    fp = len(pred_data) - len(matched_preds)
+    entity_tp = len(matched_truth)
+    entity_fn = len(truth_entities) - entity_tp
+    entity_fp = len(pred_entities) - len(matched_preds)
 
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    entity_precision = entity_tp / (entity_tp + entity_fp) if (entity_tp + entity_fp) else 0
+    entity_recall = entity_tp / (entity_tp + entity_fn) if (entity_tp + entity_fn)else 0
 
-    # Display Metrics
+    entity_f1 = (
+        2 * entity_precision * entity_recall / (entity_precision + entity_recall)
+        if (entity_precision + entity_recall)
+        else 0
+    )
+
+    #
+    # RELATIONSHIPS
+    #
+
+    pred_id_to_name = {}
+
+    for ent in pred_entities:
+        pred_id_to_name[ent["entity_id"]] = ent["canonical_name"]
+
+    truth_edges = set()
+
+    for rel in truth_data.get("relationships", []):
+        truth_edges.add((
+            normalize(rel["source"]),
+            rel["relationship"].lower(),
+            normalize(rel["target"])
+        ))
+
+    pred_edges = set()
+
+    for rel in pred_data.get("relationships", []):
+
+        src_id = rel["source_entity_id"].strip("[]")
+        tgt_id = rel["target_entity_id"].strip("[]")
+
+        source_name = pred_id_to_name.get(src_id)
+        target_name = pred_id_to_name.get(tgt_id)
+
+        if not source_name or not target_name:
+            continue
+
+        pred_edges.add((
+            normalize(source_name),
+            rel["relationship_type"].lower(),
+            normalize(target_name)
+        ))
+
+    rel_tp = len(truth_edges & pred_edges)
+    rel_fp = len(pred_edges - truth_edges)
+    rel_fn = len(truth_edges - pred_edges)
+
+    rel_precision = rel_tp / (rel_tp + rel_fp) if (rel_tp + rel_fp)else 0
+    rel_recall = rel_tp / (rel_tp + rel_fn) if (rel_tp + rel_fn) else 0
+
+    rel_f1 = 2 * rel_precision * rel_recall / (rel_precision + rel_recall)if (rel_precision + rel_recall) else 0
+
+
+    #
+    # REPORT
+    #
+
     console.print(Panel(f"Evaluation Report: [bold cyan]{pred_file.name}[/bold cyan]", expand=False))
 
-    metrics_table = Table(show_header=True, header_style="bold magenta")
-    metrics_table.add_column("Metric")
-    metrics_table.add_column("Score", justify="right")
+    table = Table()
 
-    metrics_table.add_row("Ground Truth Entities", str(len(truth)))
-    metrics_table.add_row("Predicted Entities", str(len(pred_data)))
-    metrics_table.add_row("True Positives (Matched)", f"[green]{tp}[/green]")
-    metrics_table.add_row("False Positives (Extra)", f"[yellow]{fp}[/yellow]")
-    metrics_table.add_row("False Negatives (Missed)", f"[red]{fn}[/red]")
-    metrics_table.add_row("---", "---")
-    metrics_table.add_row("Precision", f"{precision:.2%}")
-    metrics_table.add_row("Recall", f"{recall:.2%}")
-    metrics_table.add_row("F1 Score", f"[bold green]{f1:.2%}[/bold green]")
+    table.add_column("Metric")
+    table.add_column("Score", justify="right")
+    table.add_row("Entity Precision", f"{entity_precision:.2%}")
+    table.add_row("Entity Recall", f"{entity_recall:.2%}")
+    table.add_row("Entity F1", f"{entity_f1:.2%}")
+    table.add_row("---", "---")
+    table.add_row("Relationship Precision", f"{rel_precision:.2%}")
+    table.add_row("Relationship Recall", f"{rel_recall:.2%}")
+    table.add_row("Relationship F1", f"{rel_f1:.2%}")
 
-    console.print(metrics_table)
+    console.print(table)
+    console.print()
+    console.print(
+        f"[green]Entity TP:[/green] {entity_tp}  "
+        f"[yellow]FP:[/yellow] {entity_fp}  "
+        f"[red]FN:[/red] {entity_fn}"
+    )
 
-    # Display Missed Entities
-    if fn > 0:
-        missed_table = Table(title="Missed Ground Truth Entities (False Negatives)", style="red")
-        missed_table.add_column("Entity Name")
-        missed_table.add_column("Type")
-        for i, t_ent in enumerate(truth):
-            if i not in matched_truth:
-                missed_table.add_row(t_ent.get("entity_name", "N/A"), t_ent.get("entity_type", "N/A"))
-        console.print(missed_table)
+    console.print(
+        f"[green]Relationship TP:[/green] {rel_tp}  "
+        f"[yellow]FP:[/yellow] {rel_fp}  "
+        f"[red]FN:[/red] {rel_fn}"
+    )
 
-    # Display Over-extracted Entities
-    if fp > 0:
-        extra_table = Table(title="Extra Predicted Entities (False Positives)", style="yellow")
-        extra_table.add_column("Canonical Name")
-        extra_table.add_column("Type")
-        for i, p_ent in enumerate(pred_data):
-            if i not in matched_preds:
-                extra_table.add_row(p_ent.get("canonical_name", "N/A"), p_ent.get("entity_type", "N/A"))
-        console.print(extra_table)
+    report = {
+        "run_file": pred_file.name,
+        "predicted_entities": len(pred_data),
+        "true_positives": rel_tp,
+        "false_positives": rel_fp,
+        "false_negatives": rel_fn,
+        "precision": rel_precision,
+        "recall": rel_recall,
+        "f1": rel_f1,
+    }
+
+    metrics_file = METRICS_DIR / f"{pred_file.stem}.json"
+
+    with open(metrics_file, "w") as f:
+        json.dump(report, f, indent=2)
+
+    console.print(f"\n[green]Saved metrics:[/green] {metrics_file}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--truth", type=str, default="data/test-gt.json")
+    parser.add_argument("--file", type=str, default="data/test.gt.json")
     parser.add_argument("--run", type=str, default=None, help="Specific run file to test. Defaults to latest.")
     args = parser.parse_args()
 
     run_path = Path(args.run) if args.run else get_latest_run()
-    truth_path = Path(args.truth)
+    truth_path = Path("data") / (args.file + ".gt.json")
 
     evaluate_run(run_path, truth_path)

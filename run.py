@@ -45,9 +45,15 @@ class EntityList(BaseModel):
 
 class ValidatedEntity(BaseModel):
     chunk_id: int
+
     entity_name: str
     entity_type: str
+
     exact_quote: str
+
+    start_char: Optional[int] = None
+    end_char: Optional[int] = None
+
     is_valid: bool
     fail_reason: Optional[str] = None
 
@@ -64,8 +70,8 @@ class CanonicalEntity(BaseModel):
 
 
 class Relationship(BaseModel):
-    source_entity: str
-    target_entity: str
+    source_entity_id: str
+    target_entity_id: str
 
     relationship_type: str
 
@@ -124,13 +130,16 @@ Allowed relationships:
 
 Only extract relationships directly supported by the text.
 
+Return ONLY entity_id values exactly as provided.
+Do not modify, truncate, or reconstruct IDs.
+
 Return JSON:
 
 {
   "relationships": [
     {
-      "source_entity": "...",
-      "target_entity": "...",
+      "source_entity_id": "...",
+      "target_entity_id": "...",
       "relationship_type": "...",
       "evidence_quote": "..."
     }
@@ -147,7 +156,24 @@ TEXT:
 >>>
 """
 
-RELATIONSHIP_PROMPT_TEMPLATE = lambda chunk: f"""
+def relationship_prompt_template(chunk: str, entities: List[Dict]) -> str:
+
+    entity_block = "\n".join(
+        f"[{e['entity_id']}] {e['name']} ({e['type']})"
+        for e in entities
+    )
+
+    return f"""
+Known entities:
+
+{entity_block}
+
+IMPORTANT:
+
+Only extract relationships between entities above.
+
+Return IDs exactly as provided.
+
 TEXT:
 <<<
 {chunk}
@@ -233,20 +259,22 @@ def extract_entities(chunk: str, seed: int = 42) -> List[ExtractedEntity]:
     return [ExtractedEntity(**item) for item in entities]
 
 
-def extract_relationships(chunk: str, chunk_id: int, seed: int = 42) -> List[Relationship]:
+def extract_relationships(chunk: str, entities: List[Dict], chunk_id: int, seed: int = 42) -> List[Relationship]:
     """Extracts relationships using the generic LLM caller."""
-    prompt = RELATIONSHIP_PROMPT_TEMPLATE(chunk)
+    prompt = relationship_prompt_template(chunk, entities)
     data = _call_llm(prompt, RELATIONSHIP_SYSTEM_PROMPT, RelationshipList.model_json_schema(), seed)
     relationships = data.get("relationships", [])
+
     return [
         Relationship(
-            source_entity=item["source_entity"],
-            target_entity=item["target_entity"],
+            source_entity_id=item["source_entity_id"],
+            target_entity_id=item["target_entity_id"],
             relationship_type=item["relationship_type"],
             evidence_quote=item["evidence_quote"],
-            chunk_id=chunk_id
+            chunk_id=chunk_id,
         )
-        for item in relationships]
+        for item in relationships
+    ]
 
 
 def validate_guardrails(entity: ExtractedEntity, chunk_text: str, chunk_id: int) -> ValidatedEntity:
@@ -265,11 +293,16 @@ def validate_guardrails(entity: ExtractedEntity, chunk_text: str, chunk_id: int)
         is_valid = False
         reason = "Entity collapsed after normalization"
 
+    start_pos = chunk_text.find(entity.exact_quote)
+    end_pos = None if start_pos < 0 else (start_pos + len(entity.exact_quote))
+
     return ValidatedEntity(
         chunk_id=chunk_id,
         entity_name=entity.entity_name,
         entity_type=entity.entity_type,
         exact_quote=entity.exact_quote,
+        start_char=start_pos,
+        end_char=end_pos,
         is_valid=is_valid,
         fail_reason=reason
     )
@@ -326,7 +359,7 @@ def resolve_entities(validated_entities: List[ValidatedEntity]) -> List[Canonica
         if not matched:
             canonicals.append(
                 CanonicalEntity(
-                    entity_id=str(uuid4()),
+                    entity_id="0",
                     canonical_name=ve.entity_name,
                     entity_type=ve.entity_type,
                     aliases=[],
@@ -335,7 +368,38 @@ def resolve_entities(validated_entities: List[ValidatedEntity]) -> List[Canonica
                 )
             )
 
+    assign_entity_ids(canonicals)
+
     return canonicals
+
+
+def assign_entity_ids(canonicals):
+    for i, c in enumerate(canonicals):
+        c.entity_id = f"E{i}"
+    return canonicals
+
+
+def build_canonical_entity_map(canonicals: List[CanonicalEntity]) -> List[Dict]:
+    """
+    Build stable entity reference list for relationship extraction.
+    """
+    entity_refs = []
+
+    for c in canonicals:
+        entity_refs.append({
+            "entity_id": c.entity_id,
+            "name": c.canonical_name,
+            "type": c.entity_type
+        })
+
+        for alias in c.aliases:
+            entity_refs.append({
+                "entity_id": c.entity_id,
+                "name": alias,
+                "type": c.entity_type
+            })
+
+    return entity_refs
 
 
 def display_results(canonicals: List[CanonicalEntity], relationships: List[Relationship], dropped: int):
@@ -361,7 +425,7 @@ def display_results(canonicals: List[CanonicalEntity], relationships: List[Relat
         rel_table.add_column("Chunk", style="yellow", justify="right")
 
         for r in relationships:
-            rel_table.add_row(r.source_entity, r.relationship_type, r.target_entity, str(r.chunk_id))
+            rel_table.add_row(r.source_entity_id, r.relationship_type, r.target_entity_id, str(r.chunk_id))
 
         console.print(rel_table)
 
@@ -416,111 +480,127 @@ def looks_incomplete_person(name: str) -> bool:
     return False
 
 
-def build_networkx_graph(entities: List[CanonicalEntity], relationships: List[Relationship]):
-    """Builds a NetworkX directed graph from entities and relationships."""
+def build_networkx_graph(entities, relationships):
     import networkx as nx
 
     graph = nx.DiGraph()
 
-    for entity in entities:
+    # Add nodes
+    for e in entities:
         graph.add_node(
-            entity.entity_id,
-            label=entity.canonical_name,
-            entity_type=entity.entity_type
+            e.entity_id,
+            label=e.canonical_name,
+            entity_type=e.entity_type
         )
 
-    name_to_id = {
-        e.canonical_name: e.entity_id
-        for e in entities
-    }
-    # Also map aliases so relationships pointing to an alias still connect
-    for e in entities:
-        for alias in e.aliases:
-            name_to_id[alias] = e.entity_id
+    # Add edges DIRECTLY (NO lookup needed)
+    for r in relationships:
+        src = r.source_entity_id.strip("[]")
+        tgt = r.target_entity_id.strip("[]")
 
-    for rel in relationships:
-        source_id = name_to_id.get(rel.source_entity)
-        target_id = name_to_id.get(rel.target_entity)
-
-        if source_id and target_id:
+        # only add if valid
+        if graph.has_node(src) and graph.has_node(tgt):
             graph.add_edge(
-                source_id,
-                target_id,
-                relationship=rel.relationship_type,
-                evidence=rel.evidence_quote
+                src,
+                tgt,
+                relationship=r.relationship_type,
+                evidence=r.evidence_quote
             )
 
     return graph
 
 
 # --- MAIN EXECUTION ---
-
-def run_pipeline(file_path: str, seed: int, run_id: str):
+def run_pipeline(file_path: Path, seed: int, run_id: str):
     logger.info(f"Starting Pipeline | Run ID: {run_id} | Seed: {seed}")
 
-    text = extract_text(Path(file_path))
+    text = extract_text(file_path)
     chunks = chunk_text_with_overlap(text)
 
     all_validated_entities = []
     all_relationships = []
     hallucination_count = 0
 
-    with console.status("[bold green]Processing chunks with LLM...") as status:
+    # PASS 1: ENTITY EXTRACTION
+    with console.status("[bold green]Extracting entities..."):
         for idx, chunk in enumerate(chunks):
-            # 1. Extract Entities
             raw_entities = extract_entities(chunk, seed=seed)
             for raw_ent in raw_entities:
                 validated = validate_guardrails(raw_ent, chunk, idx)
                 all_validated_entities.append(validated)
+
                 if not validated.is_valid:
                     hallucination_count += 1
 
-            # 2. Extract Relationships
-            raw_relationships = extract_relationships(chunk, idx, seed=seed)
+    # ENTITY RESOLUTION
+    logger.info("Resolving entities...")
+    canonicals = resolve_entities(all_validated_entities)
+
+    logger.info(f"Resolved {len(canonicals)} canonical entities from {len(all_validated_entities)} mentions")
+
+    entity_refs = build_canonical_entity_map(canonicals)
+
+    with console.status("[bold green]Extracting relationships..."):
+        for idx, chunk in enumerate(chunks):
+
+            if not entity_refs:
+                continue
+
+            raw_relationships = extract_relationships(chunk, entity_refs, idx, seed)
+
             for rel in raw_relationships:
                 if validate_relationship(rel, chunk):
                     all_relationships.append(rel)
 
-    logger.info("Resolving and grouping entities...")
-    canonicals = resolve_entities(all_validated_entities)
-
     display_results(canonicals, all_relationships, hallucination_count)
 
-    # Ensure networkx graph builds properly
+    # GRAPH
     try:
         nx_graph = build_networkx_graph(canonicals, all_relationships)
-        logger.info(
-            f"Built NetworkX Graph with {nx_graph.number_of_nodes()} nodes and {nx_graph.number_of_edges()} edges.")
-    except ImportError:
-        logger.warning("NetworkX not installed. Skipping graph generation test in memory.")
 
-    # --- NEW: Reproducible JSON Output ---
+        logger.info(
+            f"Built NetworkX Graph with "
+            f"{nx_graph.number_of_nodes()} nodes and "
+            f"{nx_graph.number_of_edges()} edges."
+        )
+
+    except ImportError:
+        logger.warning("NetworkX not installed. Skipping graph generation test.")
+
+    # OUTPUT
     output_dir = Path("outputs")
     output_dir.mkdir(exist_ok=True)
 
     output_file = output_dir / f"{run_id}.json"
 
-    # Save both entities and relationships
     output = {
-        "entities": [c.model_dump() for c in canonicals],
-        "relationships": [r.model_dump() for r in all_relationships]
+        "entities": [
+            c.model_dump()
+            for c in canonicals
+        ],
+        "relationships": [
+            r.model_dump()
+            for r in all_relationships
+        ]
     }
 
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
 
     logger.info(f"Saved reproducible output to {output_file}")
+
     return output_file
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file", type=str, default="data/test-synthetic.txt", help="Path to document")
+    parser.add_argument("--file", type=str, default="test-synthetic.txt", help="Path to document")
     parser.add_argument("--seed", type=int, default=42, help="Deterministic seed for LLM")
     parser.add_argument("--run_name", type=str, default=None, help="Custom name for the run output")
     args = parser.parse_args()
 
     # Generate timestamped run ID if none provided
     run_id = args.run_name or datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_path = Path("data") / args.file
 
-    run_pipeline(args.file, args.seed, run_id)
+    run_pipeline(file_path, args.seed, run_id)
