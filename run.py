@@ -18,6 +18,7 @@ from rich.table import Table
 from rich.logging import RichHandler
 import concurrent.futures
 from collections import defaultdict
+from debug_logger import log_prompt, log_response, log_hallucinated_entity, log_relationship_check
 
 OLLAMA_CLIENT = ollama.Client(
     host="http://127.0.0.1:11434",
@@ -231,29 +232,6 @@ def chunk_text_with_overlap(text: str, max_chars: int = 2000, overlap_chars: int
     return chunks
 
 
-def _call_llm(user_prompt: str, system_prompt: str, schema: dict, seed: int = 42) -> dict:
-    """Generic LLM caller used by both entity and relationship extraction."""
-    try:
-        res = OLLAMA_CLIENT.chat(
-            model="qwen2.5:7b-instruct-q4_K_M",
-            format=schema,  # Ensure JSON mode
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            options={
-                "temperature": 0.0,
-                "seed": seed,
-                # "num_ctx": 1024,  # <-- Speeds up prompt processing
-                # "num_predict": 256  # <-- Speeds up generation (fail fast)
-            }
-        )
-        return json.loads(res["message"]["content"])
-    except Exception as e:
-        logger.error(f"LLM Call failed: {str(e)}")
-        return {}
-
-
 def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed: int = 42, timeout: int = None) -> dict:
     """Call the LLM in a separate thread so Ctrl+C works."""
     def call():
@@ -270,11 +248,19 @@ def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed:
             }
         )
 
+    log_prompt(prompt_type="entity" if schema == EntityList.model_json_schema() else "relationship",
+               prompt_text=user_prompt,
+               chunk_id=None)
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         future = executor.submit(call)
         try:
             res = future.result(timeout=timeout)  # Can add timeout in seconds
-            return json.loads(res["message"]["content"])
+            res_dict = json.loads(res["message"]["content"])
+            log_response(prompt_type="entity" if schema == EntityList.model_json_schema() else "relationship",
+                         response_data=res_dict,
+                         chunk_id=None)
+            return res_dict
         except concurrent.futures.TimeoutError:
             logger.warning("LLM call timed out")
             return {}
@@ -333,7 +319,7 @@ def validate_guardrails(entity: ExtractedEntity, chunk_text: str, chunk_id: int)
     start_pos = chunk_text.find(entity.exact_quote)
     end_pos = None if start_pos < 0 else (start_pos + len(entity.exact_quote))
 
-    return ValidatedEntity(
+    validated_entity = ValidatedEntity(
         chunk_id=chunk_id,
         entity_name=entity.entity_name,
         entity_type=entity.entity_type,
@@ -344,11 +330,16 @@ def validate_guardrails(entity: ExtractedEntity, chunk_text: str, chunk_id: int)
         fail_reason=reason
     )
 
+    if not is_valid: log_hallucinated_entity(validated_entity)
+
+    return validated_entity
+
 
 def validate_relationship(relationship: Relationship, chunk_text: str) -> bool:
     """Validates that the relationship evidence actually exists in the chunk."""
     norm_chunk = re.sub(r"\s+", " ", chunk_text)
     norm_quote = re.sub(r"\s+", " ", relationship.evidence_quote)
+
 
     return norm_quote in norm_chunk
 
@@ -587,7 +578,11 @@ def run_pipeline(file_path: Path, seed: int, run_id: str):
             raw_relationships = extract_relationships(chunk, entity_refs, idx, seed)
 
             for rel in raw_relationships:
-                if validate_relationship(rel, chunk):
+                status = validate_relationship(rel, chunk)
+                log_relationship_check(chunk_id=idx, rel=rel, status=("valid" if status else "false_positive"))
+
+
+                if status:
                     all_relationships.append(rel)
 
     display_results(canonicals, all_relationships, hallucination_count)
