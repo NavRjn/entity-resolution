@@ -88,6 +88,10 @@ class RelationshipList(BaseModel):
 
 
 # --- PROMPTS ---
+LEGAL_SUFFIXES = {"inc", "corp", "corporation", "llc", "ltd", "limited", "company", "co", "plc", "group", "holdings"}
+
+ALLOWED_RELATIONSHIPS = {"acquires", "owns", "subsidiary_of", "party_to_agreement", "signatory_for", "licensed_to", "transferred_to"}
+
 SYSTEM_PROMPT = """
 You are an expert legal entity extraction system.
 Extract all corporate, legal, and personal entities from the text.
@@ -117,39 +121,68 @@ Schema:
 Return ONLY valid JSON.
 """
 
-RELATIONSHIP_SYSTEM_PROMPT = """
+RELATIONSHIP_SYSTEM_PROMPT = f"""
 You are an expert legal relationship extraction system.
 
 Identify explicit relationships between entities.
 
 Allowed relationships:
-
-- party_to_agreement
-- acquired_by
-- owns
-- subsidiary_of
-- signatory_for
-- licensed_to
-- transferred_to
+{ALLOWED_RELATIONSHIPS}
 
 Only extract relationships directly supported by the text.
 
 Return ONLY entity_id values exactly as provided.
 Do not modify, truncate, or reconstruct IDs.
 
+For example:
+Known entities in this chunk:
+E0 | Aurora Strategic Holdings, Inc. | company
+E1 | Helios BioAnalytics Corporation | company
+E4 | Aurora Clinical Systems LLC | company
+E6 | Northbridge Data Security Ltd. | company
+
+TEXT:
+Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation pursuant to the Equity Purchase Agreement.
+Aurora Strategic Holdings, Inc. is the ultimate parent of Aurora Clinical Systems LLC and Northbridge Data Security Ltd.
+
+OUTPUT RELATIONSHIPS:
+{{
+  "relationships": [
+    {{
+      "source_entity_id": "E0",
+      "target_entity_id": "E1",
+      "relationship_type": "acquires",
+      "evidence_quote": "Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation"
+    }},
+    {{
+      "source_entity_id": "E0",
+      "target_entity_id": "E4",
+      "relationship_type": "owns",
+      "evidence_quote": "Aurora Strategic Holdings, Inc. is the ultimate parent of Aurora Clinical Systems LLC"
+    }},
+    {{
+      "source_entity_id": "E0",
+      "target_entity_id": "E6",
+      "relationship_type": "owns",
+      "evidence_quote": "Aurora Strategic Holdings, Inc. is the ultimate parent of Northbridge Data Security Ltd."
+    }}
+  ]
+}}
+
 Return JSON:
 
-{
+{{
   "relationships": [
-    {
+    {{
       "source_entity_id": "...",
       "target_entity_id": "...",
       "relationship_type": "...",
       "evidence_quote": "..."
-    }
+    }}
   ]
-}
+}}
 """
+
 
 ENTITY_PROMPT_TEMPLATE = lambda chunk: f"""
 Extract the entities in the following text.
@@ -184,7 +217,6 @@ def relationship_prompt_template(chunk: str, entities: List[Dict]) -> str:
                 >>>
         """
 
-LEGAL_SUFFIXES = {"inc", "corp", "corporation", "llc", "ltd", "limited", "company", "co", "plc", "group", "holdings"}
 
 
 # --- PIPELINE COMPONENTS ---
@@ -339,9 +371,13 @@ def validate_relationship(relationship: Relationship, chunk_text: str) -> bool:
     """Validates that the relationship evidence actually exists in the chunk."""
     norm_chunk = re.sub(r"\s+", " ", chunk_text)
     norm_quote = re.sub(r"\s+", " ", relationship.evidence_quote)
+    exists = norm_quote in norm_chunk
 
+    valid_relationship_type = relationship.relationship_type in ALLOWED_RELATIONSHIPS
+    valid_source_and_target = relationship.source_entity_id or relationship.target_entity_id
+    valid_quote =  relationship.evidence_quote or len(relationship.evidence_quote.strip()) < 5
 
-    return norm_quote in norm_chunk
+    return exists and valid_relationship_type and valid_source_and_target and valid_quote
 
 
 def normalize_entity_name(name: str) -> str:
@@ -506,6 +542,24 @@ def is_empty_after_normalization(name: str) -> bool:
     return normalize_entity_name(name).strip() == ""
 
 
+def filter_valid_relationships(relationships):
+    cleaned = []
+
+    for r in relationships:
+        if r.relationship_type not in ALLOWED_RELATIONSHIPS:
+            continue
+
+        if not r.source_entity_id or not r.target_entity_id:
+            continue
+
+        if not r.evidence_quote or len(r.evidence_quote.strip()) < 5:
+            continue
+
+        cleaned.append(r)
+
+    return cleaned
+
+
 def build_networkx_graph(entities, relationships):
     import networkx as nx
 
@@ -567,6 +621,7 @@ def run_pipeline(file_path: Path, seed: int, run_id: str):
     # entity_refs = build_canonical_entity_map(canonicals)
     chunk_entity_index = build_chunk_entity_index(canonicals)
 
+    dropped, valid = 0, 0
     with console.status("[bold green]Extracting relationships..."):
         for idx, chunk in enumerate(chunks):
 
@@ -583,8 +638,12 @@ def run_pipeline(file_path: Path, seed: int, run_id: str):
 
 
                 if status:
+                    valid += 1
                     all_relationships.append(rel)
+                else:
+                    dropped += 1
 
+    logger.warning(f"Relationship extraction: {valid} valid relationships, {dropped} dropped/invalid relationships.")
     display_results(canonicals, all_relationships, hallucination_count)
 
     # GRAPH
