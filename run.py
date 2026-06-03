@@ -16,6 +16,8 @@ from rapidfuzz import fuzz
 from rich.console import Console
 from rich.table import Table
 from rich.logging import RichHandler
+import concurrent.futures
+from collections import defaultdict
 
 OLLAMA_CLIENT = ollama.Client(
     host="http://127.0.0.1:11434",
@@ -165,21 +167,21 @@ def relationship_prompt_template(chunk: str, entities: List[Dict]) -> str:
     )
 
     return f"""
-Known entities:
-
-{entity_block}
-
-IMPORTANT:
-
-Only extract relationships between entities above.
-
-Return IDs exactly as provided.
-
-TEXT:
-<<<
-{chunk}
->>>
-"""
+                Known entities in this chunk:
+                
+                {entity_block}
+                
+                IMPORTANT:
+                
+                Only extract relationships between entities above.
+                
+                Return IDs exactly as provided.
+                
+                TEXT:
+                <<<
+                {chunk}
+                >>>
+        """
 
 LEGAL_SUFFIXES = {"inc", "corp", "corporation", "llc", "ltd", "limited", "company", "co", "plc", "group", "holdings"}
 
@@ -252,9 +254,6 @@ def _call_llm(user_prompt: str, system_prompt: str, schema: dict, seed: int = 42
         return {}
 
 
-import concurrent.futures
-import threading
-
 def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed: int = 42, timeout: int = None) -> dict:
     """Call the LLM in a separate thread so Ctrl+C works."""
     def call():
@@ -298,6 +297,7 @@ def extract_entities(chunk: str, seed: int = 42) -> List[ExtractedEntity]:
 
 def extract_relationships(chunk: str, entities: List[Dict], chunk_id: int, seed: int = 42) -> List[Relationship]:
     """Extracts relationships using the generic LLM caller."""
+    # TODO: Instead of passing all entities, pass only ones mentioned in chunk
     prompt = relationship_prompt_template(chunk, entities)
     data = _call_llm_threaded(prompt, RELATIONSHIP_SYSTEM_PROMPT, RelationshipList.model_json_schema(), seed)
     relationships = data.get("relationships", [])
@@ -439,6 +439,20 @@ def build_canonical_entity_map(canonicals: List[CanonicalEntity]) -> List[Dict]:
     return entity_refs
 
 
+def build_chunk_entity_index(canonicals):
+    index = defaultdict(list)
+
+    for c in canonicals:
+        for chunk_id in c.source_chunks:
+            index[chunk_id].append({
+                "entity_id": c.entity_id,
+                "name": c.canonical_name,
+                "type": c.entity_type
+            })
+
+    return index
+
+
 def display_results(canonicals: List[CanonicalEntity], relationships: List[Relationship], dropped: int):
     """CLI rendering of the relationship table."""
     table = Table(title="Resolved Entities Table")
@@ -501,22 +515,6 @@ def is_empty_after_normalization(name: str) -> bool:
     return normalize_entity_name(name).strip() == ""
 
 
-def entity_name_in_quote(entity_name: str, quote: str) -> bool:
-    return entity_name.lower() in quote.lower()
-
-
-def looks_incomplete_person(name: str) -> bool:
-    parts = name.strip().split()
-
-    if len(parts) < 2:
-        return True
-
-    if len(parts[-1]) == 2 and parts[-1].endswith("."):
-        return True
-
-    return False
-
-
 def build_networkx_graph(entities, relationships):
     import networkx as nx
 
@@ -575,10 +573,13 @@ def run_pipeline(file_path: Path, seed: int, run_id: str):
 
     logger.info(f"Resolved {len(canonicals)} canonical entities from {len(all_validated_entities)} mentions")
 
-    entity_refs = build_canonical_entity_map(canonicals)
+    # entity_refs = build_canonical_entity_map(canonicals)
+    chunk_entity_index = build_chunk_entity_index(canonicals)
 
     with console.status("[bold green]Extracting relationships..."):
         for idx, chunk in enumerate(chunks):
+
+            entity_refs = chunk_entity_index[idx]
 
             if not entity_refs:
                 continue

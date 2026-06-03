@@ -163,7 +163,7 @@ def evaluate_run(pred_file: Path, truth_file: Path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file", type=str, default="data/test.gt.json")
+    parser.add_argument("--file", type=str, default="test")
     parser.add_argument("--run", type=str, default=None, help="Specific run file to test. Defaults to latest.")
     args = parser.parse_args()
 
