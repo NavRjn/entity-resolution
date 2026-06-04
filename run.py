@@ -264,10 +264,9 @@ def chunk_text_with_overlap(text: str, max_chars: int = 2000, overlap_chars: int
     return chunks
 
 
-def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed: int = 42, timeout: int = None) -> dict:
-    """Call the LLM in a separate thread so Ctrl+C works."""
-    def call():
-        return OLLAMA_CLIENT.chat(
+def _llm_backend(provider, schema, system_prompt, user_prompt, seed):
+    if provider=="ollama":
+        res = OLLAMA_CLIENT.chat(
             model="qwen2.5:7b-instruct-q4_K_M",
             format=schema,
             messages=[
@@ -279,6 +278,21 @@ def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed:
                 "seed": seed,
             }
         )
+        return json.loads(res["message"]["content"])
+    else:
+        raise ValueError("Invalid model provider!: ", provider)
+
+
+def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed: int = 42, timeout: int = None) -> dict:
+    """Call the LLM in a separate thread so Ctrl+C works."""
+    def call():
+        return _llm_backend(
+            provider="ollama",
+            schema=schema,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            seed=seed
+        )
 
     log_prompt(prompt_type="entity" if schema == EntityList.model_json_schema() else "relationship",
                prompt_text=user_prompt,
@@ -287,8 +301,7 @@ def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed:
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         future = executor.submit(call)
         try:
-            res = future.result(timeout=timeout)  # Can add timeout in seconds
-            res_dict = json.loads(res["message"]["content"])
+            res_dict = future.result(timeout=timeout)  # Can add timeout in seconds
             log_response(prompt_type="entity" if schema == EntityList.model_json_schema() else "relationship",
                          response_data=res_dict,
                          chunk_id=None)
