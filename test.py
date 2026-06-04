@@ -88,7 +88,9 @@ def evaluate_run(pred_file: Path, truth_file: Path):
 
     # Truth edges: use canonical form
     truth_edges = set(
-        (canon(rel["source"]), rel["relationship"].lower(), canon(rel["target"]))
+        (canon(rel["source"]),
+         rel["relationship"].lower(),
+         canon(rel["target"]))
         for rel in truth_data.get("relationships", [])
     )
 

@@ -329,9 +329,9 @@
 
   "relationships": [
     {
-      "source": "Helios BioAnalytics Corporation",
-      "relationship": "acquired_by",
-      "target": "Aurora Strategic Holdings, Inc."
+      "source": "Aurora Strategic Holdings, Inc.",
+      "relationship": "acquires",
+      "target": "Helios BioAnalytics Corporation"
     },
 
     {

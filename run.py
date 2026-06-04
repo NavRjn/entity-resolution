@@ -19,11 +19,11 @@ from rich.logging import RichHandler
 import concurrent.futures
 from collections import defaultdict
 from debug_logger import log_prompt, log_response, log_hallucinated_entity, log_relationship_check
+from openai import OpenAI
+import os
 
-OLLAMA_CLIENT = ollama.Client(
-    host="http://127.0.0.1:11434",
-    timeout=180
-)
+OLLAMA_CLIENT = ollama.Client(host="http://127.0.0.1:11434", timeout=180)
+OPENAI_CLIENT = OpenAI(api_key=os.getenv("OPENAI_API_LEGALDEV"))
 
 # --- CONFIG & OBSERVABILITY ---
 logging.basicConfig(
@@ -279,20 +279,35 @@ def chunk_text_with_overlap(text: str, max_chars: int = 2000, overlap_chars: int
 
 
 def _llm_backend(provider, schema, system_prompt, user_prompt, seed):
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
+    ]
+
     if provider=="ollama":
         res = OLLAMA_CLIENT.chat(
             model="qwen2.5:7b-instruct-q4_K_M",
             format=schema,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
+            messages=messages,
             options={
                 "temperature": 0.0,
                 "seed": seed,
             }
         )
         return json.loads(res["message"]["content"])
+    elif provider=="openai":
+        response = OPENAI_CLIENT.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0,
+            seed=seed,
+
+            # IMPORTANT: enforce JSON mode
+            response_format={"type": "json_object"}
+        )
+
+        content = response.choices[0].message.content
+        return json.loads(content)
     else:
         raise ValueError("Invalid model provider!: ", provider)
 
@@ -301,7 +316,7 @@ def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed:
     """Call the LLM in a separate thread so Ctrl+C works."""
     def call():
         return _llm_backend(
-            provider="ollama",
+            provider="openai",
             schema=schema,
             system_prompt=system_prompt,
             user_prompt=user_prompt,
@@ -571,24 +586,6 @@ def is_acronym(short_name: str, long_name: str) -> bool:
 
 def is_empty_after_normalization(name: str) -> bool:
     return normalize_entity_name(name).strip() == ""
-
-
-def filter_valid_relationships(relationships):
-    cleaned = []
-
-    for r in relationships:
-        if r.relationship_type not in ALLOWED_RELATIONSHIPS:
-            continue
-
-        if not r.source_entity_id or not r.target_entity_id:
-            continue
-
-        if not r.evidence_quote or len(r.evidence_quote.strip()) < 5:
-            continue
-
-        cleaned.append(r)
-
-    return cleaned
 
 
 def build_networkx_graph(entities, relationships):
