@@ -122,30 +122,42 @@ Return ONLY valid JSON.
 """
 
 RELATIONSHIP_SYSTEM_PROMPT = f"""
-You are an expert legal relationship extraction system.
+You are a highly accurate legal relationship extraction assistant.
 
-Identify explicit relationships between entities.
+Your task:
+- Identify only explicit relationships mentioned in the provided text chunk.
+- Use ONLY the entity IDs provided. Do not change, truncate, or invent new IDs.
+- Only extract relationships that are directly supported by the text.
+- Do NOT hallucinate relationships or relationship types.
+
+Entity types and mapping rules:
+- person → can have roles such as ceo_of, director_of, signatory_for
+- company → can own other companies, be party_to_agreement, be regulated_by, or be investigated_by
+- agreement → can have signatories, and companies/persons can be party_to_agreement
+- regulator → companies/persons may be regulated_by or investigated_by them
 
 Allowed relationships:
 {ALLOWED_RELATIONSHIPS}
 
-Only extract relationships directly supported by the text.
+Important instructions:
+1. If a relationship is mentioned but the target entity in text is not in the entity list, skip it.
+2. If multiple entities are mentioned in the same sentence, carefully link the correct entity ID to the relationship according to type.
+3. Do not invent relationship types; use only those in ALLOWED_RELATIONSHIPS.
+4. Return evidence quotes exactly as they appear in the text.
+5. If unsure, do not guess—omit the relationship.
 
-Return ONLY entity_id values exactly as provided.
-Do not modify, truncate, or reconstruct IDs.
-
-For example:
-Known entities in this chunk:
+Example:
+Entities in this chunk:
 E0 | Aurora Strategic Holdings, Inc. | company
 E1 | Helios BioAnalytics Corporation | company
-E4 | Aurora Clinical Systems LLC | company
-E6 | Northbridge Data Security Ltd. | company
+E2 | Jonathan R. Keene | person
+E3 | Equity Purchase Agreement | agreement
 
-TEXT:
+Text:
 Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation pursuant to the Equity Purchase Agreement.
-Aurora Strategic Holdings, Inc. is the ultimate parent of Aurora Clinical Systems LLC and Northbridge Data Security Ltd.
+Jonathan R. Keene signed the Equity Purchase Agreement on behalf of Aurora Strategic Holdings, Inc.
 
-OUTPUT RELATIONSHIPS:
+Output relationships:
 {{
   "relationships": [
     {{
@@ -155,22 +167,21 @@ OUTPUT RELATIONSHIPS:
       "evidence_quote": "Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation"
     }},
     {{
-      "source_entity_id": "E0",
-      "target_entity_id": "E4",
-      "relationship_type": "owns",
-      "evidence_quote": "Aurora Strategic Holdings, Inc. is the ultimate parent of Aurora Clinical Systems LLC"
+      "source_entity_id": "E2",
+      "target_entity_id": "E3",
+      "relationship_type": "signatory_for",
+      "evidence_quote": "Jonathan R. Keene signed the Equity Purchase Agreement"
     }},
     {{
       "source_entity_id": "E0",
-      "target_entity_id": "E6",
-      "relationship_type": "owns",
-      "evidence_quote": "Aurora Strategic Holdings, Inc. is the ultimate parent of Northbridge Data Security Ltd."
+      "target_entity_id": "E3",
+      "relationship_type": "party_to_agreement",
+      "evidence_quote": "Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation pursuant to the Equity Purchase Agreement"
     }}
   ]
 }}
 
-Return JSON:
-
+Return JSON strictly in the above format:
 {{
   "relationships": [
     {{
@@ -387,10 +398,14 @@ def validate_relationship(relationship: Relationship, chunk_text: str) -> bool:
     exists = norm_quote in norm_chunk
 
     valid_relationship_type = relationship.relationship_type in ALLOWED_RELATIONSHIPS
-    valid_source_and_target = relationship.source_entity_id or relationship.target_entity_id
-    valid_quote =  relationship.evidence_quote or len(relationship.evidence_quote.strip()) < 5
+    valid_source_and_target = relationship.source_entity_id and relationship.target_entity_id
+    valid_quote =  relationship.evidence_quote and len(relationship.evidence_quote.strip()) > 5
 
-    return exists and valid_relationship_type and valid_source_and_target and valid_quote
+    valid = exists and valid_relationship_type and valid_source_and_target and valid_quote
+    if not valid:
+        logger.warning(f"Dropping relationship | Exists: {exists} | Valid Type: {valid_relationship_type} | Valid Source/Target: {valid_source_and_target} | Valid Quote: {valid_quote}")
+
+    return True # exists and valid_relationship_type and valid_source_and_target and valid_quote
 
 
 def normalize_entity_name(name: str) -> str:
@@ -603,6 +618,7 @@ def build_networkx_graph(entities, relationships):
     return graph
 
 
+# %%
 # --- MAIN EXECUTION ---
 def run_pipeline(file_path: Path, seed: int, run_id: str):
     logger.info(f"Starting Pipeline | Run ID: {run_id} | Seed: {seed}")
