@@ -6,6 +6,7 @@ from rapidfuzz import fuzz
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+from collections import defaultdict
 
 console = Console()
 
@@ -110,6 +111,34 @@ def evaluate_run(pred_file: Path, truth_file: Path):
     rel_fp = len(pred_edges - truth_edges)
     rel_fn = len(truth_edges - pred_edges)
 
+    #
+    # PER-CHUNK TP / FP COUNTS
+    #
+    chunk_stats = defaultdict(lambda: {"tp": 0, "fp": 0})
+
+    for rel in pred_data.get("relationships", []):
+        src_id = rel["source_entity_id"].strip("[]")
+        tgt_id = rel["target_entity_id"].strip("[]")
+
+        source_name = pred_id_to_name.get(src_id)
+        target_name = pred_id_to_name.get(tgt_id)
+
+        if not source_name or not target_name:
+            continue
+
+        edge = (
+            canon(source_name),
+            rel["relationship_type"].lower(),
+            canon(target_name)
+        )
+
+        chunk_id = rel.get("chunk_id", "unknown")
+
+        if edge in truth_edges:
+            chunk_stats[chunk_id]["tp"] += 1
+        else:
+            chunk_stats[chunk_id]["fp"] += 1
+
     rel_precision = rel_tp / (rel_tp + rel_fp) if (rel_tp + rel_fp) else 0
     rel_recall = rel_tp / (rel_tp + rel_fn) if (rel_tp + rel_fn) else 0
     rel_f1 = 2 * rel_precision * rel_recall / (rel_precision + rel_recall) if (rel_precision + rel_recall) else 0
@@ -142,6 +171,29 @@ def evaluate_run(pred_file: Path, truth_file: Path):
         f"[yellow]FP:[/yellow] {rel_fp}  "
         f"[red]FN:[/red] {rel_fn}"
     )
+
+    console.print("\n[bold cyan]Relationship Results By Chunk[/bold cyan]")
+
+    chunk_table = Table()
+    chunk_table.add_column("Chunk")
+    chunk_table.add_column("TP", justify="right")
+    chunk_table.add_column("FP", justify="right")
+    chunk_table.add_column("FP Rate", justify="right")
+
+    for chunk_id in sorted(chunk_stats.keys()):
+        tp = chunk_stats[chunk_id]["tp"]
+        fp = chunk_stats[chunk_id]["fp"]
+
+        fp_rate = fp / (tp + fp) if (tp + fp) else 0
+
+        chunk_table.add_row(
+            str(chunk_id),
+            str(tp),
+            str(fp),
+            f"{fp_rate:.2%}",
+        )
+
+    console.print(chunk_table)
 
     report = {
         "run_file": pred_file.name,

@@ -130,6 +130,9 @@ Your task:
 - Only extract relationships that are directly supported by the text.
 - Do NOT hallucinate relationships or relationship types.
 
+Do NOT generate relationships based on descriptive text, office locations, lists of entities, or inferred connections.
+Only extract relationships explicitly stated using verbs like "owns", "acquired", "is a party to", "is signatory for", "regulated by", "licensed to", or "transferred to".
+
 Entity types and mapping rules:
 - person → can have roles such as ceo_of, director_of, signatory_for
 - company → can own other companies, be party_to_agreement, be regulated_by, or be investigated_by
