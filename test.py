@@ -36,9 +36,9 @@ def canon(text: str) -> str:
 
 
 def get_latest_run() -> Path:
-    files = list(OUTPUT_DIR.glob("*.json"))
+    files = list(OUTPUT_DIR.glob("*/output.json"))
     if not files:
-        raise FileNotFoundError("No run files found in outputs/")
+        raise FileNotFoundError("No run files found in outputs/RUN/output.json")
     return max(files, key=lambda f: f.stat().st_mtime)
 
 
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     parser.add_argument("--run", type=str, default=None, help="Specific run file to test. Defaults to latest.")
     args = parser.parse_args()
 
-    run_path = Path(args.run) if args.run else get_latest_run()
+    run_path = (OUTPUT_DIR / args.run / "output.json") if args.run else get_latest_run()
     truth_path = Path("data") / (args.file + ".gt.json")
 
     evaluate_run(run_path, truth_path)

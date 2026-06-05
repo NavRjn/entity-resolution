@@ -91,9 +91,10 @@ class RelationshipList(BaseModel):
 # --- PROMPTS ---
 LEGAL_SUFFIXES = {"inc", "corp", "corporation", "llc", "ltd", "limited", "company", "co", "plc", "group", "holdings"}
 
+ALLOWED_ENTITIES = {"company", "person", "organization", "agreement", "product", "other"}
 ALLOWED_RELATIONSHIPS = {"acquires", "subsidiary_of", "party_to_agreement", "signatory_for", "licensed_to", "transferred_to"}
 
-SYSTEM_PROMPT = """
+SYSTEM_PROMPT = f"""
 You are an expert legal entity extraction system.
 Extract all corporate, legal, and personal entities from the text.
 
@@ -113,11 +114,11 @@ Products:
 
 Schema:
 [
-  {
+  {{
     "entity_name": "Standardized Name (e.g. Acme Corp)",
-    "entity_type": "company|person|organization|agreement|product|other",
+    "entity_type": "{"|".join(ALLOWED_ENTITIES)}",
     "exact_quote": "The exact string from the text proving this exists."
-  }
+  }}
 ]
 Return ONLY valid JSON.
 """
@@ -627,22 +628,96 @@ def build_networkx_graph(entities, relationships):
     return graph
 
 
+def get_run_dir(run_id: str) -> Path:
+    run_dir = Path("outputs") / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    return run_dir
+
+
+def get_latest_run_id() -> str:
+    outputs_dir = Path("outputs")
+    runs = [p for p in outputs_dir.iterdir() if p.is_dir()]
+    if not runs:
+        raise ValueError("No previous runs found in outputs/")
+    return sorted(runs, key=lambda p: p.stat().st_mtime)[-1].name
+
+
+def save_manifest(run_dir: Path, source_file: str, seed: int):
+    manifest = {
+        "run_id": run_dir.name,
+        "created_at": datetime.datetime.now().isoformat(),
+        "source_file": source_file,
+        "seed": seed,
+        "chunk_max_chars": 2000,
+        "chunk_overlap_chars": 200,
+    }
+
+    with open(run_dir / "manifest.json", "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2)
+
+
+def load_manifest(run_dir: Path):
+    with open(run_dir / "manifest.json", "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_chunks(run_dir: Path, chunks: List[str]):
+    with open(run_dir / "chunks.json", "w", encoding="utf-8") as f:
+        json.dump({"chunks": chunks}, f, indent=2)
+
+
+def load_chunks(run_dir: Path) -> List[str]:
+    with open(run_dir / "chunks.json", "r", encoding="utf-8") as f:
+        return json.load(f)["chunks"]
+
+
+def save_entities_artifact(run_dir: Path, validated_entities, canonicals, chunk_entity_index):
+    payload = {
+        "validated_entities": [v.model_dump() for v in validated_entities],
+        "canonical_entities": [c.model_dump() for c in canonicals],
+        "chunk_entity_index": dict(chunk_entity_index)
+    }
+
+    with open(run_dir / "entities.json", "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+
+
+def load_entities_artifact(run_dir: Path):
+    with open(run_dir / "entities.json", "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_output(run_dir: Path, canonicals, relationships):
+    payload = {
+        "entities": [c.model_dump() if hasattr(c, "model_dump") else c for c in canonicals],
+        "relationships": [r.model_dump() if hasattr(r, "model_dump") else r for r in relationships]
+    }
+
+    with open(run_dir / "output.json", "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+
+    logger.info(f"Saved output to {run_dir / 'output.json'}")
+
+
+def rebuild_canonicals(canonical_entities_json):
+    return [CanonicalEntity(**c) for c in canonical_entities_json]
+
+
 # %%
 # --- MAIN EXECUTION ---
-def run_pipeline(file_path: Path, seed: int, run_id: str):
-    logger.info(f"Starting Pipeline | Run ID: {run_id} | Seed: {seed}")
 
+
+def run_entity_pipeline(file_path: Path, seed: int, run_id: str):
     text = extract_text(file_path)
     chunks = chunk_text_with_overlap(text)
 
     all_validated_entities = []
-    all_relationships = []
     hallucination_count = 0
 
-    # PASS 1: ENTITY EXTRACTION
     with console.status("[bold green]Extracting entities..."):
         for idx, chunk in enumerate(chunks):
             raw_entities = extract_entities(chunk, seed=seed)
+
             for raw_ent in raw_entities:
                 validated = validate_guardrails(raw_ent, chunk, idx)
                 all_validated_entities.append(validated)
@@ -650,20 +725,30 @@ def run_pipeline(file_path: Path, seed: int, run_id: str):
                 if not validated.is_valid:
                     hallucination_count += 1
 
-    # ENTITY RESOLUTION
     logger.info("Resolving entities...")
     canonicals = resolve_entities(all_validated_entities)
 
     logger.info(f"Resolved {len(canonicals)} canonical entities from {len(all_validated_entities)} mentions")
 
-    # entity_refs = build_canonical_entity_map(canonicals)
     chunk_entity_index = build_chunk_entity_index(canonicals)
 
+    run_dir = get_run_dir(run_id)
+
+    save_manifest(run_dir, str(file_path), seed)
+    save_chunks(run_dir, chunks)
+    save_entities_artifact(run_dir, all_validated_entities, canonicals, chunk_entity_index)
+
+    return chunks, canonicals, chunk_entity_index, hallucination_count
+
+
+def run_relationship_pipeline(chunks, canonicals, chunk_entity_index, seed):
+    all_relationships = []
     dropped, valid = 0, 0
+
     with console.status("[bold green]Extracting relationships..."):
         for idx, chunk in enumerate(chunks):
 
-            entity_refs = chunk_entity_index[idx]
+            entity_refs = chunk_entity_index.get(str(idx), chunk_entity_index.get(idx, []))
 
             if not entity_refs:
                 continue
@@ -672,8 +757,8 @@ def run_pipeline(file_path: Path, seed: int, run_id: str):
 
             for rel in raw_relationships:
                 status = validate_relationship(rel, chunk)
-                log_relationship_check(chunk_id=idx, rel=rel, status=("valid" if status else "false_positive"))
 
+                log_relationship_check(chunk_id=idx, rel=rel, status=("valid" if status else "false_positive"))
 
                 if status:
                     valid += 1
@@ -682,11 +767,20 @@ def run_pipeline(file_path: Path, seed: int, run_id: str):
                     dropped += 1
 
     logger.warning(f"Relationship extraction: {valid} valid relationships, {dropped} dropped/invalid relationships.")
-    display_results(canonicals, all_relationships, hallucination_count)
 
-    # GRAPH
+    return all_relationships
+
+
+def run_pipeline(file_path: Path, seed: int, run_id: str):
+
+    chunks, canonicals, chunk_entity_index, hallucination_count = run_entity_pipeline(file_path, seed, run_id)
+
+    relationships = run_relationship_pipeline(chunks, canonicals, chunk_entity_index, seed)
+
+    display_results(canonicals, relationships, hallucination_count)
+
     try:
-        nx_graph = build_networkx_graph(canonicals, all_relationships)
+        nx_graph = build_networkx_graph(canonicals, relationships)
 
         logger.info(
             f"Built NetworkX Graph with "
@@ -697,40 +791,81 @@ def run_pipeline(file_path: Path, seed: int, run_id: str):
     except ImportError:
         logger.warning("NetworkX not installed. Skipping graph generation test.")
 
-    # OUTPUT
-    output_dir = Path("outputs")
-    output_dir.mkdir(exist_ok=True)
+    save_output(get_run_dir(run_id), canonicals, relationships)
 
-    output_file = output_dir / f"{run_id}.json"
+    return get_run_dir(run_id) / "output.json"
 
-    output = {
-        "entities": [
-            c.model_dump()
-            for c in canonicals
-        ],
-        "relationships": [
-            r.model_dump()
-            for r in all_relationships
-        ]
-    }
 
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2)
+def run_relationship_only(run_id: str):
+    run_dir = get_run_dir(run_id)
 
-    logger.info(f"Saved reproducible output to {output_file}")
+    manifest = load_manifest(run_dir)
+    chunks = load_chunks(run_dir)
 
-    return output_file
+    entities = load_entities_artifact(run_dir)
+
+    canonicals = rebuild_canonicals(entities["canonical_entities"])
+    chunk_entity_index = entities["chunk_entity_index"]
+
+    relationships = run_relationship_pipeline(
+        chunks,
+        canonicals,
+        chunk_entity_index,
+        manifest["seed"]
+    )
+
+    save_output(run_dir, canonicals, relationships)
+
+    display_results(canonicals, relationships, 0)
+
+    return run_dir / "output.json"
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file", type=str, default="test-synthetic.txt", help="Path to document")
-    parser.add_argument("--seed", type=int, default=42, help="Deterministic seed for LLM")
-    parser.add_argument("--run_name", type=str, default=None, help="Custom name for the run output")
+
+    parser.add_argument("--file", type=str)
+    parser.add_argument("--run", type=str)
+    parser.add_argument("--last", action="store_true")
+
+    parser.add_argument(
+        "--only",
+        choices=["entities", "relationship", "all"],
+        default="all"
+    )
+
+    parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
-    # Generate timestamped run ID if none provided
-    run_id = args.run_name or datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_path = Path("data") / args.file
+    sources = sum([args.file is not None, args.run is not None, args.last])
 
-    run_pipeline(file_path, args.seed, run_id)
+    if sources != 1:
+        parser.error("Specify exactly one of --file, --run, or --last")
+
+    if args.last:
+        args.run = get_latest_run_id()
+
+    if args.only == "relationship":
+        if not args.run:
+            parser.error("--only relationship requires --run or --last")
+        run_relationship_only(args.run)
+
+    elif args.only == "entities":
+        if not args.file:
+            parser.error("--only entities requires --file")
+
+        run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_path = Path("data") / args.file
+
+        logger.info(f"Starting Entity Pipeline | Run ID: {run_id}")
+        run_entity_pipeline(file_path, args.seed, run_id)
+
+    else:
+        if args.run:
+            parser.error("--only all requires --file")
+
+        run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_path = Path("data") / args.file
+
+        logger.info(f"Starting Full Pipeline | Run ID: {run_id}")
+        run_pipeline(file_path, args.seed, run_id)
