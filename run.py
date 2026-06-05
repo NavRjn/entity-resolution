@@ -33,6 +33,7 @@ logging.basicConfig(
     handlers=[RichHandler(rich_tracebacks=True)]
 )
 logger = logging.getLogger("EntityResolution")
+logger.setLevel(logging.DEBUG) # Comment this out to reduce log verbosity
 console = Console()
 
 
@@ -90,7 +91,7 @@ class RelationshipList(BaseModel):
 # --- PROMPTS ---
 LEGAL_SUFFIXES = {"inc", "corp", "corporation", "llc", "ltd", "limited", "company", "co", "plc", "group", "holdings"}
 
-ALLOWED_RELATIONSHIPS = {"acquires", "owns", "subsidiary_of", "party_to_agreement", "signatory_for", "licensed_to", "transferred_to"}
+ALLOWED_RELATIONSHIPS = {"acquires", "subsidiary_of", "party_to_agreement", "signatory_for", "licensed_to", "transferred_to"}
 
 SYSTEM_PROMPT = """
 You are an expert legal entity extraction system.
@@ -124,33 +125,34 @@ Return ONLY valid JSON.
 RELATIONSHIP_SYSTEM_PROMPT = f"""
 You are a highly accurate legal relationship extraction assistant.
 
-Your task:
-- Identify only explicit relationships mentioned in the provided text chunk.
-- Use ONLY the entity IDs provided. Do not change, truncate, or invent new IDs.
-- Only extract relationships that are directly supported by the text.
-- Do NOT hallucinate relationships or relationship types.
+Task:
+- Extract only **explicit relationships** mentioned in the text.
+- Use only the entity IDs provided; do not invent, truncate, or modify them.
+- Only relationships explicitly supported by the text should be extracted.
+- Do NOT hallucinate relationships, relationship types, or entity connections.
 
-Do NOT generate relationships based on descriptive text, office locations, lists of entities, or inferred connections.
-Only extract relationships explicitly stated using verbs like "owns", "acquired", "is a party to", "is signatory for", "regulated by", "licensed to", or "transferred to".
+Entity types and directional rules:
+- person → ceo_of, director_of, signatory_for
+- company → acquires, party_to_agreement, regulated_by, investigated_by, subsidiary_of (source = subsidiary, target = parent)
+- agreement → No active relationships: can only be targets for party_to_agreement or signatory_for
+- regulator → No active relationships.
 
-Entity types and mapping rules:
-- person → can have roles such as ceo_of, director_of, signatory_for
-- company → can own other companies, be party_to_agreement, be regulated_by, or be investigated_by
-- agreement → can have signatories, and companies/persons can be party_to_agreement
-- regulator → companies/persons may be regulated_by or investigated_by them
+Remember: A subsidiary_of B if and only if B is the parent company of A. The direction is always from child to parent.
 
 Allowed relationships:
 {ALLOWED_RELATIONSHIPS}
 
-Important instructions:
-1. If a relationship is mentioned but the target entity in text is not in the entity list, skip it.
-2. If multiple entities are mentioned in the same sentence, carefully link the correct entity ID to the relationship according to type.
-3. Do not invent relationship types; use only those in ALLOWED_RELATIONSHIPS.
-4. Return evidence quotes exactly as they appear in the text.
-5. If unsure, do not guess—omit the relationship.
+Instructions:
+1. If a relationship’s target entity is not listed, skip it.
+2. For multiple entities in the same sentence, carefully assign the correct IDs to relationships.
+3. Do not invent new relationship types; use only allowed ones.
+4. Return the exact text evidence for each relationship.
+5. If unsure, omit the relationship rather than guessing.
+6. **Direction matters:** `subsidiary_of` must always be from child → parent.
+7. Always double-check which entity is the source and which is the target before extracting.
 
 Example:
-Entities in this chunk:
+Entities:
 E0 | Aurora Strategic Holdings, Inc. | company
 E1 | Helios BioAnalytics Corporation | company
 E2 | Jonathan R. Keene | person
@@ -180,6 +182,12 @@ Output relationships:
       "target_entity_id": "E3",
       "relationship_type": "party_to_agreement",
       "evidence_quote": "Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation pursuant to the Equity Purchase Agreement"
+    }},
+    {{
+      "source_entity_id": "E1",
+      "target_entity_id": "E0",
+      "relationship_type": "subsidiary_of",
+      "evidence_quote": "Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation"
     }}
   ]
 }}
@@ -422,6 +430,7 @@ def validate_relationship(relationship: Relationship, chunk_text: str) -> bool:
     valid = exists and valid_relationship_type and valid_source_and_target and valid_quote
     if not valid:
         logger.warning(f"Dropping relationship | Exists: {exists} | Valid Type: {valid_relationship_type} | Valid Source/Target: {valid_source_and_target} | Valid Quote: {valid_quote}")
+        if not exists: logger.debug(f"{norm_quote} not found in chunk: {norm_chunk}")
 
     return True # exists and valid_relationship_type and valid_source_and_target and valid_quote
 

@@ -335,9 +335,9 @@
     },
 
     {
-      "source": "Aurora Strategic Holdings, Inc.",
-      "relationship": "owns",
-      "target": "Aurora Clinical Systems LLC"
+      "source": "Aurora Clinical Systems LLC",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
     },
     {
       "source": "Aurora Clinical Systems LLC",
@@ -346,9 +346,9 @@
     },
 
     {
-      "source": "Aurora Strategic Holdings, Inc.",
-      "relationship": "owns",
-      "target": "Aurora CS Europe GmbH"
+      "source": "Aurora CS Europe GmbH",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
     },
     {
       "source": "Aurora CS Europe GmbH",
@@ -357,9 +357,9 @@
     },
 
     {
-      "source": "Aurora Strategic Holdings, Inc.",
-      "relationship": "owns",
-      "target": "Northbridge Data Security Ltd."
+      "source": "Northbridge Data Security Ltd.",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
     },
     {
       "source": "Northbridge Data Security Ltd.",
@@ -368,9 +368,9 @@
     },
 
     {
-      "source": "Aurora Strategic Holdings, Inc.",
-      "relationship": "owns",
-      "target": "Meridian Specialty Pharma, Inc."
+      "source": "Meridian Specialty Pharma, Inc.",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
     },
     {
       "source": "Meridian Specialty Pharma, Inc.",
@@ -379,9 +379,9 @@
     },
 
     {
-      "source": "Aurora Strategic Holdings, Inc.",
-      "relationship": "owns",
-      "target": "Meridian Specialty Pharma Canada ULC"
+      "source": "Meridian Specialty Pharma Canada ULC",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
     },
     {
       "source": "Meridian Specialty Pharma Canada ULC",
@@ -390,9 +390,9 @@
     },
 
     {
-      "source": "Aurora Strategic Holdings, Inc.",
-      "relationship": "owns",
-      "target": "Vantage Harbor Reinsurance SPC"
+      "source": "Vantage Harbor Reinsurance SPC",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
     },
     {
       "source": "Vantage Harbor Reinsurance SPC",
@@ -401,9 +401,9 @@
     },
 
     {
-      "source": "Aurora Strategic Holdings, Inc.",
-      "relationship": "owns",
-      "target": "BlueHarbor Analytics Pte. Ltd."
+      "source": "BlueHarbor Analytics Pte. Ltd.",
+      "relationship": "subsidiary_of",
+      "target": "Aurora Strategic Holdings, Inc."
     },
     {
       "source": "BlueHarbor Analytics Pte. Ltd.",
