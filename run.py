@@ -176,8 +176,12 @@ Instructions:
 4. Return the exact text evidence for each relationship.
 5. If unsure, omit the relationship rather than guessing.
 6. **Direction matters:** the relationships are designed such that the source is always the actor, acting on the target. Do not flip them.
-7. Always double-check which entity is the source and which is the target before extracting.
-8. IMPORTANT: If you are sure two entities are related, but not sure how: revert to related_to.
+7. IMPORTANT: If you are sure two entities are related, but not how. DO NOT REVERT TO related_to. Instead, omit it entirely.
+Use related_to ONLY when the text explicitly states a non-specific relationship using words such as ‘related to’, ‘associated with’, ‘affiliated with’. Otherwise omit. 
+8. Do not infer relationships from: co-occurrence, same paragraph, shared document section. A relationship must be directly inferable without external reasoning
+9. If entity is a regulator AND action verb present → always attempt extraction
+10. controls can ONLY be extracted if explicit ownership/control language exists (e.g. owns, parent of, subsidiary of, acquired, wholly owned).
+Participation in agreements or transactions does NOT imply control.
 
 Example:
 Entities:
