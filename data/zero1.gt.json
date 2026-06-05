@@ -1,0 +1,19 @@
+{
+  "entities": [
+    { "entity_name": "Northbridge Risk Holdings", "entity_type": "company" },
+    { "entity_name": "Harbor Re Analytics", "entity_type": "company" },
+    { "entity_name": "Elena Voss", "entity_type": "person" },
+    { "entity_name": "Capital Transfer and Services Agreement", "entity_type": "agreement" },
+    { "entity_name": "Federal Insurance Compliance Bureau", "entity_type": "other" }
+  ],
+  "relationships": [
+    {"source": "Northbridge Risk Holdings", "relationship": "controls", "target": "Harbor Re Analytics"},
+    {"source": "Elena Voss", "relationship": "controls", "target": "Northbridge Risk Holdings"},
+    {"source": "Elena Voss", "relationship": "controls", "target": "Harbor Re Analytics"},
+    {"source": "Northbridge Risk Holdings", "relationship": "participates_in", "target": "Capital Transfer and Services Agreement"},
+    {"source": "Harbor Re Analytics", "relationship": "participates_in", "target": "Capital Transfer and Services Agreement"},
+    {"source": "Elena Voss", "relationship": "participates_in", "target": "Capital Transfer and Services Agreement"},
+    {"source": "Federal Insurance Compliance Bureau", "relationship": "related_to", "target": "Northbridge Risk Holdings"},
+    {"source": "Federal Insurance Compliance Bureau", "relationship": "related_to", "target": "Harbor Re Analytics"}
+  ]
+}

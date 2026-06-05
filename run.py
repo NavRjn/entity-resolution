@@ -91,8 +91,39 @@ class RelationshipList(BaseModel):
 # --- PROMPTS ---
 LEGAL_SUFFIXES = {"inc", "corp", "corporation", "llc", "ltd", "limited", "company", "co", "plc", "group", "holdings"}
 
-ALLOWED_ENTITIES = {"company", "person", "organization", "agreement", "product", "other"}
-ALLOWED_RELATIONSHIPS = {"acquires", "subsidiary_of", "party_to_agreement", "signatory_for", "licensed_to", "transferred_to"}
+ALLOWED_ENTITIES = {"person", "company", "agreement", "asset", "other"}
+ALLOWED_RELATIONSHIPS = {"controls", "participates_in", "represents", "transfers_to", "governs", "related_to"}
+ENTITY_RELATIONSHIP_DIRECTION_RULES = {
+    "controls": {
+        "source": {"person", "company"},
+        "target": {"person", "company", "asset", "claim"}
+    },
+
+    "participates_in": {
+        "source": {"person", "company"},
+        "target": {"agreement", "claim"}
+    },
+
+    "represents": {
+        "source": {"person", "company"},
+        "target": {"person", "company"}
+    },
+
+    "transfers_to": {
+        "source": {"asset", "claim", "agreement"},
+        "target": {"person", "company"}
+    },
+
+    "governs": {
+        "source": {"agreement", "claim", "asset"},
+        "target": {"person", "company", "asset"}
+    },
+
+    "related_to": {
+        "source": "any",
+        "target": "any"
+    }
+}
 
 SYSTEM_PROMPT = f"""
 You are an expert legal entity extraction system.
@@ -132,16 +163,11 @@ Task:
 - Only relationships explicitly supported by the text should be extracted.
 - Do NOT hallucinate relationships, relationship types, or entity connections.
 
-Entity types and directional rules:
-- person → ceo_of, director_of, signatory_for
-- company → acquires, party_to_agreement, regulated_by, investigated_by, subsidiary_of (source = subsidiary, target = parent)
-- agreement → No active relationships: can only be targets for party_to_agreement or signatory_for
-- regulator → No active relationships.
-
-Remember: A subsidiary_of B if and only if B is the parent company of A. The direction is always from child to parent.
-
 Allowed relationships:
 {ALLOWED_RELATIONSHIPS}
+
+Follow the following rules for each relationship:
+{ENTITY_RELATIONSHIP_DIRECTION_RULES}
 
 Instructions:
 1. If a relationship’s target entity is not listed, skip it.
@@ -149,8 +175,9 @@ Instructions:
 3. Do not invent new relationship types; use only allowed ones.
 4. Return the exact text evidence for each relationship.
 5. If unsure, omit the relationship rather than guessing.
-6. **Direction matters:** `subsidiary_of` must always be from child → parent.
+6. **Direction matters:** the relationships are designed such that the source is always the actor, acting on the target. Do not flip them.
 7. Always double-check which entity is the source and which is the target before extracting.
+8. IMPORTANT: If you are sure two entities are related, but not sure how: revert to related_to.
 
 Example:
 Entities:
@@ -169,29 +196,32 @@ Output relationships:
     {{
       "source_entity_id": "E0",
       "target_entity_id": "E1",
-      "relationship_type": "acquires",
+      "relationship_type": "controls",
       "evidence_quote": "Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation"
     }},
     {{
       "source_entity_id": "E2",
       "target_entity_id": "E3",
-      "relationship_type": "signatory_for",
+      "relationship_type": "participates_in",
       "evidence_quote": "Jonathan R. Keene signed the Equity Purchase Agreement"
     }},
     {{
       "source_entity_id": "E0",
       "target_entity_id": "E3",
-      "relationship_type": "party_to_agreement",
+      "relationship_type": "participates_in",
       "evidence_quote": "Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation pursuant to the Equity Purchase Agreement"
     }},
     {{
-      "source_entity_id": "E1",
+      "source_entity_id": "E2",
       "target_entity_id": "E0",
-      "relationship_type": "subsidiary_of",
-      "evidence_quote": "Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation"
+      "relationship_type": "related_to",
+      "evidence_quote": "Jonathan R. Keene signed the Equity Purchase Agreement on behalf of Aurora Strategic Holdings, Inc"
     }}
   ]
 }}
+
+Here on the E2->related_to->E0 relationship, we do not know the relationship, but we know that Jonathan R. Keene
+is sufficiently related to Aurora Strategic Holdings enough to sign for them.
 
 Return JSON strictly in the above format:
 {{
