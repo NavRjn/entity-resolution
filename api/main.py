@@ -4,6 +4,7 @@ import json
 import datetime
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from run import (
     EntityResolutionPipeline,
@@ -14,6 +15,14 @@ from run import (
 )
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 pipeline = EntityResolutionPipeline()
 

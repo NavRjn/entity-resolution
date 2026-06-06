@@ -20,7 +20,10 @@ import concurrent.futures
 from collections import defaultdict
 from debug_logger import log_prompt, log_response, log_hallucinated_entity, log_relationship_check
 from openai import OpenAI
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 OLLAMA_CLIENT = ollama.Client(host="http://127.0.0.1:11434", timeout=180)
 OPENAI_CLIENT = OpenAI(api_key=os.getenv("OPENAI_API_LEGALDEV"))
