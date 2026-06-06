@@ -38,6 +38,14 @@ console = Console()
 
 
 # --- SCHEMAS ---
+class Citation(BaseModel):
+    file_id: str
+    chunk_id: int
+    start_char: int
+    end_char: int
+    quote: str
+
+
 class ExtractedEntity(BaseModel):
     entity_name: str
     entity_type: str
@@ -49,15 +57,11 @@ class EntityList(BaseModel):
 
 
 class ValidatedEntity(BaseModel):
-    chunk_id: int
 
     entity_name: str
     entity_type: str
 
-    exact_quote: str
-
-    start_char: Optional[int] = None
-    end_char: Optional[int] = None
+    citation: Citation
 
     is_valid: bool
     fail_reason: Optional[str] = None
@@ -70,8 +74,7 @@ class CanonicalEntity(BaseModel):
     entity_type: str
 
     aliases: list[str] = Field(default_factory=list)
-    evidence_quotes: list[str] = Field(default_factory=list)
-    source_chunks: list[int] = Field(default_factory=list)
+    citations: list[Citation] = Field(default_factory=list)
 
 
 class Relationship(BaseModel):
@@ -80,8 +83,7 @@ class Relationship(BaseModel):
 
     relationship_type: str
 
-    evidence_quote: str
-    chunk_id: int
+    citation: Citation
 
 
 class RelationshipList(BaseModel):
@@ -398,7 +400,7 @@ def extract_entities(chunk: str, seed: int = 42) -> List[ExtractedEntity]:
     return [ExtractedEntity(**item) for item in entities]
 
 
-def extract_relationships(chunk: str, entities: List[Dict], chunk_id: int, seed: int = 42) -> List[Relationship]:
+def extract_relationships(chunk: str, entities: List[Dict], chunk_id: int, file_id: str, seed: int = 42) -> List[Relationship]:
     """Extracts relationships using the generic LLM caller."""
     # TODO: Instead of passing all entities, pass only ones mentioned in chunk
     prompt = relationship_prompt_template(chunk, entities)
@@ -410,14 +412,19 @@ def extract_relationships(chunk: str, entities: List[Dict], chunk_id: int, seed:
             source_entity_id=item["source_entity_id"],
             target_entity_id=item["target_entity_id"],
             relationship_type=item["relationship_type"],
-            evidence_quote=item["evidence_quote"],
-            chunk_id=chunk_id,
+            citation=Citation(
+                file_id=file_id,
+                chunk_id=chunk_id,
+                start_char=-1, # TODO: Fill them properly later
+                end_char=-1,
+                quote=item["evidence_quote"]
+            )
         )
         for item in relationships
     ]
 
 
-def validate_guardrails(entity: ExtractedEntity, chunk_text: str, chunk_id: int) -> ValidatedEntity:
+def validate_guardrails(entity: ExtractedEntity, chunk_text: str, chunk_id: int, file_id: str) -> ValidatedEntity:
     """The Zero-Hallucination Guardrail."""
     # Normalize spaces for robust checking, but retain characters
     norm_chunk = re.sub(r'\s+', ' ', chunk_text)
@@ -436,15 +443,14 @@ def validate_guardrails(entity: ExtractedEntity, chunk_text: str, chunk_id: int)
     start_pos = chunk_text.find(entity.exact_quote)
     end_pos = None if start_pos < 0 else (start_pos + len(entity.exact_quote))
 
+    citation = Citation(file_id=file_id, chunk_id=chunk_id, start_char=start_pos, end_char=end_pos, quote=entity.exact_quote)
+
     validated_entity = ValidatedEntity(
-        chunk_id=chunk_id,
         entity_name=entity.entity_name,
         entity_type=entity.entity_type,
-        exact_quote=entity.exact_quote,
-        start_char=start_pos,
-        end_char=end_pos,
         is_valid=is_valid,
-        fail_reason=reason
+        fail_reason=reason,
+        citation=citation
     )
 
     if not is_valid: log_hallucinated_entity(validated_entity)
@@ -505,6 +511,8 @@ def resolve_entities(validated_entities: List[ValidatedEntity]) -> List[Canonica
                         c.evidence_quotes.append(ve.exact_quote)
                     if ve.chunk_id not in c.source_chunks:
                         c.source_chunks.append(ve.chunk_id)
+                    if ve.citation not in c.citations:
+                        c.citations.append(ve.citation)
                     matched = True
                     break
             if matched:
@@ -517,8 +525,7 @@ def resolve_entities(validated_entities: List[ValidatedEntity]) -> List[Canonica
                     canonical_name=ve.entity_name,
                     entity_type=ve.entity_type,
                     aliases=[],
-                    evidence_quotes=[ve.exact_quote],
-                    source_chunks=[ve.chunk_id],
+                    citations=[ve.citation],
                 )
             )
 
@@ -740,8 +747,10 @@ def rebuild_canonicals(canonical_entities_json):
 # %%
 # --- MAIN EXECUTION ---
 
+FILE_ID = "0000"
 
-def run_entity_pipeline(file_path: Path, seed: int, run_id: str):
+
+def run_entity_pipeline(file_path: Path, seed: int, run_id: str, file_id: str):
     text = extract_text(file_path)
     chunks = chunk_text_with_overlap(text)
 
@@ -753,7 +762,7 @@ def run_entity_pipeline(file_path: Path, seed: int, run_id: str):
             raw_entities = extract_entities(chunk, seed=seed)
 
             for raw_ent in raw_entities:
-                validated = validate_guardrails(raw_ent, chunk, idx)
+                validated = validate_guardrails(raw_ent, chunk, idx, file_id)
                 all_validated_entities.append(validated)
 
                 if not validated.is_valid:
@@ -775,7 +784,7 @@ def run_entity_pipeline(file_path: Path, seed: int, run_id: str):
     return chunks, canonicals, chunk_entity_index, hallucination_count
 
 
-def run_relationship_pipeline(chunks, canonicals, chunk_entity_index, seed):
+def run_relationship_pipeline(chunks, canonicals, chunk_entity_index, seed, file_id: str):
     all_relationships = []
     dropped, valid = 0, 0
 
@@ -787,7 +796,7 @@ def run_relationship_pipeline(chunks, canonicals, chunk_entity_index, seed):
             if not entity_refs:
                 continue
 
-            raw_relationships = extract_relationships(chunk, entity_refs, idx, seed)
+            raw_relationships = extract_relationships(chunk, entity_refs, idx, file_id, seed)
 
             for rel in raw_relationships:
                 status = validate_relationship(rel, chunk)
@@ -807,9 +816,10 @@ def run_relationship_pipeline(chunks, canonicals, chunk_entity_index, seed):
 
 def run_pipeline(file_path: Path, seed: int, run_id: str):
 
-    chunks, canonicals, chunk_entity_index, hallucination_count = run_entity_pipeline(file_path, seed, run_id)
 
-    relationships = run_relationship_pipeline(chunks, canonicals, chunk_entity_index, seed)
+    chunks, canonicals, chunk_entity_index, hallucination_count = run_entity_pipeline(file_path, seed, run_id, FILE_ID)
+
+    relationships = run_relationship_pipeline(chunks, canonicals, chunk_entity_index, seed, FILE_ID)
 
     display_results(canonicals, relationships, hallucination_count)
 
@@ -845,7 +855,8 @@ def run_relationship_only(run_id: str):
         chunks,
         canonicals,
         chunk_entity_index,
-        manifest["seed"]
+        manifest["seed"],
+        FILE_ID
     )
 
     save_output(run_dir, canonicals, relationships)
@@ -892,7 +903,7 @@ if __name__ == "__main__":
         file_path = Path("data") / args.file
 
         logger.info(f"Starting Entity Pipeline | Run ID: {run_id}")
-        run_entity_pipeline(file_path, args.seed, run_id)
+        run_entity_pipeline(file_path, args.seed, run_id, FILE_ID)
 
     else:
         if args.run:
