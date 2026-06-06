@@ -37,6 +37,10 @@ logger.setLevel(logging.DEBUG) # Comment this out to reduce log verbosity
 console = Console()
 
 
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import List, Optional
+
 # --- SCHEMAS ---
 class Citation(BaseModel):
     file_id: str
@@ -88,6 +92,29 @@ class Relationship(BaseModel):
 
 class RelationshipList(BaseModel):
     relationships: list[Relationship]
+
+
+@dataclass
+class RunContext:
+    run_id: str
+    file_id: str
+    seed: int
+
+    file_path: Optional[Path] = None
+    output_dir: Optional[Path] = None
+
+    text: str = ""
+
+    chunks: List[str] = field(default_factory=list)
+
+    validated_entities: List[ValidatedEntity] = field(default_factory=list)
+    canonicals: List[CanonicalEntity] = field(default_factory=list)
+
+    chunk_entity_index: dict = field(default_factory=dict)
+
+    relationships: List[Relationship] = field(default_factory=list)
+
+    hallucination_count: int = 0
 
 
 # --- PROMPTS ---
@@ -461,12 +488,12 @@ def validate_guardrails(entity: ExtractedEntity, chunk_text: str, chunk_id: int,
 def validate_relationship(relationship: Relationship, chunk_text: str) -> bool:
     """Validates that the relationship evidence actually exists in the chunk."""
     norm_chunk = re.sub(r"\s+", " ", chunk_text)
-    norm_quote = re.sub(r"\s+", " ", relationship.evidence_quote)
+    norm_quote = re.sub(r"\s+", " ", relationship.citation.quote)
     exists = norm_quote in norm_chunk
 
     valid_relationship_type = relationship.relationship_type in ALLOWED_RELATIONSHIPS
     valid_source_and_target = relationship.source_entity_id and relationship.target_entity_id
-    valid_quote =  relationship.evidence_quote and len(relationship.evidence_quote.strip()) > 5
+    valid_quote =  relationship.citation.quote and len(relationship.citation.quote.strip()) > 5
 
     valid = exists and valid_relationship_type and valid_source_and_target and valid_quote
     if not valid:
@@ -507,10 +534,6 @@ def resolve_entities(validated_entities: List[ValidatedEntity]) -> List[Canonica
                 if fuzz.token_sort_ratio(norm_name, candidate) > 90:  # Keep high for strictness
                     if ve.entity_name not in c.aliases and ve.entity_name != c.canonical_name:
                         c.aliases.append(ve.entity_name)
-                    if ve.exact_quote not in c.evidence_quotes:
-                        c.evidence_quotes.append(ve.exact_quote)
-                    if ve.chunk_id not in c.source_chunks:
-                        c.source_chunks.append(ve.chunk_id)
                     if ve.citation not in c.citations:
                         c.citations.append(ve.citation)
                     matched = True
@@ -567,7 +590,8 @@ def build_chunk_entity_index(canonicals):
     index = defaultdict(list)
 
     for c in canonicals:
-        for chunk_id in c.source_chunks:
+        for citation in c.citations:
+            chunk_id = citation.chunk_id
             index[chunk_id].append({
                 "entity_id": c.entity_id,
                 "name": c.canonical_name,
@@ -587,7 +611,7 @@ def display_results(canonicals: List[CanonicalEntity], relationships: List[Relat
 
     for c in canonicals:
         aliases_str = ", ".join(c.aliases) if c.aliases else "None"
-        chunks_str = ", ".join(map(str, c.source_chunks))
+        chunks_str = ", ".join(map(str, [cit.chunk_id for cit in c.citations])) if c.citations else "None"
         table.add_row(c.canonical_name, c.entity_type, aliases_str, chunks_str)
 
     console.print(table)
@@ -600,7 +624,7 @@ def display_results(canonicals: List[CanonicalEntity], relationships: List[Relat
         rel_table.add_column("Chunk", style="yellow", justify="right")
 
         for r in relationships:
-            rel_table.add_row(r.source_entity_id, r.relationship_type, r.target_entity_id, str(r.chunk_id))
+            rel_table.add_row(r.source_entity_id, r.relationship_type, r.target_entity_id, str(r.citation.chunk_id))
 
         console.print(rel_table)
 
@@ -663,7 +687,7 @@ def build_networkx_graph(entities, relationships):
                 src,
                 tgt,
                 relationship=r.relationship_type,
-                evidence=r.evidence_quote
+                evidence=r.citation.quote
             )
 
     return graph
@@ -866,19 +890,111 @@ def run_relationship_only(run_id: str):
     return run_dir / "output.json"
 
 
+class EntityResolutionPipeline:
+    def run_entities(self, ctx: RunContext) -> RunContext:
+        ctx.text = extract_text(file_path)
+        ctx.chunks = chunk_text_with_overlap(ctx.text)
+
+        with console.status("[bold green]Extracting entities..."):
+            for idx, chunk in enumerate(ctx.chunks):
+                raw_entities = extract_entities(chunk, seed=ctx.seed)
+
+                for raw_ent in raw_entities:
+                    validated = validate_guardrails(raw_ent, chunk, idx, ctx.file_id)
+                    ctx.validated_entities.append(validated)
+
+                    if not validated.is_valid:
+                        ctx.hallucination_count += 1
+
+        logger.info("Resolving entities...")
+        ctx.canonicals = resolve_entities(ctx.validated_entities)
+
+        logger.info(f"Resolved {len(ctx.canonicals)} canonical entities from {len(ctx.validated_entities)} mentions")
+
+        ctx.chunk_entity_index = build_chunk_entity_index(ctx.canonicals)
+        run_dir = get_run_dir(run_id)
+
+        save_manifest(run_dir, str(file_path), ctx.seed)
+        save_chunks(run_dir, ctx.chunks)
+        save_entities_artifact(run_dir, ctx.validated_entities, ctx.canonicals, ctx.chunk_entity_index)
+
+        return ctx
+
+    def run_relationships(self, ctx: RunContext):
+
+        all_relationships = []
+
+        dropped = 0
+        valid = 0
+
+        logger.warning(f"Starting relationship extraction with {len(ctx.canonicals)} entities and {len(ctx.chunks)} chunks.")
+        with console.status("[bold green]Extracting relationships..."):
+            for idx, chunk in enumerate(ctx.chunks):
+                entity_refs = ctx.chunk_entity_index.get(str(idx), ctx.chunk_entity_index.get(idx, []))
+                if not entity_refs:
+                    continue
+
+                raw_relationships = extract_relationships(chunk, entity_refs, idx, ctx.file_id, ctx.seed)
+
+                for rel in raw_relationships:
+                    status = validate_relationship(rel,chunk)
+                    log_relationship_check(chunk_id=idx, rel=rel, status=("valid" if status else "false_positive"))
+                    if status:
+                        valid += 1
+                        all_relationships.append(rel)
+                    else:
+                        dropped += 1
+
+        ctx.relationships = all_relationships
+        logger.warning(f"Relationship extraction: {valid} valid relationships, {dropped} dropped.")
+
+        return ctx
+
+    def run_full(self, ctx: RunContext):
+
+        self.run_entities(ctx)
+        self.run_relationships(ctx)
+
+        display_results(ctx.canonicals, ctx.relationships, ctx.hallucination_count)
+
+        try:
+            nx_graph = build_networkx_graph(ctx.canonicals, ctx.relationships)
+            logger.info(f"Built NetworkX Graph with {nx_graph.number_of_nodes()} nodes and {nx_graph.number_of_edges()} edges.")
+        except ImportError:
+            logger.warning("NetworkX not installed.")
+
+        save_output(ctx.output_dir, ctx.canonicals, ctx.relationships)
+        return ctx
+
+    def run_relationships_only(self, run_id: str):
+
+        run_dir = get_run_dir(run_id)
+        manifest = load_manifest(run_dir)
+        chunks = load_chunks(run_dir)
+        entities = load_entities_artifact(run_dir)
+
+        ctx = RunContext(run_id=run_id, file_id=FILE_ID, seed=manifest["seed"])
+        ctx.output_dir = run_dir
+        ctx.chunks = chunks
+        ctx.canonicals = rebuild_canonicals(entities["canonical_entities"])
+        ctx.chunk_entity_index = entities["chunk_entity_index"]
+
+        self.run_relationships(ctx)
+
+        save_output(run_dir, ctx.canonicals, ctx.relationships)
+
+        return ctx
+
+
+
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--file", type=str)
     parser.add_argument("--run", type=str)
     parser.add_argument("--last", action="store_true")
-
-    parser.add_argument(
-        "--only",
-        choices=["entities", "relationship", "all"],
-        default="all"
-    )
-
+    parser.add_argument("--only", choices=["entities", "relationship", "all"], default="all")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -886,31 +1002,31 @@ if __name__ == "__main__":
 
     if sources != 1:
         parser.error("Specify exactly one of --file, --run, or --last")
-
     if args.last:
         args.run = get_latest_run_id()
+
+    pipeline = EntityResolutionPipeline()
 
     if args.only == "relationship":
         if not args.run:
             parser.error("--only relationship requires --run or --last")
-        run_relationship_only(args.run)
-
-    elif args.only == "entities":
-        if not args.file:
-            parser.error("--only entities requires --file")
-
-        run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        file_path = Path("data") / args.file
-
-        logger.info(f"Starting Entity Pipeline | Run ID: {run_id}")
-        run_entity_pipeline(file_path, args.seed, run_id, FILE_ID)
+        pipeline.run_relationships_only(args.run)
 
     else:
-        if args.run:
-            parser.error("--only all requires --file")
-
+        if not args.file:
+            parser.error("--file required")
         run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         file_path = Path("data") / args.file
 
-        logger.info(f"Starting Full Pipeline | Run ID: {run_id}")
-        run_pipeline(file_path, args.seed, run_id)
+        ctx = RunContext(
+            run_id=run_id,
+            file_id=FILE_ID,
+            seed=args.seed,
+            file_path=file_path,
+            output_dir=get_run_dir(run_id)
+        )
+
+        if args.only == "entities":
+            pipeline.run_entities(ctx)
+        else:
+            pipeline.run_full(ctx)
