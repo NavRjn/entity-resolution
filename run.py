@@ -279,6 +279,7 @@ TEXT:
 >>>
 """
 
+
 def relationship_prompt_template(chunk: str, entities: List[Dict]) -> str:
 
     entity_block = "\n".join(
@@ -302,7 +303,6 @@ def relationship_prompt_template(chunk: str, entities: List[Dict]) -> str:
                 {chunk}
                 >>>
         """
-
 
 
 # --- PIPELINE COMPONENTS ---
@@ -770,129 +770,12 @@ def rebuild_canonicals(canonical_entities_json):
 
 # %%
 # --- MAIN EXECUTION ---
-
 FILE_ID = "0000"
-
-
-def run_entity_pipeline(file_path: Path, seed: int, run_id: str, file_id: str):
-    text = extract_text(file_path)
-    chunks = chunk_text_with_overlap(text)
-
-    all_validated_entities = []
-    hallucination_count = 0
-
-    with console.status("[bold green]Extracting entities..."):
-        for idx, chunk in enumerate(chunks):
-            raw_entities = extract_entities(chunk, seed=seed)
-
-            for raw_ent in raw_entities:
-                validated = validate_guardrails(raw_ent, chunk, idx, file_id)
-                all_validated_entities.append(validated)
-
-                if not validated.is_valid:
-                    hallucination_count += 1
-
-    logger.info("Resolving entities...")
-    canonicals = resolve_entities(all_validated_entities)
-
-    logger.info(f"Resolved {len(canonicals)} canonical entities from {len(all_validated_entities)} mentions")
-
-    chunk_entity_index = build_chunk_entity_index(canonicals)
-
-    run_dir = get_run_dir(run_id)
-
-    save_manifest(run_dir, str(file_path), seed)
-    save_chunks(run_dir, chunks)
-    save_entities_artifact(run_dir, all_validated_entities, canonicals, chunk_entity_index)
-
-    return chunks, canonicals, chunk_entity_index, hallucination_count
-
-
-def run_relationship_pipeline(chunks, canonicals, chunk_entity_index, seed, file_id: str):
-    all_relationships = []
-    dropped, valid = 0, 0
-
-    with console.status("[bold green]Extracting relationships..."):
-        for idx, chunk in enumerate(chunks):
-
-            entity_refs = chunk_entity_index.get(str(idx), chunk_entity_index.get(idx, []))
-
-            if not entity_refs:
-                continue
-
-            raw_relationships = extract_relationships(chunk, entity_refs, idx, file_id, seed)
-
-            for rel in raw_relationships:
-                status = validate_relationship(rel, chunk)
-
-                log_relationship_check(chunk_id=idx, rel=rel, status=("valid" if status else "false_positive"))
-
-                if status:
-                    valid += 1
-                    all_relationships.append(rel)
-                else:
-                    dropped += 1
-
-    logger.warning(f"Relationship extraction: {valid} valid relationships, {dropped} dropped/invalid relationships.")
-
-    return all_relationships
-
-
-def run_pipeline(file_path: Path, seed: int, run_id: str):
-
-
-    chunks, canonicals, chunk_entity_index, hallucination_count = run_entity_pipeline(file_path, seed, run_id, FILE_ID)
-
-    relationships = run_relationship_pipeline(chunks, canonicals, chunk_entity_index, seed, FILE_ID)
-
-    display_results(canonicals, relationships, hallucination_count)
-
-    try:
-        nx_graph = build_networkx_graph(canonicals, relationships)
-
-        logger.info(
-            f"Built NetworkX Graph with "
-            f"{nx_graph.number_of_nodes()} nodes and "
-            f"{nx_graph.number_of_edges()} edges."
-        )
-
-    except ImportError:
-        logger.warning("NetworkX not installed. Skipping graph generation test.")
-
-    save_output(get_run_dir(run_id), canonicals, relationships)
-
-    return get_run_dir(run_id) / "output.json"
-
-
-def run_relationship_only(run_id: str):
-    run_dir = get_run_dir(run_id)
-
-    manifest = load_manifest(run_dir)
-    chunks = load_chunks(run_dir)
-
-    entities = load_entities_artifact(run_dir)
-
-    canonicals = rebuild_canonicals(entities["canonical_entities"])
-    chunk_entity_index = entities["chunk_entity_index"]
-
-    relationships = run_relationship_pipeline(
-        chunks,
-        canonicals,
-        chunk_entity_index,
-        manifest["seed"],
-        FILE_ID
-    )
-
-    save_output(run_dir, canonicals, relationships)
-
-    display_results(canonicals, relationships, 0)
-
-    return run_dir / "output.json"
 
 
 class EntityResolutionPipeline:
     def run_entities(self, ctx: RunContext) -> RunContext:
-        ctx.text = extract_text(file_path)
+        ctx.text = extract_text(ctx.file_path)
         ctx.chunks = chunk_text_with_overlap(ctx.text)
 
         with console.status("[bold green]Extracting entities..."):
@@ -912,9 +795,9 @@ class EntityResolutionPipeline:
         logger.info(f"Resolved {len(ctx.canonicals)} canonical entities from {len(ctx.validated_entities)} mentions")
 
         ctx.chunk_entity_index = build_chunk_entity_index(ctx.canonicals)
-        run_dir = get_run_dir(run_id)
+        run_dir = get_run_dir(ctx.run_id)
 
-        save_manifest(run_dir, str(file_path), ctx.seed)
+        save_manifest(run_dir, str(ctx.file_path), ctx.seed)
         save_chunks(run_dir, ctx.chunks)
         save_entities_artifact(run_dir, ctx.validated_entities, ctx.canonicals, ctx.chunk_entity_index)
 
@@ -937,7 +820,7 @@ class EntityResolutionPipeline:
                 raw_relationships = extract_relationships(chunk, entity_refs, idx, ctx.file_id, ctx.seed)
 
                 for rel in raw_relationships:
-                    status = validate_relationship(rel,chunk)
+                    status = validate_relationship(rel, chunk)
                     log_relationship_check(chunk_id=idx, rel=rel, status=("valid" if status else "false_positive"))
                     if status:
                         valid += 1
@@ -984,7 +867,6 @@ class EntityResolutionPipeline:
         save_output(run_dir, ctx.canonicals, ctx.relationships)
 
         return ctx
-
 
 
 if __name__ == "__main__":
