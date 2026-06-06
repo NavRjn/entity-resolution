@@ -1,10 +1,14 @@
-import { useParams } from "react-router-dom"
-import { useEffect, useState, useMemo } from "react"
+import { useParams, useSearchParams } from "react-router-dom"
+import { useEffect, useState } from "react"
 
 import { Box, Typography, Chip } from "@mui/material"
 
 export default function Document() {
   const { runId } = useParams()
+  const [searchParams] = useSearchParams()
+
+  const targetEntity = searchParams.get("entity")
+
   const [data, setData] = useState(null)
 
   useEffect(() => {
@@ -13,15 +17,8 @@ export default function Document() {
       .then(setData)
   }, [runId])
 
-  // 👇 ALWAYS define derived state BEFORE return
   const text = data?.document || ""
   const entities = data?.entities || []
-
-  const entityNames = useMemo(() => {
-    return entities.map(e => e.canonical_name)
-  }, [entities])
-
-  if (!data) return <div>Loading...</div>
 
   function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -32,22 +29,39 @@ export default function Document() {
 
     let result = text
 
-    entities.forEach((e) => {
+    for (const e of entities) {
       const name = e.canonical_name
-      if (!name) return
+      if (!name) continue
 
       const regex = new RegExp(`\\b${escapeRegExp(name)}\\b`, "g")
 
       result = result.replace(
         regex,
-        `<mark style="background:#fff3cd;padding:2px;border-radius:4px;">${name}</mark>`
+        `<mark id="ent-${name}" style="
+          background:#fff3cd;
+          padding:2px;
+          border-radius:4px;
+        ">${name}</mark>`
       )
-    })
+    }
 
     return result
   }
 
   const highlighted = highlightText(text, entities)
+
+  useEffect(() => {
+    if (!targetEntity) return
+
+    const el = document.getElementById(`ent-${targetEntity}`)
+
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" })
+      el.style.background = "#ffe082"
+    }
+  }, [targetEntity, entities])
+
+  if (!data) return <div>Loading...</div>
 
   return (
     <Box sx={{ padding: 3 }}>
@@ -56,17 +70,19 @@ export default function Document() {
         Document — {runId}
       </Typography>
 
+      {/* Entity chips */}
       <Box sx={{ marginBottom: 2 }}>
         {entities.slice(0, 10).map((e, idx) => (
           <Chip
             key={idx}
-            label={`${e.canonical_name} (${e.entity_type})`}
+            label={e.canonical_name}
             size="small"
             sx={{ marginRight: 1, marginBottom: 1 }}
           />
         ))}
       </Box>
 
+      {/* Document */}
       <Box
         sx={{
           whiteSpace: "pre-wrap",

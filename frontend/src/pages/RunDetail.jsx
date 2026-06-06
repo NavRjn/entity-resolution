@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 
+import { Link } from "react-router-dom"
 import { Box, Typography, Chip } from "@mui/material"
 import { DataGrid } from "@mui/x-data-grid"
 
@@ -66,6 +67,19 @@ export default function RunDetail() {
 
   return (
     <Box sx={{ height: "80vh", width: "100%", p: 2 }}>
+      <Box sx={{ mb: 2, display: "flex", gap: 2 }}>
+        <Link to={`/runs/${runId}`}>
+          Entities
+        </Link>
+        <Link to={`/runs/${runId}/relationships`}>
+          Relationships
+        </Link>
+
+        <Link to={`/runs/${runId}/document`}>
+          Document
+        </Link>
+
+      </Box>
 
       <Typography variant="h4" gutterBottom>
         Entities — {runId}
@@ -75,6 +89,10 @@ export default function RunDetail() {
         rows={rows}
         columns={columns}
         pageSizeOptions={[50, 100, 150]}
+        onRowClick={(params) => {
+          const entity = params.row
+          window.location.href = `/runs/${runId}/document?entity=${encodeURIComponent(entity.name)}`
+        }}
         initialState={{
           pagination: {
             paginationModel: { pageSize: 50, page: 0 }
