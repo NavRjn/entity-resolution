@@ -13,8 +13,11 @@ from run import (
     get_run_dir,
     FILE_ID,
 )
-
+from fastapi import APIRouter, HTTPException
+from pathlib import Path
 app = FastAPI()
+# router = APIRouter()
+# app.include_router(router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -191,6 +194,34 @@ def get_graph(run_id: str):
     return {"nodes": nodes, "edges": edges}
 
 
+@app.get("/api/runs/{run_id}/document")
+def get_run_document(run_id: str):
+
+    run_dir = Path("outputs") / run_id
+
+    manifest_path = run_dir / "manifest.json"
+    if not manifest_path.exists():
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    import json
+    manifest = json.loads(manifest_path.read_text())
+
+    # OPTION A: direct file path stored in manifest
+    source_file = manifest.get("source_file")
+
+    if not source_file:
+        raise HTTPException(status_code=400, detail="No source file linked to run")
+
+    # resolve file
+    file_path = Path(source_file)
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Source document not found")
+
+    return {
+        "run_id": run_id,
+        "document": file_path.read_text(encoding="utf-8")
+    }
 
 @app.get("/api/uploads/{upload_id}/document")
 def get_document(upload_id: str):

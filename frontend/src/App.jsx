@@ -4,6 +4,8 @@ import Runs from "./pages/Runs.jsx"
 import RunDetail from "./pages/RunDetail.jsx"
 import Uploads from "./pages/Uploads.jsx"
 import UploadNew from "./pages/UploadNew.jsx"
+import Relationships from "./pages/Relationships.jsx"
+import Document from "./pages/Document.jsx"
 
 export default function App() {
   return (
@@ -15,11 +17,13 @@ export default function App() {
       </nav>
 
       <Routes>
-        <Route path="/runs" element={<Runs />} />
-        <Route path="/runs/:runId" element={<RunDetail />} />
+          <Route path="/runs" element={<Runs />} />
+          <Route path="/runs/:runId" element={<RunDetail />} />
 
-        <Route path="/uploads" element={<Uploads />} />
-        <Route path="/uploads/new" element={<UploadNew />} />
+          <Route path="/uploads" element={<Uploads />} />
+          <Route path="/uploads/new" element={<UploadNew />} />
+          <Route path="/runs/:runId/relationships" element={<Relationships />} />
+          <Route path="/runs/:runId/document" element={<Document />} />
       </Routes>
     </div>
   )
