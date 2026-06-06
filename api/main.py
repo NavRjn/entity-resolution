@@ -8,6 +8,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from run import (
     EntityResolutionPipeline,
     RunContext,
+    build_networkx_graph,
     get_run_dir,
     FILE_ID,
 )
@@ -158,4 +159,50 @@ def rerun_relationships(run_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/runs/{run_id}/graph")
+def get_graph(run_id: str):
+    run_dir = Path("outputs") / run_id
+    output_file = run_dir / "output.json"
+    if not output_file.exists():
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    with open(output_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    entities = data.get("entities", [])
+    relationships = data.get("relationships", [])
+
+    graph = build_networkx_graph(entities, relationships)
+
+    nodes = [{"id": n, **graph.nodes[n]}for n in graph.nodes]
+    edges = [{"source": u, "target": v, **graph.edges[u, v]} for u, v in graph.edges]
+
+    return {"nodes": nodes, "edges": edges}
+
+
+
+@app.get("/api/uploads/{upload_id}/document")
+def get_document(upload_id: str):
+    matches = list(Path("uploads").glob(f"{upload_id}_*"))
+    if not matches:
+        raise HTTPException(status_code=404, detail="Upload not found")
+
+    file_path = matches[0]
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File missing")
+
+    # TEXT FILE VIEWER (MVP)
+    if file_path.suffix == ".txt":
+        with open(file_path, "r", encoding="utf-8") as f:
+            text = f.read()
+
+        return {"upload_id": upload_id, "type": "text", "content": text}
+
+    # FUTURE EXTENSION POINT
+    if file_path.suffix == ".pdf":
+        return {"upload_id": upload_id, "type": "pdf", "message": "PDF rendering not implemented yet"}
+
+    raise HTTPException(status_code=400, detail="Unsupported file type")
 
