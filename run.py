@@ -666,7 +666,7 @@ def is_empty_after_normalization(name: str) -> bool:
     return normalize_entity_name(name).strip() == ""
 
 
-def build_networkx_graph(entities, relationships):
+def build_networkx_graph(entities: list[CanonicalEntity], relationships: list[Relationship]):
     import networkx as nx
 
     graph = nx.DiGraph()

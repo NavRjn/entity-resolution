@@ -3,6 +3,7 @@ import { Routes, Route, Link } from "react-router-dom"
 import Runs from "./pages/Runs.jsx"
 import RunDetail from "./pages/RunDetail.jsx"
 import RunCreating from "./pages/RunCreating.jsx"
+import GraphView from "./pages/GraphView.jsx";
 import Uploads from "./pages/Uploads.jsx"
 import UploadNew from "./pages/UploadNew.jsx"
 import Relationships from "./pages/Relationships.jsx"
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/uploads/new" element={<UploadNew />} />
           <Route path="/runs/:runId/relationships" element={<Relationships />} />
           <Route path="/runs/:runId/document" element={<Document />} />
+          <Route path="/runs/:runId/graph" element={<GraphView />} />
       </Routes>
     </div>
   )

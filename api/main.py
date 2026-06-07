@@ -4,6 +4,7 @@ import json
 import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from run import CanonicalEntity, Relationship
 
 from run import (
     EntityResolutionPipeline,
@@ -179,8 +180,8 @@ def get_graph(run_id: str):
     with open(output_file, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    entities = data.get("entities", [])
-    relationships = data.get("relationships", [])
+    entities = [CanonicalEntity.model_validate(c) for c in data.get("entities", [])]
+    relationships = [Relationship.model_validate(r) for r in data.get("relationships", [])]
 
     graph = build_networkx_graph(entities, relationships)
 
