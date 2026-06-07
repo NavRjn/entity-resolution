@@ -1,6 +1,5 @@
 import { useParams, useSearchParams } from "react-router-dom"
 import { useEffect, useState } from "react"
-
 import { Box, Typography, Chip } from "@mui/material"
 
 export default function Document() {
@@ -9,80 +8,113 @@ export default function Document() {
 
   const targetEntity = searchParams.get("entity")
 
-  const [data, setData] = useState(null)
+  const [documentText, setDocumentText] = useState("")
+  const [entities, setEntities] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`http://localhost:8000/api/runs/${runId}/document`)
-      .then(r => r.json())
-      .then(setData)
+    async function loadData() {
+      try {
+        const [runResp, docResp] = await Promise.all([
+          fetch(`http://localhost:8000/api/runs/${runId}`),
+          fetch(`http://localhost:8000/api/runs/${runId}/document`)
+        ])
+
+        const runData = await runResp.json()
+        const docData = await docResp.json()
+
+        setEntities(runData.entities || [])
+        setDocumentText(docData.document || "")
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
   }, [runId])
 
-  const text = data?.document || ""
-  const entities = data?.entities || []
-
   function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   }
 
-  function highlightText(text, entities) {
-    if (!entities.length) return text
+  function normalize(str) {
+    return (str || "")
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, " ")
+  }
 
+  function highlightText(text) {
     let result = text
 
-    for (const e of entities) {
-      const name = e.canonical_name
+    for (const entity of entities) {
+      const name = entity.canonical_name
       if (!name) continue
 
-      const regex = new RegExp(`\\b${escapeRegExp(name)}\\b`, "g")
+      const regex = new RegExp(escapeRegExp(name), "gi")
 
       result = result.replace(
         regex,
-        `<mark id="ent-${name}" style="
-          background:#fff3cd;
-          padding:2px;
-          border-radius:4px;
-        ">${name}</mark>`
+        (match) =>
+          `<mark id="ent-${normalize(match)}"
+            style="
+              background:#fff3cd;
+              padding:2px;
+              border-radius:4px;
+            "
+          >${match}</mark>`
       )
     }
 
     return result
   }
 
-  const highlighted = highlightText(text, entities)
-
   useEffect(() => {
     if (!targetEntity) return
+    if (entities.length === 0) return
 
-    const el = document.getElementById(`ent-${targetEntity}`)
+    const normalized = normalize(targetEntity)
 
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" })
-      el.style.background = "#ffe082"
-    }
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`ent-${normalized}`)
+
+      if (el) {
+        el.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        })
+
+        el.style.background = "#ffe082"
+      } else {
+        console.warn("Could not find:", normalized)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
   }, [targetEntity, entities])
 
-  if (!data) return <div>Loading...</div>
+  if (loading) return <div>Loading...</div>
 
   return (
-    <Box sx={{ padding: 3 }}>
+    <Box sx={{ p: 3 }}>
 
       <Typography variant="h4" gutterBottom>
         Document — {runId}
       </Typography>
 
-      {/* Entity chips */}
-      <Box sx={{ marginBottom: 2 }}>
-        {entities.slice(0, 10).map((e, idx) => (
+      <Box sx={{ mb: 2 }}>
+        {entities.slice(0, 20).map((e) => (
           <Chip
-            key={idx}
+            key={e.entity_id}
             label={e.canonical_name}
             size="small"
-            sx={{ marginRight: 1, marginBottom: 1 }}
+            sx={{ mr: 1, mb: 1 }}
           />
         ))}
       </Box>
 
-      {/* Document */}
       <Box
         sx={{
           whiteSpace: "pre-wrap",
@@ -93,7 +125,9 @@ export default function Document() {
           borderRadius: 2,
           border: "1px solid #eee"
         }}
-        dangerouslySetInnerHTML={{ __html: highlighted }}
+        dangerouslySetInnerHTML={{
+          __html: highlightText(documentText)
+        }}
       />
 
     </Box>
