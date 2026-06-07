@@ -27,7 +27,8 @@ export default function UploadNew() {
         body: JSON.stringify({ upload_id: data.upload_id })
       })
       const runData = await runResp.json()
-      navigate(`/runs/${runData.run_id}`)
+      // After upload returns the new uploadId
+      navigate("/runs/creating", { state: { uploadId: data.upload_id } })
     } catch (err) {
       console.error(err)
     } finally {

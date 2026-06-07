@@ -471,9 +471,9 @@ def validate_guardrails(entity: ExtractedEntity, chunk_text: str, chunk_id: int,
         reason = "Entity collapsed after normalization"
 
     start_pos = chunk_text.find(entity.exact_quote)
-    end_pos = None if start_pos < 0 else (start_pos + len(entity.exact_quote))
+    end_pos = -1 if start_pos < 0 else (start_pos + len(entity.exact_quote))
 
-    citation = Citation(file_id=file_id, chunk_id=chunk_id, start_char=start_pos, end_char=end_pos, quote=entity.exact_quote)
+    citation = Citation(file_id=file_id, chunk_id=int(chunk_id), start_char=int(start_pos), end_char=int(end_pos), quote=entity.exact_quote)
 
     validated_entity = ValidatedEntity(
         entity_name=entity.entity_name,

@@ -2,8 +2,7 @@ from pathlib import Path
 from uuid import uuid4
 import json
 import datetime
-
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 
 from run import (
@@ -80,9 +79,7 @@ def list_uploads():
 
 
 @app.post("/api/uploads/{upload_id}/run")
-def run_upload(
-    upload_id: str
-):
+def run_upload(upload_id: str, background_tasks: BackgroundTasks):
     matches = list(UPLOAD_DIR.glob(f"{upload_id}_*"))
     if not matches:
         raise HTTPException(status_code=404, detail="Upload not found")
@@ -98,13 +95,11 @@ def run_upload(
         output_dir=get_run_dir(run_id)
     )
 
-    pipeline.run_full(ctx)
-    return {
-        "run_id": run_id,
-        "status": "completed",
-        "entities": len(ctx.canonicals),
-        "relationships": len(ctx.relationships)
-    }
+    # Launch the long run in the background
+    background_tasks.add_task(pipeline.run_full, ctx)
+
+    # Immediately return run_id
+    return {"run_id": run_id, "status": "pending"}
 
 @app.get("/api/runs")
 def list_runs():
@@ -132,17 +127,18 @@ def list_runs():
 
 @app.get("/api/runs/{run_id}")
 def get_run(run_id: str):
-
-    output_file = (OUTPUT_DIR / run_id / "output.json")
+    output_file = OUTPUT_DIR / run_id / "output.json"
     if not output_file.exists():
-        raise HTTPException(status_code=404, detail="Run not found")
+        return {"run_id": run_id, "status": "pending"}
 
-    with open(output_file, "r",encoding="utf-8") as f:
-        return json.load(f)
+    with open(output_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    return {"run_id": run_id, "status": "completed", **data}
 
 
 @app.get("/api/runs/{run_id}/manifest")
-def get_run(run_id: str):
+def get_run_manifest(run_id: str):
 
     output_file = (OUTPUT_DIR / run_id / "manifest.json")
     if not output_file.exists():
@@ -153,7 +149,7 @@ def get_run(run_id: str):
 
 
 @app.get("/api/runs/{run_id}/entities")
-def get_run(run_id: str):
+def get_run_entities(run_id: str):
 
     output_file = (OUTPUT_DIR / run_id / "entities.json")
     if not output_file.exists():

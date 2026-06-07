@@ -2,6 +2,7 @@ import { Routes, Route, Link } from "react-router-dom"
 
 import Runs from "./pages/Runs.jsx"
 import RunDetail from "./pages/RunDetail.jsx"
+import RunCreating from "./pages/RunCreating.jsx"
 import Uploads from "./pages/Uploads.jsx"
 import UploadNew from "./pages/UploadNew.jsx"
 import Relationships from "./pages/Relationships.jsx"
@@ -19,6 +20,7 @@ export default function App() {
       <Routes>
           <Route path="/runs" element={<Runs />} />
           <Route path="/runs/:runId" element={<RunDetail />} />
+          <Route path="/runs/creating" element={<RunCreating />} />
 
           <Route path="/uploads" element={<Uploads />} />
           <Route path="/uploads/new" element={<UploadNew />} />

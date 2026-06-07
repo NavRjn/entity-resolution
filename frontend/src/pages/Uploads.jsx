@@ -28,21 +28,9 @@ export default function Uploads() {
     fetchUploads()
   }, [])
 
-  async function handleCreateRun(uploadId) {
-    try {
-      const resp = await fetch("http://localhost:8000/api/runs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ upload_id: uploadId })
-      })
-      const data = await resp.json()
-      navigate(`/runs/${data.run_id}`)
-    } catch (err) {
-      console.error(err)
-    }
+  function handleCreateRun(uploadId) {
+    navigate("/runs/creating", { state: { uploadId } })
   }
-
-  console.log(uploads)
 
   return (
     <Box sx={{ p: 3 }}>
