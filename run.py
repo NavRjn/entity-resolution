@@ -19,7 +19,8 @@ from rich.logging import RichHandler
 import concurrent.futures
 from collections import defaultdict
 from debug_logger import log_prompt, log_response, log_hallucinated_entity, log_relationship_check
-from openai import OpenAI
+# from openai import OpenAI
+from langfuse.openai import OpenAI
 from dotenv import load_dotenv
 import os
 
