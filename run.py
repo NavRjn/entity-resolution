@@ -160,121 +160,14 @@ ENTITY_RELATIONSHIP_DIRECTION_RULES = {
     }
 }
 
-SYSTEM_PROMPT = f"""
-You are an expert legal entity extraction system.
-Extract all corporate, legal, and personal entities from the text.
-
-Do NOT extract locations (cities, countries).
-Do NOT extract dates.
-Do NOT extract monetary values or clause references.
-
-Agreements:
-- Transitional Manufacturing and Support Agreement
-- Retention and Transition Bonus Agreements
-
-Products:
-- AegisPoint(TM)
-- SentinelGrid Analytics
-- OmniPath Clinical Exchange
-- SAP Horizon Enterprise Suite
-
-Schema:
-[
-  {{
-    "entity_name": "Standardized Name (e.g. Acme Corp)",
-    "entity_type": "{"|".join(ALLOWED_ENTITIES)}",
-    "exact_quote": "The exact string from the text proving this exists."
-  }}
-]
-Return ONLY valid JSON.
-"""
-
-RELATIONSHIP_SYSTEM_PROMPT = f"""
-You are a highly accurate legal relationship extraction assistant.
-
-Task:
-- Extract only **explicit relationships** mentioned in the text.
-- Use only the entity IDs provided; do not invent, truncate, or modify them.
-- Only relationships explicitly supported by the text should be extracted.
-- Do NOT hallucinate relationships, relationship types, or entity connections.
-
-Allowed relationships:
-{ALLOWED_RELATIONSHIPS}
-
-Follow the following rules for each relationship:
-{ENTITY_RELATIONSHIP_DIRECTION_RULES}
-
-Instructions:
-1. If a relationship’s target entity is not listed, skip it.
-2. For multiple entities in the same sentence, carefully assign the correct IDs to relationships.
-3. Do not invent new relationship types; use only allowed ones.
-4. Return the exact text evidence for each relationship.
-5. If unsure, omit the relationship rather than guessing.
-6. **Direction matters:** the relationships are designed such that the source is always the actor, acting on the target. Do not flip them.
-7. IMPORTANT: If you are sure two entities are related, but not how. DO NOT REVERT TO related_to. Instead, omit it entirely.
-Use related_to ONLY when the text explicitly states a non-specific relationship using words such as ‘related to’, ‘associated with’, ‘affiliated with’. Otherwise omit. 
-8. Do not infer relationships from: co-occurrence, same paragraph, shared document section. A relationship must be directly inferable without external reasoning
-9. If entity is a regulator AND action verb present → always attempt extraction
-10. controls can ONLY be extracted if explicit ownership/control language exists (e.g. owns, parent of, subsidiary of, acquired, wholly owned).
-Participation in agreements or transactions does NOT imply control.
-
-Example:
-Entities:
-E0 | Aurora Strategic Holdings, Inc. | company
-E1 | Helios BioAnalytics Corporation | company
-E2 | Jonathan R. Keene | person
-E3 | Equity Purchase Agreement | agreement
-
-Text:
-Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation pursuant to the Equity Purchase Agreement.
-Jonathan R. Keene signed the Equity Purchase Agreement on behalf of Aurora Strategic Holdings, Inc.
-
-Output relationships:
-{{
-  "relationships": [
-    {{
-      "source_entity_id": "E0",
-      "target_entity_id": "E1",
-      "relationship_type": "controls",
-      "evidence_quote": "Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation"
-    }},
-    {{
-      "source_entity_id": "E2",
-      "target_entity_id": "E3",
-      "relationship_type": "participates_in",
-      "evidence_quote": "Jonathan R. Keene signed the Equity Purchase Agreement"
-    }},
-    {{
-      "source_entity_id": "E0",
-      "target_entity_id": "E3",
-      "relationship_type": "participates_in",
-      "evidence_quote": "Aurora Strategic Holdings, Inc. acquired Helios BioAnalytics Corporation pursuant to the Equity Purchase Agreement"
-    }},
-    {{
-      "source_entity_id": "E2",
-      "target_entity_id": "E0",
-      "relationship_type": "related_to",
-      "evidence_quote": "Jonathan R. Keene signed the Equity Purchase Agreement on behalf of Aurora Strategic Holdings, Inc"
-    }}
-  ]
-}}
-
-Here on the E2->related_to->E0 relationship, we do not know the relationship, but we know that Jonathan R. Keene
-is sufficiently related to Aurora Strategic Holdings enough to sign for them.
-
-Return JSON strictly in the above format:
-{{
-  "relationships": [
-    {{
-      "source_entity_id": "...",
-      "target_entity_id": "...",
-      "relationship_type": "...",
-      "evidence_quote": "..."
-    }}
-  ]
-}}
-"""
-
+SYSTEM_PROMPT = LANGFUSE.get_prompt("entity-system").compile(allowed_entities="|".join(ALLOWED_ENTITIES))
+RELATIONSHIP_SYSTEM_PROMPT = (
+    LANGFUSE.get_prompt("relationship-system")
+    .compile(
+        allowed_relationships="|".join(ALLOWED_RELATIONSHIPS),
+        entity_relationship_direction_rules=ENTITY_RELATIONSHIP_DIRECTION_RULES
+    )
+)
 
 ENTITY_PROMPT_TEMPLATE = lambda chunk: f"""
 Extract the entities in the following text.
