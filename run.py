@@ -249,15 +249,16 @@ def chunk_text_with_overlap(text: str, max_chars: int = 2000, overlap_chars: int
     return chunks
 
 
-def _llm_backend(provider, schema, system_prompt, user_prompt, seed):
+def _llm_backend(provider, schema, system_prompt, user_prompt, seed, model=None):
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
     ]
 
     if provider=="ollama":
+        model = "qwen2.5:7b-instruct-q4_K_M" if model is None else model
         res = OLLAMA_CLIENT.chat(
-            model="qwen2.5:7b-instruct-q4_K_M",
+            model=model,
             format=schema,
             messages=messages,
             options={
@@ -267,8 +268,9 @@ def _llm_backend(provider, schema, system_prompt, user_prompt, seed):
         )
         return json.loads(res["message"]["content"])
     elif provider=="openai":
+        model = "gpt-4o-mini" if model is None else model
         response = OPENAI_CLIENT.chat.completions.create(
-            model="gpt-4o-mini",
+            model=model,
             messages=messages,
             temperature=0,
             seed=seed,
@@ -283,7 +285,7 @@ def _llm_backend(provider, schema, system_prompt, user_prompt, seed):
         raise ValueError("Invalid model provider!: ", provider)
 
 
-def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed: int = 42, timeout: int = None) -> dict:
+def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed: int = 42, timeout: int = None, model=None) -> dict:
     """Call the LLM in a separate thread so Ctrl+C works."""
     def call():
         return _llm_backend(
@@ -291,7 +293,8 @@ def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed:
             schema=schema,
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            seed=seed
+            seed=seed,
+            model=model
         )
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
@@ -323,7 +326,7 @@ def extract_relationships(chunk: str, entities: List[Dict], chunk_id: int, file_
     """Extracts relationships using the generic LLM caller."""
     # TODO: Instead of passing all entities, pass only ones mentioned in chunk
     prompt = relationship_prompt_template(chunk, entities)
-    data = _call_llm_threaded(prompt, RELATIONSHIP_SYSTEM_PROMPT, RelationshipList.model_json_schema(), seed)
+    data = _call_llm_threaded(prompt, RELATIONSHIP_SYSTEM_PROMPT, RelationshipList.model_json_schema(), seed, model="gpt-4o")
     relationships = data.get("relationships", [])
 
     return [
