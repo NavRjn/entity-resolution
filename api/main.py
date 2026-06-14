@@ -38,7 +38,13 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 @app.get("/")
 def healthcheck():
-    return {"status": "ok"}
+    return {"status": "ok", "version": "v0.0.1"}
+
+@app.get("/debug")
+def debug():
+    import os
+    import sys
+    return {"path": str(sys.path), "trace": str(sys.gettrace()), "cwd": os.getcwd(), "pwd": os.getpid()}
 
 
 @app.post("/api/uploads")
@@ -90,7 +96,7 @@ def run_upload(upload_id: str, background_tasks: BackgroundTasks):
 
     ctx = RunContext(
         run_id=run_id,
-        file_id=FILE_ID,
+        file_id=upload_id,
         seed=42,
         file_path=upload_path,
         output_dir=get_run_dir(run_id)

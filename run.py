@@ -18,16 +18,18 @@ from rich.table import Table
 from rich.logging import RichHandler
 import concurrent.futures
 from collections import defaultdict
-from debug_logger import log_prompt, log_response, log_hallucinated_entity, log_relationship_check
+from debug_logger import log_hallucinated_entity, log_relationship_check
 # from openai import OpenAI
 from langfuse.openai import OpenAI
 from dotenv import load_dotenv
 import os
+from langfuse import get_client
 
 load_dotenv()
 
 OLLAMA_CLIENT = ollama.Client(host="http://127.0.0.1:11434", timeout=180)
 OPENAI_CLIENT = OpenAI(api_key=os.getenv("OPENAI_API_LEGALDEV"))
+LANGFUSE = get_client()
 
 # --- CONFIG & OBSERVABILITY ---
 logging.basicConfig(
@@ -399,17 +401,10 @@ def _call_llm_threaded(user_prompt: str, system_prompt: str, schema: dict, seed:
             seed=seed
         )
 
-    log_prompt(prompt_type="entity" if schema == EntityList.model_json_schema() else "relationship",
-               prompt_text=user_prompt,
-               chunk_id=None)
-
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         future = executor.submit(call)
         try:
             res_dict = future.result(timeout=timeout)  # Can add timeout in seconds
-            log_response(prompt_type="entity" if schema == EntityList.model_json_schema() else "relationship",
-                         response_data=res_dict,
-                         chunk_id=None)
             return res_dict
         except concurrent.futures.TimeoutError:
             logger.warning("LLM call timed out")
@@ -778,80 +773,148 @@ FILE_ID = "0000"
 
 
 class EntityResolutionPipeline:
+
+    def _run_metadata(self, ctx: RunContext):
+        return {
+            "run_id": ctx.run_id,
+            "file_id": ctx.file_id,
+            "seed": ctx.seed,
+            "file_path": str(ctx.file_path) if ctx.file_path else None,
+        }
+
     def run_entities(self, ctx: RunContext) -> RunContext:
-        ctx.text = extract_text(ctx.file_path)
-        ctx.chunks = chunk_text_with_overlap(ctx.text)
+        with LANGFUSE.start_as_current_observation(
+                as_type="span", name="entity_pipeline", input=self._run_metadata(ctx)
+        ) as span:
+            with LANGFUSE.start_as_current_observation(as_type="span", name="document_ingestion"):
+                ctx.text = extract_text(ctx.file_path)
+            with LANGFUSE.start_as_current_observation(as_type="span", name="chunking"):
+                ctx.chunks = chunk_text_with_overlap(ctx.text)
 
-        with console.status("[bold green]Extracting entities..."):
-            for idx, chunk in enumerate(ctx.chunks):
-                raw_entities = extract_entities(chunk, seed=ctx.seed)
+            extraction_stats = {"chunks_processed": 0, "entities_extracted": 0, "invalid_entities": 0}
 
-                for raw_ent in raw_entities:
-                    validated = validate_guardrails(raw_ent, chunk, idx, ctx.file_id)
-                    ctx.validated_entities.append(validated)
+            with LANGFUSE.start_as_current_observation(as_type="span", name="entity_extraction"):
+                with console.status("[bold green]Extracting entities..."):
+                    for idx, chunk in enumerate(ctx.chunks):
+                        raw_entities = extract_entities(chunk, seed=ctx.seed)
 
-                    if not validated.is_valid:
-                        ctx.hallucination_count += 1
+                        extraction_stats["chunks_processed"] += 1
+                        extraction_stats["entities_extracted"] += len(raw_entities)
 
-        logger.info("Resolving entities...")
-        ctx.canonicals = resolve_entities(ctx.validated_entities)
+                        for raw_ent in raw_entities:
+                            validated = validate_guardrails(raw_ent, chunk, idx, ctx.file_id)
+                            ctx.validated_entities.append(validated)
 
-        logger.info(f"Resolved {len(ctx.canonicals)} canonical entities from {len(ctx.validated_entities)} mentions")
+                            if not validated.is_valid:
+                                ctx.hallucination_count += 1
+                                extraction_stats["invalid_entities"] += 1
 
-        ctx.chunk_entity_index = build_chunk_entity_index(ctx.canonicals)
-        run_dir = get_run_dir(ctx.run_id)
+            with LANGFUSE.start_as_current_observation(as_type="span", name="entity_resolution") as resolution_span:
+                logger.info("Resolving entities...")
+                ctx.canonicals = resolve_entities(ctx.validated_entities)
+                resolution_span.update(output={
+                        "validated_mentions": len(ctx.validated_entities),
+                        "canonical_entities": len(ctx.canonicals)
+                    })
 
-        save_manifest(run_dir, str(ctx.file_path), ctx.seed)
-        save_chunks(run_dir, ctx.chunks)
-        save_entities_artifact(run_dir, ctx.validated_entities, ctx.canonicals, ctx.chunk_entity_index)
+            logger.info(f"Resolved {len(ctx.canonicals)} canonical entities from {len(ctx.validated_entities)} mentions")
 
-        return ctx
+            ctx.chunk_entity_index = build_chunk_entity_index(ctx.canonicals)
+            run_dir = get_run_dir(ctx.run_id)
+
+            with LANGFUSE.start_as_current_observation(as_type="span", name="artifact_persistence"):
+                save_manifest(run_dir, str(ctx.file_path), ctx.seed)
+                save_chunks(run_dir, ctx.chunks)
+                save_entities_artifact(run_dir, ctx.validated_entities, ctx.canonicals, ctx.chunk_entity_index)
+
+            compression_ratio = (len(ctx.validated_entities)/ max(1, len(ctx.canonicals)))
+            hallucination_rate = (ctx.hallucination_count / max(1, len(ctx.validated_entities)))
+
+            span.update(
+                output={
+                    "chunks": len(ctx.chunks),
+                    "validated_entities": len(ctx.validated_entities),
+                    "canonical_entities": len(ctx.canonicals),
+                    "hallucinations": ctx.hallucination_count,
+                    "hallucination_rate": hallucination_rate,
+                    "compression_ratio": compression_ratio
+                }
+            )
+
+            return ctx
 
     def run_relationships(self, ctx: RunContext):
 
-        all_relationships = []
+        with LANGFUSE.start_as_current_observation(
+                as_type="span", name="relationship_pipeline",
+                input={
+                    "chunks": len(ctx.chunks),
+                    "entities": len(ctx.canonicals)
+                }) as span:
+            all_relationships = []
 
-        dropped = 0
-        valid = 0
+            dropped = 0
+            valid = 0
 
-        logger.warning(f"Starting relationship extraction with {len(ctx.canonicals)} entities and {len(ctx.chunks)} chunks.")
-        with console.status("[bold green]Extracting relationships..."):
-            for idx, chunk in enumerate(ctx.chunks):
-                entity_refs = ctx.chunk_entity_index.get(str(idx), ctx.chunk_entity_index.get(idx, []))
-                if not entity_refs:
-                    continue
+            logger.warning(f"Starting relationship extraction with {len(ctx.canonicals)} entities and {len(ctx.chunks)} chunks.")
+            with console.status("[bold green]Extracting relationships..."):
+                for idx, chunk in enumerate(ctx.chunks):
+                    entity_refs = ctx.chunk_entity_index.get(str(idx), ctx.chunk_entity_index.get(idx, []))
+                    if not entity_refs:
+                        continue
 
-                raw_relationships = extract_relationships(chunk, entity_refs, idx, ctx.file_id, ctx.seed)
+                    raw_relationships = extract_relationships(chunk, entity_refs, idx, ctx.file_id, ctx.seed)
 
-                for rel in raw_relationships:
-                    status = validate_relationship(rel, chunk)
-                    log_relationship_check(chunk_id=idx, rel=rel, status=("valid" if status else "false_positive"))
-                    if status:
-                        valid += 1
-                        all_relationships.append(rel)
-                    else:
-                        dropped += 1
+                    for rel in raw_relationships:
+                        status = validate_relationship(rel, chunk)
+                        log_relationship_check(chunk_id=idx, rel=rel, status=("valid" if status else "false_positive"))
+                        if status:
+                            valid += 1
+                            all_relationships.append(rel)
+                        else:
+                            dropped += 1
 
-        ctx.relationships = all_relationships
-        logger.warning(f"Relationship extraction: {valid} valid relationships, {dropped} dropped.")
+            ctx.relationships = all_relationships
+            acceptance_rate = (valid / max(1, valid + dropped))
+            span.update(
+                output={
+                    "valid_relationships": valid,
+                    "dropped_relationships": dropped,
+                    "acceptance_rate": acceptance_rate
+                }
+            )
 
-        return ctx
+            logger.warning(f"Relationship extraction: {valid} valid relationships, {dropped} dropped.")
 
+            return ctx
+
+    # Main external API Endpoint for running the full pipeline
     def run_full(self, ctx: RunContext):
+        with LANGFUSE.start_as_current_observation(
+                as_type="span", name="full_pipeline", input=self._run_metadata(ctx)
+        ) as root:
+            self.run_entities(ctx)
+            self.run_relationships(ctx)
 
-        self.run_entities(ctx)
-        self.run_relationships(ctx)
+            display_results(ctx.canonicals, ctx.relationships, ctx.hallucination_count)
 
-        display_results(ctx.canonicals, ctx.relationships, ctx.hallucination_count)
+            try:
+                with LANGFUSE.start_as_current_observation(as_type="span", name="graph_construction") as graph_span:
+                    nx_graph = build_networkx_graph(ctx.canonicals, ctx.relationships)
 
-        try:
-            nx_graph = build_networkx_graph(ctx.canonicals, ctx.relationships)
-            logger.info(f"Built NetworkX Graph with {nx_graph.number_of_nodes()} nodes and {nx_graph.number_of_edges()} edges.")
-        except ImportError:
-            logger.warning("NetworkX not installed.")
+                    graph_span.update(output={"nodes": nx_graph.number_of_nodes(), "edges": nx_graph.number_of_edges()})
+                    logger.info(f"Built NetworkX Graph with {nx_graph.number_of_nodes()} nodes and {nx_graph.number_of_edges()} edges.")
+            except ImportError:
+                logger.warning("NetworkX not installed.")
 
-        save_output(ctx.output_dir, ctx.canonicals, ctx.relationships)
-        return ctx
+            save_output(ctx.output_dir, ctx.canonicals, ctx.relationships)
+            root.update(output={
+                    "entities": len(ctx.canonicals),
+                    "relationships": len(ctx.relationships),
+                    "hallucinations": ctx.hallucination_count
+                })
+
+            return ctx
 
     def run_relationships_only(self, run_id: str):
 
@@ -897,7 +960,6 @@ if __name__ == "__main__":
         if not args.run:
             parser.error("--only relationship requires --run or --last")
         pipeline.run_relationships_only(args.run)
-
     else:
         if not args.file:
             parser.error("--file required")
