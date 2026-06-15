@@ -11,24 +11,40 @@ import Document from "./pages/Document.jsx"
 
 export default function App() {
   return (
-    <div style={{ padding: 20 }}>
-      <nav style={{ marginBottom: 20 }}>
-        <Link to="/runs">Runs</Link> |{" "}
-        <Link to="/uploads">Uploads</Link> |{" "}
-        <Link to="/uploads/new">Upload New</Link>
-      </nav>
+      <div style={{padding: 20}}>
+          <div className="p-10 bg-red-500 text-white text-3xl">
+              Tailwind is working
+          </div>
+          <nav style={{marginBottom: 20}}>
+              <Link to="/runs">Runs</Link> |{" "}
+              <Link to="/uploads">Uploads</Link> |{" "}
+              <Link to="/uploads/new">Upload New</Link>
+          </nav>
 
-      <Routes>
-          <Route path="/runs" element={<Runs />} />
-          <Route path="/runs/:runId" element={<RunDetail />} />
-          <Route path="/runs/creating" element={<RunCreating />} />
+          <Routes>
+              <Route path="/runs" element={<Runs/>}/>
+              <Route path="/runs/:runId" element={<RunDetail/>}/>
+              <Route path="/runs/creating" element={<RunCreating/>}/>
 
-          <Route path="/uploads" element={<Uploads />} />
-          <Route path="/uploads/new" element={<UploadNew />} />
-          <Route path="/runs/:runId/relationships" element={<Relationships />} />
-          <Route path="/runs/:runId/document" element={<Document />} />
-          <Route path="/runs/:runId/graph" element={<GraphView />} />
-      </Routes>
-    </div>
+              <Route path="/uploads" element={<Uploads/>}/>
+              <Route path="/uploads/new" element={<UploadNew/>}/>
+              <Route path="/runs/:runId/relationships" element={<Relationships/>}/>
+              <Route path="/runs/:runId/document" element={<Document/>}/>
+              <Route path="/runs/:runId/graph" element={<GraphView/>}/>
+          </Routes>
+      </div>
   )
 }
+
+// export default function App() {
+//   return (
+//       <div>
+//           <div className="p-10 bg-red-500 text-white text-3xl">
+//               TAILWIND TEST
+//           </div>
+//         <div className="test-red p-10 text-white">
+//             CSS TEST
+//         </div>
+//           </div>
+//   )
+// }
