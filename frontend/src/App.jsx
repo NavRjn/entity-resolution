@@ -12,9 +12,6 @@ import Document from "./pages/Document.jsx"
 export default function App() {
   return (
       <div style={{padding: 20}}>
-          <div className="p-10 bg-red-500 text-white text-3xl">
-              Tailwind is working
-          </div>
           <nav style={{marginBottom: 20}}>
               <Link to="/runs">Runs</Link> |{" "}
               <Link to="/uploads">Uploads</Link> |{" "}
@@ -35,16 +32,3 @@ export default function App() {
       </div>
   )
 }
-
-// export default function App() {
-//   return (
-//       <div>
-//           <div className="p-10 bg-red-500 text-white text-3xl">
-//               TAILWIND TEST
-//           </div>
-//         <div className="test-red p-10 text-white">
-//             CSS TEST
-//         </div>
-//           </div>
-//   )
-// }

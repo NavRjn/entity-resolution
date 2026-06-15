@@ -94,10 +94,6 @@ export default function Runs() {
           </Card>
         </div>
 
-        <div className="p-10 bg-red-500 text-white">
-          Tailwind test
-        </div>
-
         {/* TOOLBAR */}
         <div className="flex items-center justify-between gap-4">
           <div className="relative w-full max-w-md">
