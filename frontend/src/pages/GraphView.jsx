@@ -10,21 +10,27 @@ export default function GraphView() {
 
   const [graph, setGraph] = useState({ nodes: [], links: [] })
   const [loading, setLoading] = useState(true)
+  const [hoverNode, setHoverNode] = useState(null)
 
-  // --- COLOR MAPS ---
+  /* ---------------- COLORS (SOFT LEGAL PALETTE) ---------------- */
+
   const nodeColors = {
-    person: "#2d3436",
-    company: "#0984e3",
-    location: "#00b894",
-    default: "#636e72",
+    person: "#4f46e5",
+    company: "#0ea5e9",
+    location: "#10b981",
+    case: "#f59e0b",
+    default: "#64748b"
   }
 
   const edgeColors = {
-    works_at: "#6c5ce7",
-    owns: "#e17055",
-    related_to: "#636e72",
-    default: "#b2bec3",
+    works_at: "#6366f1",
+    owns: "#f97316",
+    related_to: "#94a3b8",
+    cites: "#22c55e",
+    default: "#cbd5e1"
   }
+
+  /* ---------------- LOAD GRAPH ---------------- */
 
   useEffect(() => {
     async function loadGraph() {
@@ -53,19 +59,28 @@ export default function GraphView() {
     loadGraph()
   }, [runId])
 
-  // IMPORTANT: fix "half graph invisible" issue
+  /* ---------------- AUTO-FIT ---------------- */
+
   useEffect(() => {
     if (!loading && fgRef.current) {
       setTimeout(() => {
-        fgRef.current.zoomToFit(500, 80) // padding fixes clipping
-      }, 300)
+        fgRef.current.zoomToFit(600, 120)
+      }, 400)
     }
   }, [loading])
 
   if (loading) {
     return (
-      <Box sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Typography>Loading graph...</Typography>
+      <Box sx={{
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#f8fafc"
+      }}>
+        <Typography sx={{ color: "#64748b" }}>
+          Loading legal relationship graph...
+        </Typography>
       </Box>
     )
   }
@@ -75,94 +90,138 @@ export default function GraphView() {
       style={{
         height: "100vh",
         width: "100%",
-        backgroundColor: "#f7f9fc"
+        background: `
+          radial-gradient(circle at 20% 10%, #eef2ff 0%, transparent 40%),
+          radial-gradient(circle at 80% 30%, #ecfeff 0%, transparent 45%),
+          radial-gradient(circle at 40% 80%, #fef3c7 0%, transparent 45%),
+          #f8fafc
+        `,
+        overflow: "hidden"
       }}
     >
-      {/* LEGEND */}
-      <div style={{
-        position: "absolute",
-        top: 10,
-        left: 10,
-        background: "white",
-        padding: 12,
-        borderRadius: 8,
-        fontSize: 12,
-        zIndex: 10,
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
-      }}>
-        <div><b>Node Types</b></div>
+
+      {/* FLOATING LEGEND */}
+      <div
+        style={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          zIndex: 10,
+          padding: 14,
+          borderRadius: 14,
+          background: "rgba(255,255,255,0.75)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(0,0,0,0.06)",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+          fontSize: 12,
+          color: "#334155",
+          width: 180
+        }}
+      >
+        <div style={{ fontWeight: 600, marginBottom: 6 }}>Entities</div>
         <div>● Person</div>
         <div>● Company</div>
         <div>● Location</div>
+        <div>● Case</div>
 
-        <div style={{ marginTop: 8 }}><b>Edges</b></div>
-        <div>— works_at</div>
-        <div>— owns</div>
-        <div>— related_to</div>
+        <div style={{ marginTop: 10, fontWeight: 600 }}>Relations</div>
+        <div>→ works at</div>
+        <div>→ owns</div>
+        <div>→ cites</div>
       </div>
 
       <ForceGraph2D
         ref={fgRef}
         graphData={graph}
 
-        // --- LAYOUT FIXES ---
-        d3VelocityDecay={0.35}
-        d3AlphaDecay={0.02}
-
-        // --- EDGES ---
-        linkWidth={1.2}
-        linkDirectionalArrowLength={5}
-        linkDirectionalArrowRelPos={1}
-        linkColor={link => edgeColors[link.type] || edgeColors.default}
-
-        // softer motion (less aggressive)
-        linkDirectionalParticles={1}
-        linkDirectionalParticleSpeed={0.003}
-
-        // --- NODE SIZE (BIG CHANGE) ---
-        nodeVal={node => {
-          // bigger nodes
-          if (node.entity_type === "company") return 20
-          if (node.entity_type === "person") return 15
-          return 10
+        /* ---------------- LAYOUT (LESS CHAOS) ---------------- */
+        d3VelocityDecay={0.4}
+        d3AlphaDecay={0.03}
+        d3Force="link"
+        d3ForceConfig={{
+          link: { distance: 140 }
         }}
 
-        // --- CLICK ---
+        /* ---------------- LINKS (FLOW STYLE) ---------------- */
+        linkWidth={1.6}
+        linkColor={l => edgeColors[l.type] || edgeColors.default}
+        linkDirectionalArrowLength={6}
+        linkDirectionalArrowRelPos={1}
+        linkCurvature={0.25}
+
+        /* subtle motion */
+        linkDirectionalParticles={hoverNode ? 0 : 1}
+        linkDirectionalParticleSpeed={0.004}
+
+        /* ---------------- NODE SIZE ---------------- */
+        nodeVal={node => {
+          if (node.entity_type === "company") return 28
+          if (node.entity_type === "person") return 22
+          if (node.entity_type === "case") return 26
+          return 18
+        }}
+
+        /* ---------------- INTERACTION ---------------- */
+        onNodeHover={setHoverNode}
+
         onNodeClick={(node) => {
           navigate(
-            `/runs/${runId}/document?entity=${encodeURIComponent(node.label || node.id)}`
+            `/runs/${runId}/document?entity=${encodeURIComponent(
+              node.label || node.id
+            )}`
           )
         }}
 
-        // --- NODE DRAW ---
+        /* ---------------- CUSTOM NODE RENDER ---------------- */
         nodeCanvasObject={(node, ctx, globalScale) => {
           const label = node.label || node.id
           const type = node.entity_type || "default"
 
-          const radius =
-            type === "company" ? 7 :
-            type === "person" ? 6 :
-            5
+          const baseRadius =
+            type === "company" ? 18 :
+            type === "person" ? 16 :
+            type === "case" ? 18 : 14
 
-          // NODE BODY (dark but color-coded)
+          const isHovered = hoverNode && hoverNode.id === node.id
+
+          const radius = isHovered ? baseRadius + 6 : baseRadius
+
+          /* --- NODE BACKGROUND (PILL STYLE) --- */
           ctx.beginPath()
           ctx.fillStyle = nodeColors[type] || nodeColors.default
-          ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI)
+
+          // rounded pill shape
+          const w = ctx.measureText(label).width / globalScale + 30
+          const h = 26
+
+          const x = node.x - w / 2
+          const y = node.y - h / 2
+
+          const r = 10
+
+          ctx.moveTo(x + r, y)
+          ctx.lineTo(x + w - r, y)
+          ctx.quadraticCurveTo(x + w, y, x + w, y + r)
+          ctx.lineTo(x + w, y + h - r)
+          ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+          ctx.lineTo(x + r, y + h)
+          ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+          ctx.lineTo(x, y + r)
+          ctx.quadraticCurveTo(x, y, x + r, y)
+          ctx.closePath()
           ctx.fill()
 
-          // subtle border glow
-          ctx.strokeStyle = "rgba(0,0,0,0.15)"
-          ctx.lineWidth = 1
+          /* subtle glow */
+          ctx.strokeStyle = "rgba(0,0,0,0.08)"
           ctx.stroke()
 
-          // LABEL (dark readable text)
-          const fontSize = 12 / globalScale
-          ctx.font = `${fontSize}px Sans-Serif`
-          ctx.fillStyle = "#2c3e50"
+          /* --- TEXT INSIDE NODE --- */
+          ctx.font = `${12 / globalScale}px Sans-Serif`
+          ctx.fillStyle = "white"
           ctx.textAlign = "center"
           ctx.textBaseline = "middle"
 
-          ctx.fillText(label, node.x, node.y + radius + 10)
+          ctx.fillText(label, node.x, node.y)
         }}
       />
     </div>
