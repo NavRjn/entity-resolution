@@ -325,7 +325,8 @@ def extract_entities(chunk: str, seed: int = 42) -> List[ExtractedEntity]:
 def extract_relationships(chunk: str, entities: List[Dict], chunk_id: int, file_id: str, seed: int = 42) -> List[Relationship]:
     """Extracts relationships using the generic LLM caller."""
     prompt = relationship_prompt_template(chunk, entities)
-    data = _call_llm_threaded(prompt, RELATIONSHIP_SYSTEM_PROMPT, RelationshipList.model_json_schema(), seed, model="gpt-4o")
+    relationship_model = "gpt-4o-mini"
+    data = _call_llm_threaded(prompt, RELATIONSHIP_SYSTEM_PROMPT, RelationshipList.model_json_schema(), seed, model=relationship_model)
     relationships = data.get("relationships", [])
 
     return [
