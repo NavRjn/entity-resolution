@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react"
 import ForceGraph2D from "react-force-graph-2d"
 import { useParams, useNavigate } from "react-router-dom"
 import { Box, Typography } from "@mui/material"
+import * as d3 from "d3-force"
 
 export default function GraphView() {
   const { runId } = useParams()
@@ -11,8 +12,6 @@ export default function GraphView() {
   const [graph, setGraph] = useState({ nodes: [], links: [] })
   const [loading, setLoading] = useState(true)
   const [hoverNode, setHoverNode] = useState(null)
-
-  /* ---------------- COLORS (SOFT LEGAL PALETTE) ---------------- */
 
   const nodeColors = {
     person: "#4f46e5",
@@ -30,7 +29,7 @@ export default function GraphView() {
     default: "#cbd5e1"
   }
 
-  /* ---------------- LOAD GRAPH ---------------- */
+  /* ---------------- LOAD ---------------- */
 
   useEffect(() => {
     async function loadGraph() {
@@ -39,18 +38,15 @@ export default function GraphView() {
         const data = await resp.json()
 
         setGraph({
-          nodes: Array.isArray(data.nodes) ? data.nodes : [],
-          links: Array.isArray(data.edges)
-            ? data.edges.map(e => ({
-                source: e.source,
-                target: e.target,
-                type: e.relationship_type || "default"
-              }))
-            : []
+          nodes: data.nodes || [],
+          links: (data.edges || []).map(e => ({
+            source: e.source,
+            target: e.target,
+            type: e.relationship_type || "default"
+          }))
         })
       } catch (err) {
         console.error(err)
-        setGraph({ nodes: [], links: [] })
       } finally {
         setLoading(false)
       }
@@ -59,28 +55,69 @@ export default function GraphView() {
     loadGraph()
   }, [runId])
 
-  /* ---------------- AUTO-FIT ---------------- */
+  /* ---------------- FORCE ENGINE (SAFE VERSION) ---------------- */
 
   useEffect(() => {
-    if (!loading && fgRef.current) {
-      setTimeout(() => {
-        fgRef.current.zoomToFit(600, 120)
-      }, 400)
-    }
+    if (!fgRef.current || loading) return
+
+    const fg = fgRef.current
+
+    // stronger structure
+    fg.d3Force("charge", d3.forceManyBody().strength(-220))
+
+    fg.d3Force("link")
+      .distance(80)
+      .strength(0.7)
+
+    // ✅ REAL collision (no require, no crash)
+    fg.d3Force(
+      "collision",
+      d3.forceCollide().radius(node => {
+        const base =
+          node.entity_type === "company" ? 26 :
+          node.entity_type === "person" ? 22 :
+          node.entity_type === "case" ? 24 : 18
+
+        return base + 6
+      })
+    )
+
+    setTimeout(() => {
+      fg.zoomToFit(600, 120)
+    }, 500)
   }, [loading])
+
+  /* ---------------- HELPERS ---------------- */
+
+  const getLabel = (node, globalScale) => {
+    const full = node.label || node.id
+
+    if (globalScale < 0.7) {
+      return full
+        .split(" ")
+        .map(w => w[0])
+        .join("")
+        .slice(0, 3)
+        .toUpperCase()
+    }
+
+    return full
+  }
+
+  const getRadius = (node) => {
+    return (
+      node.entity_type === "company" ? 18 :
+      node.entity_type === "person" ? 16 :
+      node.entity_type === "case" ? 18 : 14
+    )
+  }
+
+  const isDenseMode = false // keep stable first (IMPORTANT for debugging)
 
   if (loading) {
     return (
-      <Box sx={{
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#f8fafc"
-      }}>
-        <Typography sx={{ color: "#64748b" }}>
-          Loading legal relationship graph...
-        </Typography>
+      <Box sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Typography>Loading graph...</Typography>
       </Box>
     )
   }
@@ -90,78 +127,27 @@ export default function GraphView() {
       style={{
         height: "100vh",
         width: "100%",
-        background: `
-          radial-gradient(circle at 20% 10%, #eef2ff 0%, transparent 40%),
-          radial-gradient(circle at 80% 30%, #ecfeff 0%, transparent 45%),
-          radial-gradient(circle at 40% 80%, #fef3c7 0%, transparent 45%),
-          #f8fafc
-        `,
+        background: "#f8fafc",
         overflow: "hidden"
       }}
     >
-
-      {/* FLOATING LEGEND */}
-      <div
-        style={{
-          position: "absolute",
-          top: 16,
-          left: 16,
-          zIndex: 10,
-          padding: 14,
-          borderRadius: 14,
-          background: "rgba(255,255,255,0.75)",
-          backdropFilter: "blur(12px)",
-          border: "1px solid rgba(0,0,0,0.06)",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-          fontSize: 12,
-          color: "#334155",
-          width: 180
-        }}
-      >
-        <div style={{ fontWeight: 600, marginBottom: 6 }}>Entities</div>
-        <div>● Person</div>
-        <div>● Company</div>
-        <div>● Location</div>
-        <div>● Case</div>
-
-        <div style={{ marginTop: 10, fontWeight: 600 }}>Relations</div>
-        <div>→ works at</div>
-        <div>→ owns</div>
-        <div>→ cites</div>
-      </div>
 
       <ForceGraph2D
         ref={fgRef}
         graphData={graph}
 
-        /* ---------------- LAYOUT (LESS CHAOS) ---------------- */
-        d3VelocityDecay={0.4}
-        d3AlphaDecay={0.03}
-        d3Force="link"
-        d3ForceConfig={{
-          link: { distance: 140 }
-        }}
+        /* layout stability */
+        d3VelocityDecay={0.35}
+        d3AlphaDecay={0.02}
 
-        /* ---------------- LINKS (FLOW STYLE) ---------------- */
-        linkWidth={1.6}
+        /* links */
+        linkWidth={1.5}
         linkColor={l => edgeColors[l.type] || edgeColors.default}
         linkDirectionalArrowLength={6}
         linkDirectionalArrowRelPos={1}
         linkCurvature={0.25}
 
-        /* subtle motion */
-        linkDirectionalParticles={hoverNode ? 0 : 1}
-        linkDirectionalParticleSpeed={0.004}
-
-        /* ---------------- NODE SIZE ---------------- */
-        nodeVal={node => {
-          if (node.entity_type === "company") return 28
-          if (node.entity_type === "person") return 22
-          if (node.entity_type === "case") return 26
-          return 18
-        }}
-
-        /* ---------------- INTERACTION ---------------- */
+        /* interaction */
         onNodeHover={setHoverNode}
 
         onNodeClick={(node) => {
@@ -172,56 +158,38 @@ export default function GraphView() {
           )
         }}
 
-        /* ---------------- CUSTOM NODE RENDER ---------------- */
+        /* node size */
+        nodeVal={getRadius}
+
+        /* IMPORTANT: correct rendering */
         nodeCanvasObject={(node, ctx, globalScale) => {
-          const label = node.label || node.id
+          const label = getLabel(node, globalScale)
           const type = node.entity_type || "default"
+          const radius = getRadius(node)
 
-          const baseRadius =
-            type === "company" ? 18 :
-            type === "person" ? 16 :
-            type === "case" ? 18 : 14
+          const isHovered = hoverNode?.id === node.id
 
-          const isHovered = hoverNode && hoverNode.id === node.id
+          ctx.globalAlpha = isHovered ? 1 : 0.9
 
-          const radius = isHovered ? baseRadius + 6 : baseRadius
-
-          /* --- NODE BACKGROUND (PILL STYLE) --- */
+          /* node */
           ctx.beginPath()
           ctx.fillStyle = nodeColors[type] || nodeColors.default
-
-          // rounded pill shape
-          const w = ctx.measureText(label).width / globalScale + 30
-          const h = 26
-
-          const x = node.x - w / 2
-          const y = node.y - h / 2
-
-          const r = 10
-
-          ctx.moveTo(x + r, y)
-          ctx.lineTo(x + w - r, y)
-          ctx.quadraticCurveTo(x + w, y, x + w, y + r)
-          ctx.lineTo(x + w, y + h - r)
-          ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-          ctx.lineTo(x + r, y + h)
-          ctx.quadraticCurveTo(x, y + h, x, y + h - r)
-          ctx.lineTo(x, y + r)
-          ctx.quadraticCurveTo(x, y, x + r, y)
-          ctx.closePath()
+          ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI)
           ctx.fill()
 
-          /* subtle glow */
-          ctx.strokeStyle = "rgba(0,0,0,0.08)"
+          ctx.strokeStyle = "rgba(0,0,0,0.1)"
           ctx.stroke()
 
-          /* --- TEXT INSIDE NODE --- */
-          ctx.font = `${12 / globalScale}px Sans-Serif`
-          ctx.fillStyle = "white"
+          /* label */
+          const fontSize = Math.max(10 / globalScale, 7)
+          ctx.font = `${fontSize}px Sans-Serif`
+          ctx.fillStyle = "#1f2937"
           ctx.textAlign = "center"
           ctx.textBaseline = "middle"
 
-          ctx.fillText(label, node.x, node.y)
+          ctx.fillText(label, node.x, node.y + radius + 10)
+
+          ctx.globalAlpha = 1
         }}
       />
     </div>
