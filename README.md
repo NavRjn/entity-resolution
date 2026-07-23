@@ -23,6 +23,20 @@ A LLM-aided probabilistic entity resolution and management tool for Enterprise l
    ```sh
    python run.py --data_path data/test-synthetic.txt --chunk_size 1500 --overlap 0 --seed 42
    ```
+   
+
+### Running the server
+1. **start uvicorn server**:
+   ```sh
+    entity-res.venv/Scripts/activate
+    uvicorn api.main:app --reload
+   ```
+
+2. **start npm**:
+   ```sh
+    cd frontend
+    npm run dev
+   ```
 
 ### Testing the Tool
 1. **Run Tests**:
