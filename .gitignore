@@ -167,3 +167,15 @@ cython_debug/
 #.idea/
 
 .aider*
+
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Repomix generated output
+repomix-output.xml
+frontend/repomix-output.xml
+
+# User uploads
+uploads/
