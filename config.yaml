@@ -1,0 +1,17 @@
+models:
+  llm:
+    remote:
+      provider: openai
+      model: gpt-4o
+    local:
+      provider: ollama
+      model: qwen3:8b
+
+llm_overrides:
+  generation:
+    temperature: 0.2
+    max_tokens: 512
+  reliability:
+    timeout_s: 120
+#  context_limit: 128000        # Override context window size
+#  max_output_tokens: 4096      # Override max output tokens

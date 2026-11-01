@@ -2,18 +2,18 @@ from pathlib import Path
 from uuid import uuid4
 import json
 import datetime
-from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, APIRouter, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from run import CanonicalEntity, Relationship
+from engine.api import RunContext, run_full
 
 from run import (
     EntityResolutionPipeline,
-    RunContext,
+    # RunContext,
     build_networkx_graph,
     get_run_dir,
     FILE_ID,
 )
-from fastapi import APIRouter, HTTPException
 from pathlib import Path
 app = FastAPI()
 # router = APIRouter()
@@ -97,13 +97,14 @@ def run_upload(upload_id: str, background_tasks: BackgroundTasks):
     ctx = RunContext(
         run_id=run_id,
         file_id=upload_id,
-        seed=42,
+        # seed=42,
         file_path=upload_path,
         output_dir=get_run_dir(run_id)
     )
 
     # Launch the long run in the background
-    background_tasks.add_task(pipeline.run_full, ctx)
+    # background_tasks.add_task(pipeline.run_full, ctx)
+    background_tasks.add_task(run_full, ctx)
 
     # Immediately return run_id
     return {"run_id": run_id, "status": "pending"}

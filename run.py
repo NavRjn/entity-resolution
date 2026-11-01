@@ -1,4 +1,10 @@
 # %%
+# try:
+#     import rapidfuzz
+# except:
+#     print("FAILS; ")
+#     quit()
+#
 import argparse
 import json
 import string
@@ -8,7 +14,7 @@ from typing import List, Dict, Optional
 import datetime
 import re
 from uuid import uuid4
-import fitz  # PyMuPDF
+# import fitz  # PyMuPDF
 import ollama
 # from bs4 import BeautifulSoup
 from pydantic import BaseModel, Field
@@ -211,9 +217,10 @@ def extract_text(path: Path) -> str:
     logger.info(f"Ingesting file: {path}")
     text = []
     if path.suffix == ".pdf":
-        with fitz.open(path) as doc:
-            for page in doc:
-                text.append(page.get_text())
+        raise NotImplementedError
+        # with fitz.open(path) as doc:
+        #     for page in doc:
+        #         text.append(page.get_text())
     elif path.suffix == ".txt":
         with open(path, "r", encoding="utf-8") as f:
             text.append(f.read())
