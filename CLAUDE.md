@@ -41,3 +41,10 @@ There is no automated test suite; `test.py` is an evaluation script (precision/r
 - `pyproject.toml` pins `docling-graph` to a local editable path `../docling-graph` (sibling checkout required for `uv sync`).
 - `save_compatible_files` uses `next(output_dir.glob(...))`, so it raises if docling-graph produced no output; `citations` start/end offsets are placeholders (0) in the docling path.
 - `README.md` quick-start still says `pip install -r requirements.txt`; prefer `uv`.
+
+## Architecture reference
+
+Before answering architecture or "where is X" questions, read `.ua/knowledge-graph.json`.
+It holds the file, function and class nodes, the edges between them, the layers, and a guided tour.
+For questions about a specific file or function, use the `understand-anything:understand-explain` skill.
+To ask questions about the codebase, use `understand-anything:understand-chat`.
