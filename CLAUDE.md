@@ -8,19 +8,19 @@ LLM-aided entity resolution for legal/insurance documents: extracts entities (pe
 
 ## Commands
 
-Python ≥3.12, managed with `uv` (`pyproject.toml`/`uv.lock`; `requirements.txt` is stale UTF-16). The repo also contains a Windows venv `entity-res.venv/`. Secrets live in `.env` (`OPENAI_API_LEGALDEV`, `OPENAI_API_KEY`, `LANGFUSE_*`); Langfuse tracing is initialised at import time of `run.py`, and an Ollama server is expected at `127.0.0.1:11434` for local models.
+Python ≥3.12. **Always run Python through `uv`** (`uv run ...`), never a bare `python`/`uvicorn`: `uv` manages docling and the rest of the dependency graph, and the project is not runnable outside it. `requirements.txt` is stale UTF-16. The project environment is `.venv/` (created by `uv sync`; `uv run` uses it automatically, no `--active` needed). `entity-res.venv/` is an old Windows venv and is not used. Secrets live in `.env` (`OPENAI_API_LEGALDEV`, `OPENAI_API_KEY`, `LANGFUSE_*`); Langfuse tracing is initialised at import time of `run.py`, and an Ollama server is expected at `127.0.0.1:11434` for local models.
 
 ```sh
 # Legacy CLI pipeline (run from repo root; --file is relative to data/)
-python run.py --file test.txt --seed 42            # full run -> outputs/<timestamp>/
-python run.py --file test.txt --only entities
-python run.py --run <run_id> --only relationship   # or --last; re-run relationships on existing run
+uv run python run.py --file test.txt --seed 42            # full run -> outputs/<timestamp>/
+uv run python run.py --file test.txt --only entities
+uv run python run.py --run <run_id> --only relationship   # or --last; re-run relationships on existing run
 
 # Evaluate a run against ground truth (data/<name>.gt.json)
-python test.py --file test [--run <run_id>]        # defaults to latest run
+uv run python test.py --file test [--run <run_id>]        # defaults to latest run
 
 # API server (CORS allows only http://localhost:5173)
-uvicorn api.main:app --reload
+uv run python -m uvicorn api.main:app --reload
 
 # Frontend (React + Vite + Tailwind/shadcn + MUI)
 cd frontend && npm run dev      # also: npm run build, npm run lint
@@ -40,7 +40,7 @@ There is no automated test suite; `test.py` is an evaluation script (precision/r
 
 - `pyproject.toml` pins `docling-graph` to a local editable path `../docling-graph` (sibling checkout required for `uv sync`).
 - `save_compatible_files` uses `next(output_dir.glob(...))`, so it raises if docling-graph produced no output; `citations` start/end offsets are placeholders (0) in the docling path.
-- `README.md` quick-start still says `pip install -r requirements.txt`; prefer `uv`.
+- `README.md` quick-start still says `pip install -r requirements.txt` and `python run.py` / `uvicorn ...`; those commands are wrong for this project, use `uv` instead.
 
 ## Architecture reference
 
