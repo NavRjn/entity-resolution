@@ -64,6 +64,39 @@ def workspace(tmp_path, monkeypatch):
     return tmp_path
 
 
+@pytest.fixture
+def docling_output(tmp_path):
+    """A writable copy of the canned docling-graph output tree (nodes.csv/edges.csv/metadata.json)."""
+    import shutil
+    dest = tmp_path / "docling_fixture"
+    shutil.copytree(FIXTURES / "docling_output", dest)
+    return dest
+
+
+@pytest.fixture
+def fake_docling(monkeypatch):
+    """Patch engine.api.run_pipeline (the paid call) to drop canned output in cfg.output_dir.
+
+    PipelineConfig stays real, so docling-graph config/API drift is still caught.
+    Returns a list of the PipelineConfig objects it was called with.
+    """
+    import shutil
+    from types import SimpleNamespace
+
+    import engine.api
+
+    seen = []
+
+    def fake_run_pipeline(cfg):
+        seen.append(cfg)
+        target = Path(cfg.output_dir) / "doc_20260101_000000"
+        shutil.copytree(FIXTURES / "docling_output", target)
+        return SimpleNamespace(cfg=cfg)
+
+    monkeypatch.setattr(engine.api, "run_pipeline", fake_run_pipeline)
+    return seen
+
+
 DOC_TEXT = (
     "Acme Corp. signed the Master Agreement with John Smith. "
     "John Smith represents Globex Ltd. in all matters."

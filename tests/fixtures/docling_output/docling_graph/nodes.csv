@@ -1,0 +1,5 @@
+"id","label","type","__class__","name","document_name","entity_type","__provenance__"
+"OntologyDocument_aaaa","OntologyDocument","entity","OntologyDocument","","Test Document","","{""document_id"": ""doc1"", ""match"": ""verbatim"", ""chunks"": [0], ""pages"": [1], ""refs"": [""#/texts/0""]}"
+"Person_1111","Person","entity","Person","John Smith","","person","{""document_id"": ""doc1"", ""match"": ""verbatim"", ""chunks"": [0], ""pages"": [1], ""refs"": [""#/texts/1"", ""#/texts/2""]}"
+"Company_2222","Company","entity","Company","Acme Corp","","company","{""document_id"": ""doc1"", ""match"": ""verbatim"", ""chunks"": [0], ""pages"": [1], ""refs"": [""#/texts/1""]}"
+"Agreement_3333","Agreement","entity","Agreement","Master Agreement","","agreement","{""document_id"": ""doc1"", ""match"": ""verbatim"", ""chunks"": [1], ""pages"": [1], ""refs"": [""#/texts/3""]}"
