@@ -65,6 +65,46 @@ def workspace(tmp_path, monkeypatch):
 
 
 @pytest.fixture
+def client(workspace):
+    """In-process FastAPI client (no sockets). Runs in the tmp workspace; BackgroundTasks run synchronously."""
+    from fastapi.testclient import TestClient
+
+    import api.main
+
+    return TestClient(api.main.app)
+
+
+@pytest.fixture
+def legacy_run(workspace):
+    """A finished legacy-format run at outputs/20260101_000000 (manifest/output/entities/chunks)."""
+    import json
+
+    rid = "20260101_000000"
+    d = workspace / "outputs" / rid
+    d.mkdir(parents=True)
+    cit = {"file_id": "f", "chunk_id": 0, "start_char": 0, "end_char": 4, "quote": "Acme"}
+    ents = [
+        {"entity_id": "E0", "canonical_name": "Acme Corp.", "entity_type": "company", "aliases": [], "citations": [cit]},
+        {"entity_id": "E1", "canonical_name": "Master Agreement", "entity_type": "agreement", "aliases": [], "citations": [cit]},
+    ]
+    rels = [{"source_entity_id": "E0", "target_entity_id": "E1", "relationship_type": "participates_in", "citation": cit}]
+    src = workspace / "uploads" / "abcd1234_doc.txt"
+    src.write_text("Acme Corp. signed the Master Agreement.", encoding="utf-8")
+    (d / "manifest.json").write_text(json.dumps({
+        "run_id": rid, "created_at": "2026-01-01T00:00:00", "source_file": str(src), "seed": 1,
+    }), encoding="utf-8")
+    (d / "output.json").write_text(json.dumps({"entities": ents, "relationships": rels}), encoding="utf-8")
+    (d / "chunks.json").write_text(json.dumps({"chunks": ["Acme Corp. signed the Master Agreement."]}), encoding="utf-8")
+    (d / "entities.json").write_text(json.dumps({
+        "validated_entities": [],
+        "canonical_entities": ents,
+        "chunk_entity_index": {"0": [{"entity_id": "E0", "name": "Acme Corp.", "type": "company"},
+                                      {"entity_id": "E1", "name": "Master Agreement", "type": "agreement"}]},
+    }), encoding="utf-8")
+    return rid
+
+
+@pytest.fixture
 def docling_output(tmp_path):
     """A writable copy of the canned docling-graph output tree (nodes.csv/edges.csv/metadata.json)."""
     import shutil
