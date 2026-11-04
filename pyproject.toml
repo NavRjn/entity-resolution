@@ -185,7 +185,7 @@ dev = [
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
-addopts = "--disable-socket --allow-unix-socket -q"
+addopts = "--disable-socket --allow-unix-socket -q -p no:faulthandler -W ignore::DeprecationWarning"
 timeout = 60
 markers = [
     "slow: slower tests (heavy imports)",

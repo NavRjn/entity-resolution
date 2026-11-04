@@ -16,6 +16,10 @@ for _k, _v in {
     "LANGFUSE_SECRET_KEY": "sk-test",
     "LANGFUSE_HOST": "http://127.0.0.1:1",
     "LANGFUSE_TRACING_ENABLED": "false",
+    # litellm (via docling-graph) downloads a price map at import; use the bundled copy
+    "LITELLM_LOCAL_MODEL_COST_MAP": "True",
+    "HF_HUB_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1",
 }.items():
     os.environ[_k] = _v
 
