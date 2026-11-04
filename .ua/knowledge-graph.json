@@ -1,0 +1,3067 @@
+{
+ "version": "1.0.0",
+ "project": {
+  "name": "entity-resolution",
+  "languages": [
+   "css",
+   "html",
+   "javascript",
+   "json",
+   "markdown",
+   "python",
+   "tmp",
+   "toml",
+   "txt",
+   "unknown",
+   "yaml"
+  ],
+  "frameworks": [
+   "FastAPI",
+   "Pydantic",
+   "React",
+   "Vite",
+   "Tailwind CSS",
+   "docling-graph"
+  ],
+  "description": "LLM-aided probabilistic entity resolution and management tool for enterprise legal and insurance documents (PDFs or text), producing an entity table with auditability, explainability, and provenance.",
+  "analyzedAt": "2026-11-03T17:11:30.851998+00:00",
+  "gitCommitHash": "cfe4f88ef012b529ee5ed74fd7c015a3ef1f93fe"
+ },
+ "nodes": [
+  {
+   "id": "file:frontend/src/App.jsx",
+   "type": "file",
+   "name": "App.jsx",
+   "filePath": "frontend/src/App.jsx",
+   "summary": "Root React component defining client-side routes that map URLs to the page components for uploads, runs, documents, relationships and graph view.",
+   "tags": [
+    "react",
+    "routing",
+    "entry-point",
+    "frontend"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/App.jsx:App",
+   "type": "function",
+   "name": "App",
+   "filePath": "frontend/src/App.jsx",
+   "lineRange": [
+    12,
+    34
+   ],
+   "summary": "Defines the application routes.",
+   "tags": [
+    "component",
+    "routing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:frontend/src/main.jsx",
+   "type": "file",
+   "name": "main.jsx",
+   "filePath": "frontend/src/main.jsx",
+   "summary": "Vite/React bootstrap that mounts the App component into the DOM and loads global styles.",
+   "tags": [
+    "entry-point",
+    "react",
+    "bootstrap",
+    "frontend"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:frontend/src/pages/Document.jsx",
+   "type": "file",
+   "name": "Document.jsx",
+   "filePath": "frontend/src/pages/Document.jsx",
+   "summary": "Run document viewer that fetches run data and source document, detects HTML vs markdown, and highlights extracted entity mentions with clickable marks.",
+   "tags": [
+    "page",
+    "react",
+    "document-viewer",
+    "entity-highlighting"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:frontend/src/pages/Document.jsx:detectFormat",
+   "type": "function",
+   "name": "detectFormat",
+   "filePath": "frontend/src/pages/Document.jsx",
+   "lineRange": [
+    13,
+    23
+   ],
+   "summary": "Heuristically detects whether document content is HTML or markdown.",
+   "tags": [
+    "utility",
+    "parsing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/pages/Document.jsx:escapeRegExp",
+   "type": "function",
+   "name": "escapeRegExp",
+   "filePath": "frontend/src/pages/Document.jsx",
+   "lineRange": [
+    25,
+    27
+   ],
+   "summary": "Escapes regex special characters in a string.",
+   "tags": [
+    "utility",
+    "regex"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/pages/Document.jsx:EntityMark",
+   "type": "function",
+   "name": "EntityMark",
+   "filePath": "frontend/src/pages/Document.jsx",
+   "lineRange": [
+    31,
+    41
+   ],
+   "summary": "Clickable highlighted mark component for an entity mention.",
+   "tags": [
+    "component",
+    "highlighting"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/pages/Document.jsx:highlightTextToReact",
+   "type": "function",
+   "name": "highlightTextToReact",
+   "filePath": "frontend/src/pages/Document.jsx",
+   "lineRange": [
+    45,
+    93
+   ],
+   "summary": "Splits text on entity names and returns React nodes with entity marks.",
+   "tags": [
+    "utility",
+    "highlighting",
+    "react"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:frontend/src/pages/Document.jsx:HtmlRenderer",
+   "type": "function",
+   "name": "HtmlRenderer",
+   "filePath": "frontend/src/pages/Document.jsx",
+   "lineRange": [
+    97,
+    143
+   ],
+   "summary": "Renders HTML document content with entity mentions highlighted.",
+   "tags": [
+    "component",
+    "html-rendering"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:frontend/src/pages/Document.jsx:MarkdownRenderer",
+   "type": "function",
+   "name": "MarkdownRenderer",
+   "filePath": "frontend/src/pages/Document.jsx",
+   "lineRange": [
+    147,
+    167
+   ],
+   "summary": "Renders markdown content with entity mentions highlighted.",
+   "tags": [
+    "component",
+    "markdown-rendering"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/pages/Document.jsx:Document",
+   "type": "function",
+   "name": "Document",
+   "filePath": "frontend/src/pages/Document.jsx",
+   "lineRange": [
+    171,
+    323
+   ],
+   "summary": "Page component that loads run and document data and shows the highlighted document with entity details.",
+   "tags": [
+    "page",
+    "component",
+    "data-fetching"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:frontend/src/pages/GraphView.jsx",
+   "type": "file",
+   "name": "GraphView.jsx",
+   "filePath": "frontend/src/pages/GraphView.jsx",
+   "summary": "Page that fetches a run's entity graph from the API and renders it, navigating to related views on node interaction.",
+   "tags": [
+    "page",
+    "react",
+    "graph-visualization",
+    "api-client"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:frontend/src/pages/GraphView.jsx:GraphView",
+   "type": "function",
+   "name": "GraphView",
+   "filePath": "frontend/src/pages/GraphView.jsx",
+   "lineRange": [
+    7,
+    197
+   ],
+   "summary": "Fetches and renders the run entity graph.",
+   "tags": [
+    "page",
+    "component",
+    "graph"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:frontend/src/pages/Relationships.jsx",
+   "type": "file",
+   "name": "Relationships.jsx",
+   "filePath": "frontend/src/pages/Relationships.jsx",
+   "summary": "Page listing the relationships between resolved entities for a run, loaded from the run API.",
+   "tags": [
+    "page",
+    "react",
+    "relationships",
+    "api-client"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:frontend/src/pages/Relationships.jsx:Relationships",
+   "type": "function",
+   "name": "Relationships",
+   "filePath": "frontend/src/pages/Relationships.jsx",
+   "lineRange": [
+    22,
+    230
+   ],
+   "summary": "Renders entity relationships for a run.",
+   "tags": [
+    "page",
+    "component",
+    "relationships"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:frontend/src/pages/RunCreating.jsx",
+   "type": "file",
+   "name": "RunCreating.jsx",
+   "filePath": "frontend/src/pages/RunCreating.jsx",
+   "summary": "Transitional page that triggers a run for an upload, polls run status, and redirects to the run detail once ready.",
+   "tags": [
+    "page",
+    "react",
+    "polling",
+    "api-client"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/pages/RunCreating.jsx:RunCreating",
+   "type": "function",
+   "name": "RunCreating",
+   "filePath": "frontend/src/pages/RunCreating.jsx",
+   "lineRange": [
+    5,
+    49
+   ],
+   "summary": "Starts a run and polls until completion, then redirects.",
+   "tags": [
+    "page",
+    "component",
+    "polling"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:frontend/src/pages/RunDetail.jsx",
+   "type": "file",
+   "name": "RunDetail.jsx",
+   "filePath": "frontend/src/pages/RunDetail.jsx",
+   "summary": "Run detail page showing resolved entities and results for a run, with navigation to document, graph and relationship views.",
+   "tags": [
+    "page",
+    "react",
+    "entities",
+    "api-client"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:frontend/src/pages/RunDetail.jsx:RunDetail",
+   "type": "function",
+   "name": "RunDetail",
+   "filePath": "frontend/src/pages/RunDetail.jsx",
+   "lineRange": [
+    22,
+    252
+   ],
+   "summary": "Renders run results and entity tables.",
+   "tags": [
+    "page",
+    "component",
+    "entities"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:frontend/src/pages/Runs.jsx",
+   "type": "file",
+   "name": "Runs.jsx",
+   "filePath": "frontend/src/pages/Runs.jsx",
+   "summary": "Lists all entity resolution runs fetched from the backend with links to each run's detail.",
+   "tags": [
+    "page",
+    "react",
+    "list-view",
+    "api-client"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:frontend/src/pages/Runs.jsx:Runs",
+   "type": "function",
+   "name": "Runs",
+   "filePath": "frontend/src/pages/Runs.jsx",
+   "lineRange": [
+    26,
+    181
+   ],
+   "summary": "Renders the list of runs.",
+   "tags": [
+    "page",
+    "component",
+    "list-view"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:frontend/src/pages/UploadNew.jsx",
+   "type": "file",
+   "name": "UploadNew.jsx",
+   "filePath": "frontend/src/pages/UploadNew.jsx",
+   "summary": "Upload form that posts a new document to the API, starts a run, and navigates to the run-creating page.",
+   "tags": [
+    "page",
+    "react",
+    "file-upload",
+    "api-client"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:frontend/src/pages/UploadNew.jsx:UploadNew",
+   "type": "function",
+   "name": "UploadNew",
+   "filePath": "frontend/src/pages/UploadNew.jsx",
+   "lineRange": [
+    5,
+    215
+   ],
+   "summary": "Handles document upload form and run creation.",
+   "tags": [
+    "page",
+    "component",
+    "form"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:frontend/src/pages/Uploads.jsx",
+   "type": "file",
+   "name": "Uploads.jsx",
+   "filePath": "frontend/src/pages/Uploads.jsx",
+   "summary": "Lists previously uploaded documents and lets the user start a run on one or create a new upload.",
+   "tags": [
+    "page",
+    "react",
+    "list-view",
+    "api-client"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/pages/Uploads.jsx:Uploads",
+   "type": "function",
+   "name": "Uploads",
+   "filePath": "frontend/src/pages/Uploads.jsx",
+   "lineRange": [
+    13,
+    77
+   ],
+   "summary": "Renders the list of uploads.",
+   "tags": [
+    "page",
+    "component",
+    "list-view"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:api/main.py",
+   "type": "file",
+   "name": "main.py",
+   "filePath": "api/main.py",
+   "summary": "FastAPI application exposing endpoints to upload documents, start entity-resolution runs, and read run manifests, entities, graphs and documents.",
+   "tags": [
+    "entry-point",
+    "api-handler",
+    "fastapi",
+    "rest-api"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:api/main.py:upload_file",
+   "type": "function",
+   "name": "upload_file",
+   "filePath": "api/main.py",
+   "lineRange": [
+    51,
+    60
+   ],
+   "summary": "Accepts an uploaded document and stores it.",
+   "tags": [
+    "api-handler",
+    "endpoint"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:api/main.py:list_uploads",
+   "type": "function",
+   "name": "list_uploads",
+   "filePath": "api/main.py",
+   "lineRange": [
+    64,
+    85
+   ],
+   "summary": "Lists uploaded documents.",
+   "tags": [
+    "api-handler",
+    "endpoint"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:api/main.py:run_upload",
+   "type": "function",
+   "name": "run_upload",
+   "filePath": "api/main.py",
+   "lineRange": [
+    89,
+    110
+   ],
+   "summary": "Starts a pipeline run for an upload in the background.",
+   "tags": [
+    "api-handler",
+    "endpoint"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:api/main.py:list_runs",
+   "type": "function",
+   "name": "list_runs",
+   "filePath": "api/main.py",
+   "lineRange": [
+    113,
+    133
+   ],
+   "summary": "Lists existing runs.",
+   "tags": [
+    "api-handler",
+    "endpoint"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:api/main.py:get_run",
+   "type": "function",
+   "name": "get_run",
+   "filePath": "api/main.py",
+   "lineRange": [
+    137,
+    145
+   ],
+   "summary": "Returns details for a run.",
+   "tags": [
+    "api-handler",
+    "endpoint"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:api/main.py:get_run_entities",
+   "type": "function",
+   "name": "get_run_entities",
+   "filePath": "api/main.py",
+   "lineRange": [
+    160,
+    167
+   ],
+   "summary": "Returns canonical entities for a run.",
+   "tags": [
+    "api-handler",
+    "endpoint"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:api/main.py:get_graph",
+   "type": "function",
+   "name": "get_graph",
+   "filePath": "api/main.py",
+   "lineRange": [
+    181,
+    198
+   ],
+   "summary": "Returns the entity relationship graph for a run.",
+   "tags": [
+    "api-handler",
+    "endpoint"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:api/main.py:get_run_document",
+   "type": "function",
+   "name": "get_run_document",
+   "filePath": "api/main.py",
+   "lineRange": [
+    202,
+    228
+   ],
+   "summary": "Returns the source document for a run with provenance.",
+   "tags": [
+    "api-handler",
+    "endpoint"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:debug_logger.py",
+   "type": "file",
+   "name": "debug_logger.py",
+   "filePath": "debug_logger.py",
+   "summary": "File-based debug logger with helpers recording LLM prompts, responses, hallucinated entities and relationship checks for auditability.",
+   "tags": [
+    "logging",
+    "observability",
+    "utility",
+    "debugging"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:debug_logger.py:log_prompt",
+   "type": "function",
+   "name": "log_prompt",
+   "filePath": "debug_logger.py",
+   "lineRange": [
+    27,
+    34
+   ],
+   "summary": "Logs an LLM prompt.",
+   "tags": [
+    "logging",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:debug_logger.py:log_response",
+   "type": "function",
+   "name": "log_response",
+   "filePath": "debug_logger.py",
+   "lineRange": [
+    37,
+    44
+   ],
+   "summary": "Logs an LLM response.",
+   "tags": [
+    "logging",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:debug_logger.py:log_hallucinated_entity",
+   "type": "function",
+   "name": "log_hallucinated_entity",
+   "filePath": "debug_logger.py",
+   "lineRange": [
+    47,
+    53
+   ],
+   "summary": "Logs entities rejected as hallucinated.",
+   "tags": [
+    "logging",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:debug_logger.py:log_relationship_check",
+   "type": "function",
+   "name": "log_relationship_check",
+   "filePath": "debug_logger.py",
+   "lineRange": [
+    56,
+    65
+   ],
+   "summary": "Logs relationship validation outcomes.",
+   "tags": [
+    "logging",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:engine/api.py",
+   "type": "file",
+   "name": "api.py",
+   "filePath": "engine/api.py",
+   "summary": "Engine API layer that runs the Docling-graph pipeline and the full resolution flow, then writes outputs in the legacy backward-compatible file structure.",
+   "tags": [
+    "service",
+    "docling",
+    "pipeline",
+    "adapter"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:engine/api.py:RunContext",
+   "type": "class",
+   "name": "RunContext",
+   "filePath": "engine/api.py",
+   "lineRange": [
+    19,
+    27
+   ],
+   "summary": "Dataclass holding the paths and identifiers of a pipeline run.",
+   "tags": [
+    "data-model",
+    "dataclass"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:engine/api.py:save_compatible_files",
+   "type": "function",
+   "name": "save_compatible_files",
+   "filePath": "engine/api.py",
+   "lineRange": [
+    30,
+    96
+   ],
+   "summary": "Converts Docling pipeline output into the legacy run artifact files (manifest, entities, relationships).",
+   "tags": [
+    "serialization",
+    "compatibility"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:engine/api.py:run_full",
+   "type": "function",
+   "name": "run_full",
+   "filePath": "engine/api.py",
+   "lineRange": [
+    100,
+    126
+   ],
+   "summary": "Runs the Docling pipeline end to end and saves compatible artifacts.",
+   "tags": [
+    "orchestration",
+    "pipeline"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:engine/template.py",
+   "type": "file",
+   "name": "template.py",
+   "filePath": "engine/template.py",
+   "summary": "Pydantic ontology templates (Person, Company, Agreement, Asset, OtherEntity) and the OntologyDocument root model used by Docling-graph extraction.",
+   "tags": [
+    "data-model",
+    "schema-definition",
+    "pydantic",
+    "ontology"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:engine/template.py:Person",
+   "type": "class",
+   "name": "Person",
+   "filePath": "engine/template.py",
+   "lineRange": [
+    73,
+    103
+   ],
+   "summary": "Person entity model.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:engine/template.py:Company",
+   "type": "class",
+   "name": "Company",
+   "filePath": "engine/template.py",
+   "lineRange": [
+    106,
+    136
+   ],
+   "summary": "Company entity model.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:engine/template.py:Agreement",
+   "type": "class",
+   "name": "Agreement",
+   "filePath": "engine/template.py",
+   "lineRange": [
+    139,
+    163
+   ],
+   "summary": "Agreement entity model.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:engine/template.py:Asset",
+   "type": "class",
+   "name": "Asset",
+   "filePath": "engine/template.py",
+   "lineRange": [
+    166,
+    190
+   ],
+   "summary": "Asset entity model.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:engine/template.py:OtherEntity",
+   "type": "class",
+   "name": "OtherEntity",
+   "filePath": "engine/template.py",
+   "lineRange": [
+    193,
+    206
+   ],
+   "summary": "Fallback entity model.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:engine/template.py:OntologyDocument",
+   "type": "class",
+   "name": "OntologyDocument",
+   "filePath": "engine/template.py",
+   "lineRange": [
+    228,
+    269
+   ],
+   "summary": "Root document model aggregating entities and relationship edges.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:run.py",
+   "type": "file",
+   "name": "run.py",
+   "filePath": "run.py",
+   "summary": "Core LLM-based entity resolution pipeline: chunking, entity and relationship extraction, guardrail validation, fuzzy resolution to canonical entities, artifact persistence and graph building.",
+   "tags": [
+    "entity-resolution",
+    "llm",
+    "pipeline",
+    "core"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:run.py:Citation",
+   "type": "class",
+   "name": "Citation",
+   "filePath": "run.py",
+   "lineRange": [
+    57,
+    62
+   ],
+   "summary": "Provenance citation model.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:run.py:ExtractedEntity",
+   "type": "class",
+   "name": "ExtractedEntity",
+   "filePath": "run.py",
+   "lineRange": [
+    65,
+    68
+   ],
+   "summary": "Raw extracted entity model.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:run.py:EntityList",
+   "type": "class",
+   "name": "EntityList",
+   "filePath": "run.py",
+   "lineRange": [
+    71,
+    72
+   ],
+   "summary": "List wrapper for extracted entities.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:run.py:ValidatedEntity",
+   "type": "class",
+   "name": "ValidatedEntity",
+   "filePath": "run.py",
+   "lineRange": [
+    75,
+    83
+   ],
+   "summary": "Entity validated against guardrails.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:run.py:CanonicalEntity",
+   "type": "class",
+   "name": "CanonicalEntity",
+   "filePath": "run.py",
+   "lineRange": [
+    86,
+    93
+   ],
+   "summary": "Resolved canonical entity.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:run.py:Relationship",
+   "type": "class",
+   "name": "Relationship",
+   "filePath": "run.py",
+   "lineRange": [
+    96,
+    102
+   ],
+   "summary": "Relationship between entities.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:run.py:RelationshipList",
+   "type": "class",
+   "name": "RelationshipList",
+   "filePath": "run.py",
+   "lineRange": [
+    105,
+    106
+   ],
+   "summary": "List wrapper for relationships.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:run.py:RunContext",
+   "type": "class",
+   "name": "RunContext",
+   "filePath": "run.py",
+   "lineRange": [
+    110,
+    129
+   ],
+   "summary": "Run directory and path context.",
+   "tags": [
+    "data-model",
+    "pydantic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:run.py:EntityResolutionPipeline",
+   "type": "class",
+   "name": "EntityResolutionPipeline",
+   "filePath": "run.py",
+   "lineRange": [
+    678,
+    839
+   ],
+   "summary": "Orchestrates entity and relationship extraction runs, including relationships-only reruns.",
+   "tags": [
+    "pipeline",
+    "orchestration",
+    "entity-resolution"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:run.py:chunk_text_with_overlap",
+   "type": "function",
+   "name": "chunk_text_with_overlap",
+   "filePath": "run.py",
+   "lineRange": [
+    232,
+    256
+   ],
+   "summary": "Splits text into overlapping chunks.",
+   "tags": [
+    "entity-resolution",
+    "pipeline"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:run.py:_llm_backend",
+   "type": "function",
+   "name": "_llm_backend",
+   "filePath": "run.py",
+   "lineRange": [
+    259,
+    292
+   ],
+   "summary": "Selects and invokes the LLM backend.",
+   "tags": [
+    "entity-resolution",
+    "pipeline"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:run.py:_call_llm_threaded",
+   "type": "function",
+   "name": "_call_llm_threaded",
+   "filePath": "run.py",
+   "lineRange": [
+    295,
+    321
+   ],
+   "summary": "Runs LLM calls with threading.",
+   "tags": [
+    "entity-resolution",
+    "pipeline"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:run.py:extract_relationships",
+   "type": "function",
+   "name": "extract_relationships",
+   "filePath": "run.py",
+   "lineRange": [
+    332,
+    353
+   ],
+   "summary": "Extracts relationships per chunk.",
+   "tags": [
+    "entity-resolution",
+    "pipeline"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:run.py:validate_guardrails",
+   "type": "function",
+   "name": "validate_guardrails",
+   "filePath": "run.py",
+   "lineRange": [
+    356,
+    387
+   ],
+   "summary": "Rejects hallucinated or invalid entities.",
+   "tags": [
+    "entity-resolution",
+    "pipeline"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:run.py:resolve_entities",
+   "type": "function",
+   "name": "resolve_entities",
+   "filePath": "run.py",
+   "lineRange": [
+    416,
+    459
+   ],
+   "summary": "Fuzzy-merges entity mentions into clusters.",
+   "tags": [
+    "entity-resolution",
+    "pipeline"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:run.py:build_canonical_entity_map",
+   "type": "function",
+   "name": "build_canonical_entity_map",
+   "filePath": "run.py",
+   "lineRange": [
+    468,
+    488
+   ],
+   "summary": "Builds canonical entity map.",
+   "tags": [
+    "entity-resolution",
+    "pipeline"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:run.py:build_networkx_graph",
+   "type": "function",
+   "name": "build_networkx_graph",
+   "filePath": "run.py",
+   "lineRange": [
+    568,
+    595
+   ],
+   "summary": "Builds a NetworkX graph.",
+   "tags": [
+    "entity-resolution",
+    "pipeline"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:run.py:save_manifest",
+   "type": "function",
+   "name": "save_manifest",
+   "filePath": "run.py",
+   "lineRange": [
+    612,
+    623
+   ],
+   "summary": "Persists run manifest.",
+   "tags": [
+    "entity-resolution",
+    "pipeline"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:run.py:save_output",
+   "type": "function",
+   "name": "save_output",
+   "filePath": "run.py",
+   "lineRange": [
+    657,
+    666
+   ],
+   "summary": "Writes final outputs.",
+   "tags": [
+    "entity-resolution",
+    "pipeline"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:CLAUDE.md",
+   "type": "document",
+   "name": "CLAUDE.md",
+   "filePath": "CLAUDE.md",
+   "summary": "Guidance for Claude Code covering the project purpose, run commands for the legacy CLI, API server and frontend, the two coexisting backends, and gotchas.",
+   "tags": [
+    "documentation",
+    "development",
+    "ai-guidance"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:README.md",
+   "type": "document",
+   "name": "README.md",
+   "filePath": "README.md",
+   "summary": "Project overview for the entity resolution tool with file descriptions, usage and server instructions, testing, features and contribution notes.",
+   "tags": [
+    "documentation",
+    "entry-point",
+    "overview"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "config:config.yaml",
+   "type": "config",
+   "name": "config.yaml",
+   "filePath": "config.yaml",
+   "summary": "Selects remote (OpenAI gpt-4o) and local (Ollama qwen3:8b) LLM models and overrides generation and reliability settings such as temperature, max tokens and timeout.",
+   "tags": [
+    "configuration",
+    "llm",
+    "models"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "config:package.json",
+   "type": "config",
+   "name": "package.json",
+   "filePath": "package.json",
+   "summary": "Root npm manifest declaring a single dependency on the claude package.",
+   "tags": [
+    "configuration",
+    "npm",
+    "dependencies"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "config:pyproject.toml",
+   "type": "config",
+   "name": "pyproject.toml",
+   "filePath": "pyproject.toml",
+   "summary": "Python project metadata for uv requiring Python 3.12+, with a large pinned dependency list including docling, plus script entries, build-system and uv sources.",
+   "tags": [
+    "configuration",
+    "python",
+    "build-system",
+    "dependencies"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "document:requirements.txt",
+   "type": "document",
+   "name": "requirements.txt",
+   "filePath": "requirements.txt",
+   "summary": "Stale UTF-16 pip requirements listing of Python dependencies, superseded by pyproject.toml and uv.",
+   "tags": [
+    "dependencies",
+    "python",
+    "legacy"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Encoded as UTF-16, which is why it is considered stale."
+  },
+  {
+   "id": "document:frontend/README.md",
+   "type": "document",
+   "name": "README.md",
+   "filePath": "frontend/README.md",
+   "summary": "Stock Vite React template README covering available React plugins, the React Compiler note, and ESLint expansion advice.",
+   "tags": [
+    "documentation",
+    "vite",
+    "react",
+    "template"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "config:frontend/components.json",
+   "type": "config",
+   "name": "components.json",
+   "filePath": "frontend/components.json",
+   "summary": "shadcn/ui configuration defining style, Tailwind settings, icon library and import aliases for generated UI components.",
+   "tags": [
+    "configuration",
+    "shadcn",
+    "tailwind",
+    "ui"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:frontend/index.html",
+   "type": "file",
+   "name": "index.html",
+   "filePath": "frontend/index.html",
+   "summary": "Vite HTML entry page providing the root div and loading the React app via /src/main.jsx.",
+   "tags": [
+    "entry-point",
+    "html",
+    "vite",
+    "frontend"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "config:frontend/jsconfig.json",
+   "type": "config",
+   "name": "jsconfig.json",
+   "filePath": "frontend/jsconfig.json",
+   "summary": "JavaScript project config setting compiler options such as path aliases for editor resolution.",
+   "tags": [
+    "configuration",
+    "javascript",
+    "path-aliases"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "config:frontend/package.json",
+   "type": "config",
+   "name": "package.json",
+   "filePath": "frontend/package.json",
+   "summary": "Frontend npm manifest with Vite scripts and dependencies on React 19, Tailwind 4, MUI, react-router, force-graph and markdown rendering.",
+   "tags": [
+    "configuration",
+    "npm",
+    "dependencies",
+    "build-system"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:.python-version",
+   "type": "file",
+   "name": ".python-version",
+   "filePath": ".python-version",
+   "summary": "Pins the Python interpreter version (3.12) for uv/pyenv tooling.",
+   "tags": [
+    "configuration",
+    "python",
+    "tooling"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:engine/__init__.py",
+   "type": "file",
+   "name": "__init__.py",
+   "filePath": "engine/__init__.py",
+   "summary": "Empty package marker for the engine package.",
+   "tags": [
+    "package-marker",
+    "python",
+    "entry-point"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:frontend/eslint.config.js",
+   "type": "file",
+   "name": "eslint.config.js",
+   "filePath": "frontend/eslint.config.js",
+   "summary": "ESLint flat config for the React frontend with hooks and refresh rules.",
+   "tags": [
+    "configuration",
+    "linting",
+    "frontend"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:frontend/postcss.config.js",
+   "type": "file",
+   "name": "postcss.config.js",
+   "filePath": "frontend/postcss.config.js",
+   "summary": "PostCSS config enabling Tailwind CSS and autoprefixer.",
+   "tags": [
+    "configuration",
+    "css",
+    "build-system"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:frontend/src/App.css.tmp",
+   "type": "file",
+   "name": "App.css.tmp",
+   "filePath": "frontend/src/App.css.tmp",
+   "summary": "Leftover Vite template stylesheet (counter, hero styles) kept as a temp file, not loaded by the app.",
+   "tags": [
+    "styles",
+    "template",
+    "temporary"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:frontend/src/index.css",
+   "type": "file",
+   "name": "index.css",
+   "filePath": "frontend/src/index.css",
+   "summary": "Global stylesheet with Tailwind layers, theme CSS variables and base styles for the frontend.",
+   "tags": [
+    "styles",
+    "tailwind",
+    "theming",
+    "frontend"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:frontend/tailwind.config.js",
+   "type": "file",
+   "name": "tailwind.config.js",
+   "filePath": "frontend/tailwind.config.js",
+   "summary": "Tailwind CSS configuration defining content paths and theme extensions.",
+   "tags": [
+    "configuration",
+    "tailwind",
+    "build-system"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:frontend/vite.config.js",
+   "type": "file",
+   "name": "vite.config.js",
+   "filePath": "frontend/vite.config.js",
+   "summary": "Vite build configuration for the React frontend including plugins and aliases.",
+   "tags": [
+    "configuration",
+    "vite",
+    "build-system"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:observability.py",
+   "type": "file",
+   "name": "observability.py",
+   "filePath": "observability.py",
+   "summary": "Empty placeholder module intended for observability/logging hooks.",
+   "tags": [
+    "placeholder",
+    "observability",
+    "python"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/entity_resolution/__init__.py",
+   "type": "file",
+   "name": "__init__.py",
+   "filePath": "src/entity_resolution/__init__.py",
+   "summary": "Package init exposing a placeholder main() that prints a greeting.",
+   "tags": [
+    "entry-point",
+    "package-marker",
+    "python"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:test.py",
+   "type": "file",
+   "name": "test.py",
+   "filePath": "test.py",
+   "summary": "Evaluation script comparing a run's extracted entities and relationships to ground truth using fuzzy matching, with rich console reports and metrics output.",
+   "tags": [
+    "evaluation",
+    "metrics",
+    "cli",
+    "fuzzy-matching"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:frontend/src/components/ui/badge.jsx",
+   "type": "file",
+   "name": "badge.jsx",
+   "filePath": "frontend/src/components/ui/badge.jsx",
+   "summary": "shadcn-style UI primitives (Badge) built with Tailwind classes.",
+   "tags": [
+    "component",
+    "ui",
+    "shadcn",
+    "frontend"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/badge.jsx:Badge",
+   "type": "function",
+   "name": "Badge",
+   "filePath": "frontend/src/components/ui/badge.jsx",
+   "lineRange": [
+    30,
+    45
+   ],
+   "summary": "React component Badge rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:frontend/src/components/ui/button.jsx",
+   "type": "file",
+   "name": "button.jsx",
+   "filePath": "frontend/src/components/ui/button.jsx",
+   "summary": "shadcn-style UI primitives (Button) built with Tailwind classes.",
+   "tags": [
+    "component",
+    "ui",
+    "shadcn",
+    "frontend"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/button.jsx:Button",
+   "type": "function",
+   "name": "Button",
+   "filePath": "frontend/src/components/ui/button.jsx",
+   "lineRange": [
+    44,
+    61
+   ],
+   "summary": "React component Button rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:frontend/src/components/ui/card.jsx",
+   "type": "file",
+   "name": "card.jsx",
+   "filePath": "frontend/src/components/ui/card.jsx",
+   "summary": "shadcn-style UI primitives (Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter) built with Tailwind classes.",
+   "tags": [
+    "component",
+    "ui",
+    "shadcn",
+    "frontend"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:frontend/src/components/ui/card.jsx:Card",
+   "type": "function",
+   "name": "Card",
+   "filePath": "frontend/src/components/ui/card.jsx",
+   "lineRange": [
+    5,
+    20
+   ],
+   "summary": "React component Card rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/card.jsx:CardHeader",
+   "type": "function",
+   "name": "CardHeader",
+   "filePath": "frontend/src/components/ui/card.jsx",
+   "lineRange": [
+    22,
+    35
+   ],
+   "summary": "React component CardHeader rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/card.jsx:CardTitle",
+   "type": "function",
+   "name": "CardTitle",
+   "filePath": "frontend/src/components/ui/card.jsx",
+   "lineRange": [
+    37,
+    50
+   ],
+   "summary": "React component CardTitle rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/card.jsx:CardDescription",
+   "type": "function",
+   "name": "CardDescription",
+   "filePath": "frontend/src/components/ui/card.jsx",
+   "lineRange": [
+    52,
+    62
+   ],
+   "summary": "React component CardDescription rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/card.jsx:CardAction",
+   "type": "function",
+   "name": "CardAction",
+   "filePath": "frontend/src/components/ui/card.jsx",
+   "lineRange": [
+    64,
+    77
+   ],
+   "summary": "React component CardAction rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/card.jsx:CardContent",
+   "type": "function",
+   "name": "CardContent",
+   "filePath": "frontend/src/components/ui/card.jsx",
+   "lineRange": [
+    79,
+    89
+   ],
+   "summary": "React component CardContent rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/card.jsx:CardFooter",
+   "type": "function",
+   "name": "CardFooter",
+   "filePath": "frontend/src/components/ui/card.jsx",
+   "lineRange": [
+    91,
+    104
+   ],
+   "summary": "React component CardFooter rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:frontend/src/components/ui/input.jsx",
+   "type": "file",
+   "name": "input.jsx",
+   "filePath": "frontend/src/components/ui/input.jsx",
+   "summary": "shadcn-style UI primitives (Input) built with Tailwind classes.",
+   "tags": [
+    "component",
+    "ui",
+    "shadcn",
+    "frontend"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/input.jsx:Input",
+   "type": "function",
+   "name": "Input",
+   "filePath": "frontend/src/components/ui/input.jsx",
+   "lineRange": [
+    5,
+    20
+   ],
+   "summary": "React component Input rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:frontend/src/components/ui/table.jsx",
+   "type": "file",
+   "name": "table.jsx",
+   "filePath": "frontend/src/components/ui/table.jsx",
+   "summary": "shadcn-style UI primitives (Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption) built with Tailwind classes.",
+   "tags": [
+    "component",
+    "ui",
+    "shadcn",
+    "frontend"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:frontend/src/components/ui/table.jsx:Table",
+   "type": "function",
+   "name": "Table",
+   "filePath": "frontend/src/components/ui/table.jsx",
+   "lineRange": [
+    5,
+    17
+   ],
+   "summary": "React component Table rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/table.jsx:TableHeader",
+   "type": "function",
+   "name": "TableHeader",
+   "filePath": "frontend/src/components/ui/table.jsx",
+   "lineRange": [
+    19,
+    29
+   ],
+   "summary": "React component TableHeader rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/table.jsx:TableBody",
+   "type": "function",
+   "name": "TableBody",
+   "filePath": "frontend/src/components/ui/table.jsx",
+   "lineRange": [
+    31,
+    41
+   ],
+   "summary": "React component TableBody rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/table.jsx:TableFooter",
+   "type": "function",
+   "name": "TableFooter",
+   "filePath": "frontend/src/components/ui/table.jsx",
+   "lineRange": [
+    43,
+    53
+   ],
+   "summary": "React component TableFooter rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/table.jsx:TableRow",
+   "type": "function",
+   "name": "TableRow",
+   "filePath": "frontend/src/components/ui/table.jsx",
+   "lineRange": [
+    55,
+    68
+   ],
+   "summary": "React component TableRow rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/table.jsx:TableHead",
+   "type": "function",
+   "name": "TableHead",
+   "filePath": "frontend/src/components/ui/table.jsx",
+   "lineRange": [
+    70,
+    83
+   ],
+   "summary": "React component TableHead rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/table.jsx:TableCell",
+   "type": "function",
+   "name": "TableCell",
+   "filePath": "frontend/src/components/ui/table.jsx",
+   "lineRange": [
+    85,
+    98
+   ],
+   "summary": "React component TableCell rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:frontend/src/components/ui/table.jsx:TableCaption",
+   "type": "function",
+   "name": "TableCaption",
+   "filePath": "frontend/src/components/ui/table.jsx",
+   "lineRange": [
+    100,
+    110
+   ],
+   "summary": "React component TableCaption rendering a styled UI element.",
+   "tags": [
+    "component",
+    "ui",
+    "react"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/entity_resolution/__init__.py:main",
+   "type": "function",
+   "name": "main",
+   "filePath": "src/entity_resolution/__init__.py",
+   "lineRange": [
+    1,
+    2
+   ],
+   "summary": "Prints a placeholder greeting.",
+   "tags": [
+    "entry-point",
+    "placeholder"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:test.py:normalize",
+   "type": "function",
+   "name": "normalize",
+   "filePath": "test.py",
+   "lineRange": [
+    19,
+    21
+   ],
+   "summary": "Lowercases text and strips non-alphanumerics for matching.",
+   "tags": [
+    "utility",
+    "normalization"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:test.py:canon",
+   "type": "function",
+   "name": "canon",
+   "filePath": "test.py",
+   "lineRange": [
+    24,
+    35
+   ],
+   "summary": "Canonicalizes entity text by removing parenthetical suffixes and punctuation.",
+   "tags": [
+    "utility",
+    "normalization"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:test.py:get_latest_run",
+   "type": "function",
+   "name": "get_latest_run",
+   "filePath": "test.py",
+   "lineRange": [
+    38,
+    42
+   ],
+   "summary": "Finds the most recent run output for evaluation.",
+   "tags": [
+    "utility",
+    "filesystem"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:test.py:evaluate_run",
+   "type": "function",
+   "name": "evaluate_run",
+   "filePath": "test.py",
+   "lineRange": [
+    45,
+    216
+   ],
+   "summary": "Compares a run's entities and relationships with ground truth, computes precision/recall metrics and prints rich reports.",
+   "tags": [
+    "evaluation",
+    "metrics",
+    "reporting"
+   ],
+   "complexity": "complex"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:frontend/src/App.jsx",
+   "target": "function:frontend/src/App.jsx:App",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/App.jsx",
+   "target": "function:frontend/src/App.jsx:App",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/pages/Document.jsx",
+   "target": "function:frontend/src/pages/Document.jsx:detectFormat",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/Document.jsx",
+   "target": "function:frontend/src/pages/Document.jsx:escapeRegExp",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/Document.jsx",
+   "target": "function:frontend/src/pages/Document.jsx:EntityMark",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/Document.jsx",
+   "target": "function:frontend/src/pages/Document.jsx:highlightTextToReact",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/Document.jsx",
+   "target": "function:frontend/src/pages/Document.jsx:HtmlRenderer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/Document.jsx",
+   "target": "function:frontend/src/pages/Document.jsx:MarkdownRenderer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/Document.jsx",
+   "target": "function:frontend/src/pages/Document.jsx:Document",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/Document.jsx",
+   "target": "function:frontend/src/pages/Document.jsx:Document",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/pages/GraphView.jsx",
+   "target": "function:frontend/src/pages/GraphView.jsx:GraphView",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/GraphView.jsx",
+   "target": "function:frontend/src/pages/GraphView.jsx:GraphView",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/pages/Relationships.jsx",
+   "target": "function:frontend/src/pages/Relationships.jsx:Relationships",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/Relationships.jsx",
+   "target": "function:frontend/src/pages/Relationships.jsx:Relationships",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/pages/RunCreating.jsx",
+   "target": "function:frontend/src/pages/RunCreating.jsx:RunCreating",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/RunCreating.jsx",
+   "target": "function:frontend/src/pages/RunCreating.jsx:RunCreating",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/pages/RunDetail.jsx",
+   "target": "function:frontend/src/pages/RunDetail.jsx:RunDetail",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/RunDetail.jsx",
+   "target": "function:frontend/src/pages/RunDetail.jsx:RunDetail",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/pages/Runs.jsx",
+   "target": "function:frontend/src/pages/Runs.jsx:Runs",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/Runs.jsx",
+   "target": "function:frontend/src/pages/Runs.jsx:Runs",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/pages/UploadNew.jsx",
+   "target": "function:frontend/src/pages/UploadNew.jsx:UploadNew",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/UploadNew.jsx",
+   "target": "function:frontend/src/pages/UploadNew.jsx:UploadNew",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/pages/Uploads.jsx",
+   "target": "function:frontend/src/pages/Uploads.jsx:Uploads",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:frontend/src/pages/Uploads.jsx",
+   "target": "function:frontend/src/pages/Uploads.jsx:Uploads",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/App.jsx",
+   "target": "file:frontend/src/pages/Document.jsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:frontend/src/App.jsx",
+   "target": "file:frontend/src/pages/GraphView.jsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:frontend/src/App.jsx",
+   "target": "file:frontend/src/pages/Relationships.jsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:frontend/src/App.jsx",
+   "target": "file:frontend/src/pages/RunCreating.jsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:frontend/src/App.jsx",
+   "target": "file:frontend/src/pages/RunDetail.jsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:frontend/src/App.jsx",
+   "target": "file:frontend/src/pages/Runs.jsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:frontend/src/App.jsx",
+   "target": "file:frontend/src/pages/UploadNew.jsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:frontend/src/App.jsx",
+   "target": "file:frontend/src/pages/Uploads.jsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:frontend/src/main.jsx",
+   "target": "file:frontend/src/App.jsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:frontend/src/main.jsx",
+   "target": "file:frontend/src/index.css",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:api/main.py",
+   "target": "function:api/main.py:upload_file",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:api/main.py",
+   "target": "function:api/main.py:list_uploads",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:api/main.py",
+   "target": "function:api/main.py:run_upload",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:api/main.py",
+   "target": "function:api/main.py:list_runs",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:api/main.py",
+   "target": "function:api/main.py:get_run",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:api/main.py",
+   "target": "function:api/main.py:get_run_entities",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:api/main.py",
+   "target": "function:api/main.py:get_graph",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:api/main.py",
+   "target": "function:api/main.py:get_run_document",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:debug_logger.py",
+   "target": "function:debug_logger.py:log_prompt",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:debug_logger.py",
+   "target": "function:debug_logger.py:log_response",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:debug_logger.py",
+   "target": "function:debug_logger.py:log_hallucinated_entity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:debug_logger.py",
+   "target": "function:debug_logger.py:log_relationship_check",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:engine/api.py",
+   "target": "class:engine/api.py:RunContext",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:engine/api.py",
+   "target": "function:engine/api.py:save_compatible_files",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:engine/api.py",
+   "target": "function:engine/api.py:run_full",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:engine/template.py",
+   "target": "class:engine/template.py:Person",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:engine/template.py",
+   "target": "class:engine/template.py:Company",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:engine/template.py",
+   "target": "class:engine/template.py:Agreement",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:engine/template.py",
+   "target": "class:engine/template.py:Asset",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:engine/template.py",
+   "target": "class:engine/template.py:OtherEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:engine/template.py",
+   "target": "class:engine/template.py:OntologyDocument",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "class:run.py:Citation",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "class:run.py:ExtractedEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "class:run.py:EntityList",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "class:run.py:ValidatedEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "class:run.py:CanonicalEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "class:run.py:Relationship",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "class:run.py:RelationshipList",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "class:run.py:RunContext",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "class:run.py:EntityResolutionPipeline",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "function:run.py:chunk_text_with_overlap",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "function:run.py:_llm_backend",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "function:run.py:_call_llm_threaded",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "function:run.py:extract_relationships",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "function:run.py:validate_guardrails",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "function:run.py:resolve_entities",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "function:run.py:build_canonical_entity_map",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "function:run.py:build_networkx_graph",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "function:run.py:save_manifest",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:run.py",
+   "target": "function:run.py:save_output",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:api/main.py",
+   "target": "file:engine/api.py",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:api/main.py",
+   "target": "file:run.py",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:engine/api.py",
+   "target": "file:engine/template.py",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:engine/api.py",
+   "target": "file:run.py",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:run.py",
+   "target": "file:debug_logger.py",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "function:engine/api.py:run_full",
+   "target": "function:engine/api.py:save_compatible_files",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "document:README.md",
+   "target": "file:run.py",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:README.md",
+   "target": "file:test.py",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:CLAUDE.md",
+   "target": "file:run.py",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:CLAUDE.md",
+   "target": "file:api/main.py",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "config:config.yaml",
+   "target": "file:run.py",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:pyproject.toml",
+   "target": "file:run.py",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "document:requirements.txt",
+   "target": "config:pyproject.toml",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:frontend/README.md",
+   "target": "file:frontend/index.html",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:frontend/index.html",
+   "target": "file:frontend/src/main.jsx",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:frontend/package.json",
+   "target": "file:frontend/index.html",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:frontend/components.json",
+   "target": "file:frontend/src/index.css",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:frontend/jsconfig.json",
+   "target": "file:frontend/src/main.jsx",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:frontend/src/components/ui/badge.jsx",
+   "target": "function:frontend/src/components/ui/badge.jsx:Badge",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/badge.jsx",
+   "target": "function:frontend/src/components/ui/badge.jsx:Badge",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/button.jsx",
+   "target": "function:frontend/src/components/ui/button.jsx:Button",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/button.jsx",
+   "target": "function:frontend/src/components/ui/button.jsx:Button",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:Card",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:Card",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardHeader",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardHeader",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardTitle",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardTitle",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardDescription",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardDescription",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardAction",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardAction",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardContent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardContent",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardFooter",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/card.jsx",
+   "target": "function:frontend/src/components/ui/card.jsx:CardFooter",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/input.jsx",
+   "target": "function:frontend/src/components/ui/input.jsx:Input",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/input.jsx",
+   "target": "function:frontend/src/components/ui/input.jsx:Input",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:Table",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:Table",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableHeader",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableHeader",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableBody",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableBody",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableFooter",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableFooter",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableRow",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableRow",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableHead",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableHead",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableCell",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableCell",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableCaption",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:frontend/src/components/ui/table.jsx",
+   "target": "function:frontend/src/components/ui/table.jsx:TableCaption",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/entity_resolution/__init__.py",
+   "target": "function:src/entity_resolution/__init__.py:main",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/entity_resolution/__init__.py",
+   "target": "function:src/entity_resolution/__init__.py:main",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:test.py",
+   "target": "function:test.py:normalize",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:test.py",
+   "target": "function:test.py:normalize",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:test.py",
+   "target": "function:test.py:canon",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:test.py",
+   "target": "function:test.py:canon",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:test.py",
+   "target": "function:test.py:get_latest_run",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:test.py",
+   "target": "function:test.py:get_latest_run",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:test.py",
+   "target": "function:test.py:evaluate_run",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:test.py",
+   "target": "function:test.py:evaluate_run",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:frontend/postcss.config.js",
+   "target": "file:frontend/tailwind.config.js",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:frontend/tailwind.config.js",
+   "target": "file:frontend/src/index.css",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  }
+ ],
+ "layers": [
+  {
+   "id": "layer:frontend-pages",
+   "name": "Frontend Pages & App Shell",
+   "description": "React application entry, routing shell, and page views for uploads, runs, documents, graph view, and relationships.",
+   "nodeIds": [
+    "file:frontend/src/App.jsx",
+    "file:frontend/src/main.jsx",
+    "file:frontend/src/pages/Document.jsx",
+    "file:frontend/src/pages/GraphView.jsx",
+    "file:frontend/src/pages/Relationships.jsx",
+    "file:frontend/src/pages/RunCreating.jsx",
+    "file:frontend/src/pages/RunDetail.jsx",
+    "file:frontend/src/pages/Runs.jsx",
+    "file:frontend/src/pages/UploadNew.jsx",
+    "file:frontend/src/pages/Uploads.jsx"
+   ]
+  },
+  {
+   "id": "layer:frontend-ui",
+   "name": "Frontend UI Components & Styling",
+   "description": "Reusable shadcn-style UI primitives plus global CSS, Tailwind and PostCSS styling.",
+   "nodeIds": [
+    "file:frontend/src/components/ui/badge.jsx",
+    "file:frontend/src/components/ui/button.jsx",
+    "file:frontend/src/components/ui/card.jsx",
+    "file:frontend/src/components/ui/input.jsx",
+    "file:frontend/src/components/ui/table.jsx",
+    "file:frontend/src/index.css",
+    "file:frontend/src/App.css.tmp",
+    "file:frontend/tailwind.config.js",
+    "file:frontend/postcss.config.js"
+   ]
+  },
+  {
+   "id": "layer:api",
+   "name": "API Layer",
+   "description": "FastAPI application exposing the backend to the frontend.",
+   "nodeIds": [
+    "file:api/main.py"
+   ]
+  },
+  {
+   "id": "layer:engine",
+   "name": "Docling-Graph Engine",
+   "description": "Docling-graph extraction backend and ontology template, with its API adapter.",
+   "nodeIds": [
+    "file:engine/api.py",
+    "file:engine/template.py",
+    "file:engine/__init__.py",
+    "file:src/entity_resolution/__init__.py"
+   ]
+  },
+  {
+   "id": "layer:legacy-pipeline",
+   "name": "Legacy Pipeline & Observability",
+   "description": "Original LLM entity-resolution pipeline with shared schemas, debug logging, observability and evaluation script.",
+   "nodeIds": [
+    "file:run.py",
+    "file:debug_logger.py",
+    "file:observability.py",
+    "file:test.py"
+   ]
+  },
+  {
+   "id": "layer:build-config",
+   "name": "Build & Project Configuration",
+   "description": "Dependency manifests, runtime config, and frontend tooling/build setup.",
+   "nodeIds": [
+    "config:config.yaml",
+    "config:package.json",
+    "config:pyproject.toml",
+    "document:requirements.txt",
+    "config:frontend/components.json",
+    "file:frontend/index.html",
+    "config:frontend/jsconfig.json",
+    "config:frontend/package.json",
+    "file:.python-version",
+    "file:frontend/eslint.config.js",
+    "file:frontend/vite.config.js"
+   ]
+  },
+  {
+   "id": "layer:documentation",
+   "name": "Documentation",
+   "description": "Project READMEs and Claude guidance.",
+   "nodeIds": [
+    "document:CLAUDE.md",
+    "document:README.md",
+    "document:frontend/README.md"
+   ]
+  }
+ ],
+ "tour": [
+  {
+   "order": 1,
+   "title": "Project Overview",
+   "description": "README.md introduces the entity resolution tool: LLM-aided probabilistic resolution of entities in enterprise legal and insurance documents, with auditability and provenance. CLAUDE.md complements it with a architecture summary and the commands for the legacy CLI, the API and the frontend. Read these first to learn the vocabulary used in every later step.",
+   "nodeIds": [
+    "document:README.md",
+    "document:CLAUDE.md"
+   ]
+  },
+  {
+   "order": 2,
+   "title": "Configuration and Tooling",
+   "description": "config.yaml selects the remote (OpenAI) and local (Ollama) LLM models and overrides generation settings, so it governs how every pipeline run behaves. pyproject.toml, managed by uv and requiring Python 3.12+, pins the backend dependencies and supersedes the stale requirements.txt. Knowing these explains how the backend is configured before reading its code.",
+   "nodeIds": [
+    "config:config.yaml",
+    "config:pyproject.toml",
+    "document:requirements.txt"
+   ],
+   "languageLesson": "pyproject.toml is the standard Python project manifest. Tools like uv read it to resolve and lock dependencies, replacing hand-maintained requirements.txt files."
+  },
+  {
+   "order": 3,
+   "title": "The Legacy Pipeline: run.py",
+   "description": "run.py is the most depended-on and widest-reaching file in the project. It implements the core LLM-based pipeline: chunking, entity and relationship extraction, and graph resolution. Both the engine and the evaluation script build on it, so understanding it explains where entity resolution actually happens.",
+   "nodeIds": [
+    "file:run.py"
+   ]
+  },
+  {
+   "order": 4,
+   "title": "Ontology Templates",
+   "description": "engine/template.py defines Pydantic ontology templates (Person, Company, Agreement, Asset, OtherEntity). These typed schemas describe what an extracted entity looks like and give the Docling-based extraction a structured target. They provide the shared vocabulary for the engine adapter in the next step.",
+   "nodeIds": [
+    "file:engine/template.py"
+   ],
+   "languageLesson": "Pydantic models declare typed fields as class attributes and validate data at runtime, making them a natural way to describe an extraction schema for an LLM."
+  },
+  {
+   "order": 5,
+   "title": "Engine API Adapter",
+   "description": "engine/api.py runs the Docling-graph pipeline and the full resolution flow, then writes results in a backward-compatible file structure. It bridges the ontology from Step 4 and the legacy pipeline from Step 3 into a single callable layer for the web API. debug_logger.py supports it by recording LLM prompts, responses and hallucinated entities for auditability.",
+   "nodeIds": [
+    "file:engine/api.py",
+    "file:debug_logger.py"
+   ]
+  },
+  {
+   "order": 6,
+   "title": "FastAPI Backend",
+   "description": "api/main.py exposes endpoints to upload documents and start entity-resolution runs and to read their results. It delegates the heavy work to the engine API from Step 5, keeping HTTP concerns separate from resolution logic. This is the contract the frontend consumes.",
+   "nodeIds": [
+    "file:api/main.py"
+   ]
+  },
+  {
+   "order": 7,
+   "title": "Frontend Bootstrap and Routing",
+   "description": "index.html loads main.jsx, which mounts App.jsx into the DOM, and App.jsx maps URLs to page components. This is the entry point of the React client that talks to the API from Step 6. Vite and the frontend package manifest drive the dev and build tooling.",
+   "nodeIds": [
+    "file:frontend/index.html",
+    "file:frontend/src/main.jsx",
+    "file:frontend/src/App.jsx",
+    "config:frontend/package.json"
+   ]
+  },
+  {
+   "order": 8,
+   "title": "Upload and Run Workflow",
+   "description": "Uploads.jsx lists documents, UploadNew.jsx posts a new document and starts a run, and RunCreating.jsx polls the run status before redirecting. Together they form the user journey that triggers the backend pipeline. Runs.jsx lists all runs for later review.",
+   "nodeIds": [
+    "file:frontend/src/pages/Uploads.jsx",
+    "file:frontend/src/pages/UploadNew.jsx",
+    "file:frontend/src/pages/RunCreating.jsx",
+    "file:frontend/src/pages/Runs.jsx"
+   ]
+  },
+  {
+   "order": 9,
+   "title": "Inspecting Results and Provenance",
+   "description": "RunDetail.jsx shows resolved entities for a run, Document.jsx displays the source document, GraphView.jsx renders the entity graph, and Relationships.jsx lists relationships. These pages deliver the auditability promise by letting users trace results back to the source text.",
+   "nodeIds": [
+    "file:frontend/src/pages/RunDetail.jsx",
+    "file:frontend/src/pages/Document.jsx",
+    "file:frontend/src/pages/GraphView.jsx",
+    "file:frontend/src/pages/Relationships.jsx"
+   ]
+  },
+  {
+   "order": 10,
+   "title": "UI Primitives and Styling",
+   "description": "Card, Table, Button, Badge and Input are shadcn-style primitives built with Tailwind classes and reused by the pages. index.css holds the theme variables and Tailwind layers, configured by tailwind.config.js and components.json. This shared layer keeps the pages visually consistent.",
+   "nodeIds": [
+    "file:frontend/src/components/ui/card.jsx",
+    "file:frontend/src/components/ui/table.jsx",
+    "file:frontend/src/index.css",
+    "config:frontend/components.json",
+    "file:frontend/tailwind.config.js"
+   ]
+  },
+  {
+   "order": 11,
+   "title": "Evaluating Against Ground Truth",
+   "description": "test.py compares a run's extracted entities and relationships to ground truth files. It relies on the pipeline from Step 3, closing the loop by measuring the quality of the resolution results.",
+   "nodeIds": [
+    "file:test.py"
+   ]
+  }
+ ]
+}

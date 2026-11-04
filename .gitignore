@@ -179,3 +179,7 @@ frontend/repomix-output.xml
 
 # User uploads
 uploads/
+
+# Understand anything
+.ua/.trash-*
+.ua/intermediate

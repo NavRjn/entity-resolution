@@ -1,0 +1,2390 @@
+{
+  "version": "1.0.0",
+  "gitCommitHash": "cfe4f88ef012b529ee5ed74fd7c015a3ef1f93fe",
+  "generatedAt": "2026-11-03T17:11:31.758Z",
+  "files": {
+    ".python-version": {
+      "filePath": ".python-version",
+      "contentHash": "7b55f8e67b5623c4bef3fa691288da9437d79d3aba156de48d481db32ac7d16d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 2,
+      "hasStructuralAnalysis": false
+    },
+    ".ua/config.json": {
+      "filePath": ".ua/config.json",
+      "contentHash": "f78d91dc3a5d45730ba940f98b0ac44d3c1f31a306211c658ed6ca77a0db5025",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 2,
+      "hasStructuralAnalysis": false
+    },
+    "CLAUDE.md": {
+      "filePath": "CLAUDE.md",
+      "contentHash": "b9127f78512cd61c6300b2b58a21d55bd3127c3c1b9749006fcaa53da8022249",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 44,
+      "hasStructuralAnalysis": false
+    },
+    "README.md": {
+      "filePath": "README.md",
+      "contentHash": "9b6f550552f463d73ce079d95a63f79b41dd3713839b1754058afc4d35d1c45a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 66,
+      "hasStructuralAnalysis": false
+    },
+    "api/main.py": {
+      "filePath": "api/main.py",
+      "contentHash": "3ed8945955dba74c723dc4e69301c43657deb5c4f88ffe01644d0e5a6ccfffc4",
+      "functions": [
+        {
+          "name": "healthcheck",
+          "params": [],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "debug",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "upload_file",
+          "params": [
+            "file"
+          ],
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "list_uploads",
+          "params": [],
+          "exported": true,
+          "lineCount": 22
+        },
+        {
+          "name": "run_upload",
+          "params": [
+            "upload_id",
+            "background_tasks"
+          ],
+          "exported": true,
+          "lineCount": 22
+        },
+        {
+          "name": "list_runs",
+          "params": [],
+          "exported": true,
+          "lineCount": 21
+        },
+        {
+          "name": "get_run",
+          "params": [
+            "run_id"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "get_run_manifest",
+          "params": [
+            "run_id"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "get_run_entities",
+          "params": [
+            "run_id"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "rerun_relationships",
+          "params": [
+            "run_id"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "get_graph",
+          "params": [
+            "run_id"
+          ],
+          "exported": true,
+          "lineCount": 18
+        },
+        {
+          "name": "get_run_document",
+          "params": [
+            "run_id"
+          ],
+          "exported": true,
+          "lineCount": 27
+        },
+        {
+          "name": "get_document",
+          "params": [
+            "upload_id"
+          ],
+          "exported": true,
+          "lineCount": 21
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "uuid",
+          "specifiers": [
+            "uuid4"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "datetime",
+          "specifiers": [
+            "datetime"
+          ]
+        },
+        {
+          "source": "fastapi",
+          "specifiers": [
+            "FastAPI",
+            "UploadFile",
+            "File",
+            "HTTPException",
+            "BackgroundTasks",
+            "APIRouter",
+            "HTTPException"
+          ]
+        },
+        {
+          "source": "fastapi.middleware.cors",
+          "specifiers": [
+            "CORSMiddleware"
+          ]
+        },
+        {
+          "source": "run",
+          "specifiers": [
+            "CanonicalEntity",
+            "Relationship"
+          ]
+        },
+        {
+          "source": "engine.api",
+          "specifiers": [
+            "RunContext",
+            "run_full"
+          ]
+        },
+        {
+          "source": "run",
+          "specifiers": [
+            "EntityResolutionPipeline",
+            "build_networkx_graph",
+            "get_run_dir",
+            "FILE_ID"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        }
+      ],
+      "exports": [
+        "healthcheck",
+        "debug",
+        "upload_file",
+        "list_uploads",
+        "run_upload",
+        "list_runs",
+        "get_run",
+        "get_run_manifest",
+        "get_run_entities",
+        "rerun_relationships",
+        "get_graph",
+        "get_run_document",
+        "get_document"
+      ],
+      "totalLines": 253,
+      "hasStructuralAnalysis": true
+    },
+    "config.yaml": {
+      "filePath": "config.yaml",
+      "contentHash": "368fc13e8fd17883b5c176be67f338cfc8c1d525dbebb5b31a04d8715cc8567f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 17,
+      "hasStructuralAnalysis": false
+    },
+    "debug_logger.py": {
+      "filePath": "debug_logger.py",
+      "contentHash": "b72ab75ed725934d0f385d45d595f8df23e4108bcd90e8b868b17862a503df7d",
+      "functions": [
+        {
+          "name": "log_prompt",
+          "params": [
+            "prompt_type",
+            "prompt_text",
+            "chunk_id"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "log_response",
+          "params": [
+            "prompt_type",
+            "response_data",
+            "chunk_id"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "log_hallucinated_entity",
+          "params": [
+            "entity"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "log_relationship_check",
+          "params": [
+            "chunk_id",
+            "rel",
+            "status",
+            "notes"
+          ],
+          "exported": true,
+          "lineCount": 10
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "datetime",
+          "specifiers": [
+            "datetime"
+          ]
+        }
+      ],
+      "exports": [
+        "log_prompt",
+        "log_response",
+        "log_hallucinated_entity",
+        "log_relationship_check"
+      ],
+      "totalLines": 65,
+      "hasStructuralAnalysis": true
+    },
+    "engine/__init__.py": {
+      "filePath": "engine/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "engine/api.py": {
+      "filePath": "engine/api.py",
+      "contentHash": "9717459bce51435afc8bb0736324da06cae826f135d8ec7a46ee320d1e5bb77d",
+      "functions": [
+        {
+          "name": "save_compatible_files",
+          "params": [
+            "run_id",
+            "source_file",
+            "output_dir"
+          ],
+          "exported": true,
+          "lineCount": 67
+        },
+        {
+          "name": "run_full",
+          "params": [
+            "ctx"
+          ],
+          "returnType": "RunContext",
+          "exported": true,
+          "lineCount": 27
+        }
+      ],
+      "classes": [
+        {
+          "name": "RunContext",
+          "methods": [],
+          "properties": [
+            "run_id",
+            "file_id",
+            "file_path",
+            "output_dir",
+            "doc_ctx"
+          ],
+          "exported": true,
+          "lineCount": 9
+        }
+      ],
+      "imports": [
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "dataclasses",
+          "specifiers": [
+            "dataclass"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Optional"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "csv",
+          "specifiers": [
+            "csv"
+          ]
+        },
+        {
+          "source": ".template",
+          "specifiers": [
+            "OntologyDocument"
+          ]
+        },
+        {
+          "source": "dotenv",
+          "specifiers": [
+            "load_dotenv"
+          ]
+        },
+        {
+          "source": "docling_graph",
+          "specifiers": [
+            "PipelineConfig",
+            "run_pipeline",
+            "PipelineContext"
+          ]
+        },
+        {
+          "source": "run",
+          "specifiers": [
+            "Citation",
+            "CanonicalEntity",
+            "EntityList",
+            "Relationship",
+            "RelationshipList"
+          ]
+        }
+      ],
+      "exports": [
+        "RunContext",
+        "save_compatible_files",
+        "run_full"
+      ],
+      "totalLines": 130,
+      "hasStructuralAnalysis": true
+    },
+    "engine/template.py": {
+      "filePath": "engine/template.py",
+      "contentHash": "834275f6af041d88fbf69c63514b5afdabce9ab7160e0be90814868e80235d69",
+      "functions": [
+        {
+          "name": "edge",
+          "params": [
+            "label"
+          ],
+          "returnType": "Any",
+          "exported": true,
+          "lineCount": 6
+        }
+      ],
+      "classes": [
+        {
+          "name": "Person",
+          "methods": [],
+          "properties": [
+            "entity_type",
+            "name",
+            "controls",
+            "participates_in",
+            "represents",
+            "related_to"
+          ],
+          "exported": true,
+          "lineCount": 31
+        },
+        {
+          "name": "Company",
+          "methods": [],
+          "properties": [
+            "entity_type",
+            "name",
+            "controls",
+            "participates_in",
+            "represents",
+            "related_to"
+          ],
+          "exported": true,
+          "lineCount": 31
+        },
+        {
+          "name": "Agreement",
+          "methods": [],
+          "properties": [
+            "entity_type",
+            "name",
+            "transfers_to",
+            "governs",
+            "related_to"
+          ],
+          "exported": true,
+          "lineCount": 25
+        },
+        {
+          "name": "Asset",
+          "methods": [],
+          "properties": [
+            "entity_type",
+            "name",
+            "transfers_to",
+            "governs",
+            "related_to"
+          ],
+          "exported": true,
+          "lineCount": 25
+        },
+        {
+          "name": "OtherEntity",
+          "methods": [],
+          "properties": [
+            "entity_type",
+            "name",
+            "related_to"
+          ],
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "OntologyDocument",
+          "methods": [],
+          "properties": [
+            "document_name",
+            "persons",
+            "companies",
+            "agreements",
+            "assets",
+            "others"
+          ],
+          "exported": true,
+          "lineCount": 42
+        }
+      ],
+      "imports": [
+        {
+          "source": "typing",
+          "specifiers": [
+            "Any",
+            "List",
+            "Union",
+            "Literal"
+          ]
+        },
+        {
+          "source": "pydantic",
+          "specifiers": [
+            "BaseModel",
+            "ConfigDict",
+            "Field"
+          ]
+        }
+      ],
+      "exports": [
+        "edge",
+        "Person",
+        "Company",
+        "Agreement",
+        "Asset",
+        "OtherEntity",
+        "OntologyDocument"
+      ],
+      "totalLines": 270,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/README.md": {
+      "filePath": "frontend/README.md",
+      "contentHash": "a2648adf2f4e92d188d79e14c2b26e207bb0654e90beb5d99e7eb594d995fe65",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 17,
+      "hasStructuralAnalysis": false
+    },
+    "frontend/components.json": {
+      "filePath": "frontend/components.json",
+      "contentHash": "85f2951d5c9628cb59949fbba61d59c02e55922fdbf2f9f1e9fa428bdd4273d7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 26,
+      "hasStructuralAnalysis": false
+    },
+    "frontend/eslint.config.js": {
+      "filePath": "frontend/eslint.config.js",
+      "contentHash": "9f9b44b8e55768eaf86e417b96919510b12055d87806e0e2f0703c5a0eb64817",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@eslint/js",
+          "specifiers": [
+            "js"
+          ]
+        },
+        {
+          "source": "globals",
+          "specifiers": [
+            "globals"
+          ]
+        },
+        {
+          "source": "eslint-plugin-react-hooks",
+          "specifiers": [
+            "reactHooks"
+          ]
+        },
+        {
+          "source": "eslint-plugin-react-refresh",
+          "specifiers": [
+            "reactRefresh"
+          ]
+        },
+        {
+          "source": "eslint/config",
+          "specifiers": [
+            "defineConfig",
+            "globalIgnores"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/index.html": {
+      "filePath": "frontend/index.html",
+      "contentHash": "efe2f9aa7779e8a21ed71c220218b25a67b9c12ace66ad3ed02b181ce4e44a1d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 14,
+      "hasStructuralAnalysis": false
+    },
+    "frontend/jsconfig.json": {
+      "filePath": "frontend/jsconfig.json",
+      "contentHash": "8c0ff6f387b9870240bdd514bd10c875d0b90e9362fb10d7c6499db18ca02305",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 8,
+      "hasStructuralAnalysis": false
+    },
+    "frontend/package.json": {
+      "filePath": "frontend/package.json",
+      "contentHash": "271894fc56e3f29847c241398c38c1c7211fc6f4d47576855bbf950c8ce8df36",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 55,
+      "hasStructuralAnalysis": false
+    },
+    "frontend/postcss.config.js": {
+      "filePath": "frontend/postcss.config.js",
+      "contentHash": "52adfc7a969df41daeb7aa204304a73cc5ee91afdf490c036f22d7680f7a9d62",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 6,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/App.css.tmp": {
+      "filePath": "frontend/src/App.css.tmp",
+      "contentHash": "c2571ce7245629994b8adc84f6c48e1920f047a4e7e29c89a4aeb51eeb1b5433",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 185,
+      "hasStructuralAnalysis": false
+    },
+    "frontend/src/App.jsx": {
+      "filePath": "frontend/src/App.jsx",
+      "contentHash": "4d0213ef74c497e173fd754b864ad04bc144239407344f9b6f9d54ff12a29549",
+      "functions": [
+        {
+          "name": "App",
+          "params": [],
+          "exported": true,
+          "lineCount": 23
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react-router-dom",
+          "specifiers": [
+            "Routes",
+            "Route",
+            "Link"
+          ]
+        },
+        {
+          "source": "./pages/Runs.jsx",
+          "specifiers": [
+            "Runs"
+          ]
+        },
+        {
+          "source": "./pages/RunDetail.jsx",
+          "specifiers": [
+            "RunDetail"
+          ]
+        },
+        {
+          "source": "./pages/RunCreating.jsx",
+          "specifiers": [
+            "RunCreating"
+          ]
+        },
+        {
+          "source": "./pages/GraphView.jsx",
+          "specifiers": [
+            "GraphView"
+          ]
+        },
+        {
+          "source": "./pages/Uploads.jsx",
+          "specifiers": [
+            "Uploads"
+          ]
+        },
+        {
+          "source": "./pages/UploadNew.jsx",
+          "specifiers": [
+            "UploadNew"
+          ]
+        },
+        {
+          "source": "./pages/Relationships.jsx",
+          "specifiers": [
+            "Relationships"
+          ]
+        },
+        {
+          "source": "./pages/Document.jsx",
+          "specifiers": [
+            "Document"
+          ]
+        }
+      ],
+      "exports": [
+        "App"
+      ],
+      "totalLines": 34,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/components/ui/badge.jsx": {
+      "filePath": "frontend/src/components/ui/badge.jsx",
+      "contentHash": "6aea76eb4bd0f5b07eebab2552203579ca97afa2a18f5e9d78cc91eb91ea51a5",
+      "functions": [
+        {
+          "name": "Badge",
+          "params": [],
+          "exported": true,
+          "lineCount": 16
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "class-variance-authority",
+          "specifiers": [
+            "cva"
+          ]
+        },
+        {
+          "source": "radix-ui",
+          "specifiers": [
+            "Slot"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Badge",
+        "badgeVariants"
+      ],
+      "totalLines": 48,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/components/ui/button.jsx": {
+      "filePath": "frontend/src/components/ui/button.jsx",
+      "contentHash": "808bbf2bc9985ce5bfeea07f58a72ddaabb009abbff6515c67185d5294eba99c",
+      "functions": [
+        {
+          "name": "Button",
+          "params": [],
+          "exported": true,
+          "lineCount": 18
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "class-variance-authority",
+          "specifiers": [
+            "cva"
+          ]
+        },
+        {
+          "source": "radix-ui",
+          "specifiers": [
+            "Slot"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Button",
+        "buttonVariants"
+      ],
+      "totalLines": 64,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/components/ui/card.jsx": {
+      "filePath": "frontend/src/components/ui/card.jsx",
+      "contentHash": "45398f2019ec3ac1d353a599c028c05ead5a41186789ac0919347c3191eb11e1",
+      "functions": [
+        {
+          "name": "Card",
+          "params": [],
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "CardHeader",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "CardTitle",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "CardDescription",
+          "params": [],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "CardAction",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "CardContent",
+          "params": [],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "CardFooter",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Card",
+        "CardHeader",
+        "CardFooter",
+        "CardTitle",
+        "CardAction",
+        "CardDescription",
+        "CardContent"
+      ],
+      "totalLines": 115,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/components/ui/input.jsx": {
+      "filePath": "frontend/src/components/ui/input.jsx",
+      "contentHash": "e11e9109e1db0c4f3537d08557474f09f9ac59137e9eb599f67f45dd15da78c0",
+      "functions": [
+        {
+          "name": "Input",
+          "params": [],
+          "exported": true,
+          "lineCount": 16
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Input"
+      ],
+      "totalLines": 23,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/components/ui/table.jsx": {
+      "filePath": "frontend/src/components/ui/table.jsx",
+      "contentHash": "57c01e30f3a126d57c2d55fed6df99a3f9baa8b22f384ccf1334bfcab1799ee1",
+      "functions": [
+        {
+          "name": "Table",
+          "params": [],
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "TableHeader",
+          "params": [],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "TableBody",
+          "params": [],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "TableFooter",
+          "params": [],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "TableRow",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "TableHead",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "TableCell",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "TableCaption",
+          "params": [],
+          "exported": true,
+          "lineCount": 11
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Table",
+        "TableHeader",
+        "TableBody",
+        "TableFooter",
+        "TableHead",
+        "TableRow",
+        "TableCell",
+        "TableCaption"
+      ],
+      "totalLines": 122,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/index.css": {
+      "filePath": "frontend/src/index.css",
+      "contentHash": "0b220626063ffd66ee794c68e72007c262f2187b3772aa74e07d03cc1b99bf1e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 265,
+      "hasStructuralAnalysis": false
+    },
+    "frontend/src/main.jsx": {
+      "filePath": "frontend/src/main.jsx",
+      "contentHash": "312478f80a88fd5590371953af6be8eb3e796addce00eceea0b995f8339b4fbb",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "React"
+          ]
+        },
+        {
+          "source": "react-dom/client",
+          "specifiers": [
+            "ReactDOM"
+          ]
+        },
+        {
+          "source": "react-router-dom",
+          "specifiers": [
+            "BrowserRouter"
+          ]
+        },
+        {
+          "source": "./App.jsx",
+          "specifiers": [
+            "App"
+          ]
+        },
+        {
+          "source": "./index.css",
+          "specifiers": []
+        }
+      ],
+      "exports": [],
+      "totalLines": 11,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/pages/Document.jsx": {
+      "filePath": "frontend/src/pages/Document.jsx",
+      "contentHash": "a4e2773f17ab2c41f04df7b039d0102a8ed3da49928a9a60da9a13b066e3a0de",
+      "functions": [
+        {
+          "name": "detectFormat",
+          "params": [],
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "escapeRegExp",
+          "params": [],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "EntityMark",
+          "params": [],
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "highlightTextToReact",
+          "params": [
+            "text",
+            "entities",
+            "onEntityClick"
+          ],
+          "exported": false,
+          "lineCount": 49
+        },
+        {
+          "name": "HtmlRenderer",
+          "params": [],
+          "exported": false,
+          "lineCount": 47
+        },
+        {
+          "name": "MarkdownRenderer",
+          "params": [],
+          "exported": false,
+          "lineCount": 21
+        },
+        {
+          "name": "Document",
+          "params": [],
+          "exported": true,
+          "lineCount": 153
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react-router-dom",
+          "specifiers": [
+            "useParams",
+            "useSearchParams"
+          ]
+        },
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useMemo",
+            "useRef",
+            "useState"
+          ]
+        },
+        {
+          "source": "react-markdown",
+          "specifiers": [
+            "ReactMarkdown"
+          ]
+        },
+        {
+          "source": "rehype-raw",
+          "specifiers": [
+            "rehypeRaw"
+          ]
+        },
+        {
+          "source": "rehype-sanitize",
+          "specifiers": [
+            "rehypeSanitize"
+          ]
+        },
+        {
+          "source": "@/components/ui/badge",
+          "specifiers": [
+            "Badge"
+          ]
+        },
+        {
+          "source": "@/components/ui/card",
+          "specifiers": [
+            "Card",
+            "CardContent",
+            "CardHeader",
+            "CardTitle"
+          ]
+        }
+      ],
+      "exports": [
+        "Document"
+      ],
+      "totalLines": 323,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/pages/GraphView.jsx": {
+      "filePath": "frontend/src/pages/GraphView.jsx",
+      "contentHash": "4b51b5882eb5c8bcf6c902eb03a93384bdc415afc79c3b6cf0c2ab6210e864ee",
+      "functions": [
+        {
+          "name": "GraphView",
+          "params": [],
+          "exported": true,
+          "lineCount": 191
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState",
+            "useRef"
+          ]
+        },
+        {
+          "source": "react-force-graph-2d",
+          "specifiers": [
+            "ForceGraph2D"
+          ]
+        },
+        {
+          "source": "react-router-dom",
+          "specifiers": [
+            "useParams",
+            "useNavigate"
+          ]
+        },
+        {
+          "source": "@mui/material",
+          "specifiers": [
+            "Box",
+            "Typography"
+          ]
+        },
+        {
+          "source": "d3-force",
+          "specifiers": [
+            "* as d3"
+          ]
+        }
+      ],
+      "exports": [
+        "GraphView"
+      ],
+      "totalLines": 197,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/pages/Relationships.jsx": {
+      "filePath": "frontend/src/pages/Relationships.jsx",
+      "contentHash": "ed915abad7cd1c15c0b4ad38f4e3530d16c2c00149a12fcbfd5a9df1d26b18af",
+      "functions": [
+        {
+          "name": "Relationships",
+          "params": [],
+          "exported": true,
+          "lineCount": 209
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react-router-dom",
+          "specifiers": [
+            "useParams"
+          ]
+        },
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState",
+            "useMemo"
+          ]
+        },
+        {
+          "source": "@/components/ui/card",
+          "specifiers": [
+            "Card",
+            "CardContent",
+            "CardHeader",
+            "CardTitle"
+          ]
+        },
+        {
+          "source": "@/components/ui/badge",
+          "specifiers": [
+            "Badge"
+          ]
+        },
+        {
+          "source": "@/components/ui/table",
+          "specifiers": [
+            "Table",
+            "TableBody",
+            "TableCell",
+            "TableHead",
+            "TableHeader",
+            "TableRow"
+          ]
+        }
+      ],
+      "exports": [
+        "Relationships"
+      ],
+      "totalLines": 231,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/pages/RunCreating.jsx": {
+      "filePath": "frontend/src/pages/RunCreating.jsx",
+      "contentHash": "d5e263f1c9ffda9ef5738698fcc9865a29e20d4dfcc267105cc2e143a78aba4e",
+      "functions": [
+        {
+          "name": "RunCreating",
+          "params": [],
+          "exported": true,
+          "lineCount": 45
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "react-router-dom",
+          "specifiers": [
+            "useNavigate",
+            "useLocation"
+          ]
+        },
+        {
+          "source": "@mui/material",
+          "specifiers": [
+            "CircularProgress",
+            "Box",
+            "Typography"
+          ]
+        }
+      ],
+      "exports": [
+        "RunCreating"
+      ],
+      "totalLines": 49,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/pages/RunDetail.jsx": {
+      "filePath": "frontend/src/pages/RunDetail.jsx",
+      "contentHash": "30f71545602a2cb30759da3b2601643785700c4e17016a29158a9c9c74fe0e10",
+      "functions": [
+        {
+          "name": "RunDetail",
+          "params": [],
+          "exported": true,
+          "lineCount": 231
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react-router-dom",
+          "specifiers": [
+            "useParams",
+            "Link",
+            "useNavigate",
+            "useLocation"
+          ]
+        },
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "@/components/ui/card",
+          "specifiers": [
+            "Card",
+            "CardContent",
+            "CardHeader",
+            "CardTitle"
+          ]
+        },
+        {
+          "source": "@/components/ui/badge",
+          "specifiers": [
+            "Badge"
+          ]
+        },
+        {
+          "source": "@/components/ui/table",
+          "specifiers": [
+            "Table",
+            "TableBody",
+            "TableCell",
+            "TableHead",
+            "TableHeader",
+            "TableRow"
+          ]
+        }
+      ],
+      "exports": [
+        "RunDetail"
+      ],
+      "totalLines": 252,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/pages/Runs.jsx": {
+      "filePath": "frontend/src/pages/Runs.jsx",
+      "contentHash": "4cf7972fe863c02c68c89d8d1125e9fb92ea3adbfc041b4f2963d3ce4a6c9f67",
+      "functions": [
+        {
+          "name": "Runs",
+          "params": [],
+          "exported": true,
+          "lineCount": 156
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useMemo",
+            "useState"
+          ]
+        },
+        {
+          "source": "react-router-dom",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "@/components/ui/card",
+          "specifiers": [
+            "Card",
+            "CardContent",
+            "CardHeader",
+            "CardTitle"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/table",
+          "specifiers": [
+            "Table",
+            "TableBody",
+            "TableCell",
+            "TableHead",
+            "TableHeader",
+            "TableRow"
+          ]
+        },
+        {
+          "source": "@/components/ui/badge",
+          "specifiers": [
+            "Badge"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Search",
+            "ArrowRight"
+          ]
+        }
+      ],
+      "exports": [
+        "Runs"
+      ],
+      "totalLines": 181,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/pages/UploadNew.jsx": {
+      "filePath": "frontend/src/pages/UploadNew.jsx",
+      "contentHash": "89df44aa2ca3ddd1c8a24d928afac4362b37693aa23e4955031c30798575d1b0",
+      "functions": [
+        {
+          "name": "UploadNew",
+          "params": [],
+          "exported": true,
+          "lineCount": 211
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useRef"
+          ]
+        },
+        {
+          "source": "react-router-dom",
+          "specifiers": [
+            "useNavigate"
+          ]
+        },
+        {
+          "source": "@mui/material",
+          "specifiers": [
+            "Box",
+            "Typography",
+            "Button",
+            "Paper",
+            "Fade"
+          ]
+        }
+      ],
+      "exports": [
+        "UploadNew"
+      ],
+      "totalLines": 215,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/src/pages/Uploads.jsx": {
+      "filePath": "frontend/src/pages/Uploads.jsx",
+      "contentHash": "f242222229904a4a91eaa13972b94b0e854ced25b15591998fc09f0285968a34",
+      "functions": [
+        {
+          "name": "Uploads",
+          "params": [],
+          "exported": true,
+          "lineCount": 65
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "react-router-dom",
+          "specifiers": [
+            "useNavigate"
+          ]
+        },
+        {
+          "source": "@mui/material",
+          "specifiers": [
+            "Box",
+            "Typography",
+            "Button",
+            "List",
+            "ListItem",
+            "ListItemText",
+            "Divider"
+          ]
+        }
+      ],
+      "exports": [
+        "Uploads"
+      ],
+      "totalLines": 77,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/tailwind.config.js": {
+      "filePath": "frontend/tailwind.config.js",
+      "contentHash": "d57826ede9a2cf63d3a0c23d190bacff2096b0c8238fc59d846add4c18d4cba5",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 10,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/vite.config.js": {
+      "filePath": "frontend/vite.config.js",
+      "contentHash": "f095c3e19e853f2f93b745e0e409706dee148086bfdc018221a9ee11bb4f94d3",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "vite",
+          "specifiers": [
+            "defineConfig"
+          ]
+        },
+        {
+          "source": "@vitejs/plugin-react",
+          "specifiers": [
+            "react"
+          ]
+        },
+        {
+          "source": "path",
+          "specifiers": [
+            "path"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 12,
+      "hasStructuralAnalysis": true
+    },
+    "observability.py": {
+      "filePath": "observability.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "package.json": {
+      "filePath": "package.json",
+      "contentHash": "77e90e1ed2132d13e32516f836ff338a314b0c9382f16401e6ca4bd3a76ea4d7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 6,
+      "hasStructuralAnalysis": false
+    },
+    "pyproject.toml": {
+      "filePath": "pyproject.toml",
+      "contentHash": "969aa26888feff55b08f921ee606dcb2cc6c70a1c8631bd73f7193f9d0cf6526",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 177,
+      "hasStructuralAnalysis": false
+    },
+    "requirements.txt": {
+      "filePath": "requirements.txt",
+      "contentHash": "a51943cbca4466b7e19a7387b01ae3a747936eb7e3404e44321f36de0e1448cb",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 152,
+      "hasStructuralAnalysis": false
+    },
+    "run.py": {
+      "filePath": "run.py",
+      "contentHash": "600050d87760bdaf5727fb48e2bb6dc223d87251c075ea61e1a6fc62103f95f5",
+      "functions": [
+        {
+          "name": "relationship_prompt_template",
+          "params": [
+            "chunk",
+            "entities"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 23
+        },
+        {
+          "name": "extract_text",
+          "params": [
+            "path"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 15
+        },
+        {
+          "name": "chunk_text_with_overlap",
+          "params": [
+            "text",
+            "max_chars",
+            "overlap_chars"
+          ],
+          "returnType": "List[str]",
+          "exported": true,
+          "lineCount": 25
+        },
+        {
+          "name": "_llm_backend",
+          "params": [
+            "provider",
+            "schema",
+            "system_prompt",
+            "user_prompt",
+            "seed",
+            "model"
+          ],
+          "exported": true,
+          "lineCount": 34
+        },
+        {
+          "name": "_call_llm_threaded",
+          "params": [
+            "user_prompt",
+            "system_prompt",
+            "schema",
+            "seed",
+            "timeout",
+            "model"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 27
+        },
+        {
+          "name": "extract_entities",
+          "params": [
+            "chunk",
+            "seed"
+          ],
+          "returnType": "List[ExtractedEntity]",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "extract_relationships",
+          "params": [
+            "chunk",
+            "entities",
+            "chunk_id",
+            "file_id",
+            "seed"
+          ],
+          "returnType": "List[Relationship]",
+          "exported": true,
+          "lineCount": 22
+        },
+        {
+          "name": "validate_guardrails",
+          "params": [
+            "entity",
+            "chunk_text",
+            "chunk_id",
+            "file_id"
+          ],
+          "returnType": "ValidatedEntity",
+          "exported": true,
+          "lineCount": 32
+        },
+        {
+          "name": "validate_relationship",
+          "params": [
+            "relationship",
+            "chunk_text"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "normalize_entity_name",
+          "params": [
+            "name"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "resolve_entities",
+          "params": [
+            "validated_entities"
+          ],
+          "returnType": "List[CanonicalEntity]",
+          "exported": true,
+          "lineCount": 44
+        },
+        {
+          "name": "assign_entity_ids",
+          "params": [
+            "canonicals"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "build_canonical_entity_map",
+          "params": [
+            "canonicals"
+          ],
+          "returnType": "List[Dict]",
+          "exported": true,
+          "lineCount": 21
+        },
+        {
+          "name": "build_chunk_entity_index",
+          "params": [
+            "canonicals"
+          ],
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "display_results",
+          "params": [
+            "canonicals",
+            "relationships",
+            "dropped"
+          ],
+          "exported": true,
+          "lineCount": 29
+        },
+        {
+          "name": "is_junk_entity",
+          "params": [
+            "name"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "is_acronym",
+          "params": [
+            "short_name",
+            "long_name"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "is_empty_after_normalization",
+          "params": [
+            "name"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "build_networkx_graph",
+          "params": [
+            "entities",
+            "relationships"
+          ],
+          "exported": true,
+          "lineCount": 28
+        },
+        {
+          "name": "get_run_dir",
+          "params": [
+            "run_id"
+          ],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "get_latest_run_id",
+          "params": [],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "save_manifest",
+          "params": [
+            "run_dir",
+            "source_file",
+            "seed"
+          ],
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "load_manifest",
+          "params": [
+            "run_dir"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "save_chunks",
+          "params": [
+            "run_dir",
+            "chunks"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "load_chunks",
+          "params": [
+            "run_dir"
+          ],
+          "returnType": "List[str]",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "save_entities_artifact",
+          "params": [
+            "run_dir",
+            "validated_entities",
+            "canonicals",
+            "chunk_entity_index"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "load_entities_artifact",
+          "params": [
+            "run_dir"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "save_output",
+          "params": [
+            "run_dir",
+            "canonicals",
+            "relationships"
+          ],
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "rebuild_canonicals",
+          "params": [
+            "canonical_entities_json"
+          ],
+          "exported": true,
+          "lineCount": 2
+        }
+      ],
+      "classes": [
+        {
+          "name": "Citation",
+          "methods": [],
+          "properties": [
+            "file_id",
+            "chunk_id",
+            "start_char",
+            "end_char",
+            "quote"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "ExtractedEntity",
+          "methods": [],
+          "properties": [
+            "entity_name",
+            "entity_type",
+            "exact_quote"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "EntityList",
+          "methods": [],
+          "properties": [
+            "entities"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "ValidatedEntity",
+          "methods": [],
+          "properties": [
+            "entity_name",
+            "entity_type",
+            "citation",
+            "is_valid",
+            "fail_reason"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "CanonicalEntity",
+          "methods": [],
+          "properties": [
+            "entity_id",
+            "canonical_name",
+            "entity_type",
+            "aliases",
+            "citations"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "Relationship",
+          "methods": [],
+          "properties": [
+            "source_entity_id",
+            "target_entity_id",
+            "relationship_type",
+            "citation"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "RelationshipList",
+          "methods": [],
+          "properties": [
+            "relationships"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "RunContext",
+          "methods": [],
+          "properties": [
+            "run_id",
+            "file_id",
+            "seed",
+            "file_path",
+            "output_dir",
+            "text",
+            "chunks",
+            "validated_entities",
+            "canonicals",
+            "chunk_entity_index",
+            "relationships",
+            "hallucination_count"
+          ],
+          "exported": true,
+          "lineCount": 20
+        },
+        {
+          "name": "EntityResolutionPipeline",
+          "methods": [
+            "_run_metadata",
+            "run_entities",
+            "run_relationships",
+            "run_full",
+            "run_relationships_only"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 162
+        }
+      ],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "string",
+          "specifiers": [
+            "string"
+          ]
+        },
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "List",
+            "Dict",
+            "Optional"
+          ]
+        },
+        {
+          "source": "datetime",
+          "specifiers": [
+            "datetime"
+          ]
+        },
+        {
+          "source": "re",
+          "specifiers": [
+            "re"
+          ]
+        },
+        {
+          "source": "uuid",
+          "specifiers": [
+            "uuid4"
+          ]
+        },
+        {
+          "source": "ollama",
+          "specifiers": [
+            "ollama"
+          ]
+        },
+        {
+          "source": "pydantic",
+          "specifiers": [
+            "BaseModel",
+            "Field"
+          ]
+        },
+        {
+          "source": "rapidfuzz",
+          "specifiers": [
+            "fuzz"
+          ]
+        },
+        {
+          "source": "rich.console",
+          "specifiers": [
+            "Console"
+          ]
+        },
+        {
+          "source": "rich.table",
+          "specifiers": [
+            "Table"
+          ]
+        },
+        {
+          "source": "rich.logging",
+          "specifiers": [
+            "RichHandler"
+          ]
+        },
+        {
+          "source": "concurrent.futures",
+          "specifiers": [
+            "concurrent.futures"
+          ]
+        },
+        {
+          "source": "collections",
+          "specifiers": [
+            "defaultdict"
+          ]
+        },
+        {
+          "source": "debug_logger",
+          "specifiers": [
+            "log_hallucinated_entity",
+            "log_relationship_check"
+          ]
+        },
+        {
+          "source": "langfuse.openai",
+          "specifiers": [
+            "OpenAI"
+          ]
+        },
+        {
+          "source": "dotenv",
+          "specifiers": [
+            "load_dotenv"
+          ]
+        },
+        {
+          "source": "os",
+          "specifiers": [
+            "os"
+          ]
+        },
+        {
+          "source": "langfuse",
+          "specifiers": [
+            "get_client"
+          ]
+        },
+        {
+          "source": "dataclasses",
+          "specifiers": [
+            "dataclass",
+            "field"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "List",
+            "Optional"
+          ]
+        }
+      ],
+      "exports": [
+        "Citation",
+        "ExtractedEntity",
+        "EntityList",
+        "ValidatedEntity",
+        "CanonicalEntity",
+        "Relationship",
+        "RelationshipList",
+        "RunContext",
+        "relationship_prompt_template",
+        "extract_text",
+        "chunk_text_with_overlap",
+        "_llm_backend",
+        "_call_llm_threaded",
+        "extract_entities",
+        "extract_relationships",
+        "validate_guardrails",
+        "validate_relationship",
+        "normalize_entity_name",
+        "resolve_entities",
+        "assign_entity_ids",
+        "build_canonical_entity_map",
+        "build_chunk_entity_index",
+        "display_results",
+        "is_junk_entity",
+        "is_acronym",
+        "is_empty_after_normalization",
+        "build_networkx_graph",
+        "get_run_dir",
+        "get_latest_run_id",
+        "save_manifest",
+        "load_manifest",
+        "save_chunks",
+        "load_chunks",
+        "save_entities_artifact",
+        "load_entities_artifact",
+        "save_output",
+        "rebuild_canonicals",
+        "EntityResolutionPipeline"
+      ],
+      "totalLines": 884,
+      "hasStructuralAnalysis": true
+    },
+    "src/entity_resolution/__init__.py": {
+      "filePath": "src/entity_resolution/__init__.py",
+      "contentHash": "2e351803ad939da56ea1f7ca16db022343e4d5c3be4e3f38eccaf23d1243f02c",
+      "functions": [
+        {
+          "name": "main",
+          "params": [],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 2
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "main"
+      ],
+      "totalLines": 3,
+      "hasStructuralAnalysis": true
+    },
+    "test.py": {
+      "filePath": "test.py",
+      "contentHash": "4cec508a2c7444158974919f98364291311e600f20496e655c85d4b3f455429d",
+      "functions": [
+        {
+          "name": "normalize",
+          "params": [
+            "text"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "canon",
+          "params": [
+            "text"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "get_latest_run",
+          "params": [],
+          "returnType": "Path",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "evaluate_run",
+          "params": [
+            "pred_file",
+            "truth_file"
+          ],
+          "exported": true,
+          "lineCount": 172
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "re",
+          "specifiers": [
+            "re"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "rapidfuzz",
+          "specifiers": [
+            "fuzz"
+          ]
+        },
+        {
+          "source": "rich.console",
+          "specifiers": [
+            "Console"
+          ]
+        },
+        {
+          "source": "rich.table",
+          "specifiers": [
+            "Table"
+          ]
+        },
+        {
+          "source": "rich.panel",
+          "specifiers": [
+            "Panel"
+          ]
+        },
+        {
+          "source": "collections",
+          "specifiers": [
+            "defaultdict"
+          ]
+        }
+      ],
+      "exports": [
+        "normalize",
+        "canon",
+        "get_latest_run",
+        "evaluate_run"
+      ],
+      "totalLines": 228,
+      "hasStructuralAnalysis": true
+    }
+  }
+}
