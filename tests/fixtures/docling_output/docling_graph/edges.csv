@@ -1,0 +1,6 @@
+"source","target","label"
+"OntologyDocument_aaaa","Person_1111","MENTIONS_PERSON"
+"OntologyDocument_aaaa","Company_2222","MENTIONS_COMPANY"
+"OntologyDocument_aaaa","Agreement_3333","CONTAINS_AGREEMENT"
+"Person_1111","Company_2222","represents"
+"Company_2222","Agreement_3333","participates_in"

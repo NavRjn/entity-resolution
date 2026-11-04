@@ -8,7 +8,7 @@ LLM-aided entity resolution for legal/insurance documents: extracts entities (pe
 
 ## Commands
 
-Python ≥3.12. **Always run Python through `uv`** (`uv run ...`), never a bare `python`/`uvicorn`: `uv` manages docling and the rest of the dependency graph, and the project is not runnable outside it. `requirements.txt` is stale UTF-16. The project environment is `.venv/` (created by `uv sync`; `uv run` uses it automatically, no `--active` needed). `entity-res.venv/` is an old Windows venv and is not used. Secrets live in `.env` (`OPENAI_API_LEGALDEV`, `OPENAI_API_KEY`, `LANGFUSE_*`); Langfuse tracing is initialised at import time of `run.py`, and an Ollama server is expected at `127.0.0.1:11434` for local models.
+Python ≥3.12. **Always run Python through `uv`** (`uv run ...`), never a bare `python`/`uvicorn`: `uv` manages docling and the rest of the dependency graph, and the project is not runnable outside it. `requirements.txt` is stale UTF-16. The project environment is `.venv/`, a native Windows venv (`.venv\Scripts\python.exe`, created by `uv sync`; `uv run` uses it automatically, no `--active` needed). A venv can't be shared between WSL and Windows; if `uv sync` fails with access denied on `.venv\lib64`, that is a leftover WSL symlink: remove it with `cmd /c rmdir .venv\lib64` and re-run. `entity-res.venv/` is an old venv and is not used. Secrets live in `.env` (`OPENAI_API_LEGALDEV`, `OPENAI_API_KEY`, `LANGFUSE_*`); Langfuse tracing is initialised at import time of `run.py`, and an Ollama server is expected at `127.0.0.1:11434` for local models.
 
 ```sh
 # Legacy CLI pipeline (run from repo root; --file is relative to data/)
@@ -26,7 +26,17 @@ uv run python -m uvicorn api.main:app --reload
 cd frontend && npm run dev      # also: npm run build, npm run lint
 ```
 
-There is no automated test suite; `test.py` is an evaluation script (precision/recall vs. ground truth), not pytest.
+**Tests (offline, free, no API credits):** `uv run python check.py` runs the pytest suite plus frontend lint and build (~55 s); `--fast` is pytest only, `--preflight`/`--online` add the readiness report (keys, saved runs, servers, free network checks). Details in `docs/tests/`. `test.py` is separate: an evaluation script (precision/recall vs. ground truth), not pytest.
+
+## Browser automation (frontend verification)
+
+- A Playwright MCP server (`playwright`, pinned `@playwright/mcp@0.0.83`) is registered at **local scope** in `~/.claude.json` for this project, launched with `cmd /c npx`. It is machine-specific and not committed, so check `claude mcp list` before assuming it exists. Its tools only appear in sessions started after it was registered.
+- It runs headless, isolated Chromium with a temporary profile and no access to the user's Chrome profile or sign-ins. `--browser chromium` is required; otherwise it defaults to system Chrome. Browsing is restricted to `localhost`/`127.0.0.1` on ports 5173 and 8000; other origins are blocked, so external CDN/font requests fail (this includes the Swagger UI assets on `/docs`).
+- The browser is Chromium revision 1247, in `%LOCALAPPDATA%\ms-playwright`. If the pinned package is bumped and needs a different revision, install it with `npx -y -p @playwright/mcp@<version> playwright-core install chromium`.
+- Start the API and frontend first (see Commands). Use `http://localhost:5173`, not `127.0.0.1`: Vite listens on `::1` only, so `127.0.0.1:5173` is refused, and the API's CORS only allows the `localhost` origin. `/` has no route and renders only the nav bar; `/runs` and `/uploads` load data from the API.
+- `--output-dir` keeps auto-named files out of the repo, in `%LOCALAPPDATA%\Temp\claude\C--Home-Directory-Uni-Research-entity-resolution\playwright-output`. Take screenshots without a `filename`: a relative `filename` is written to the repo root.
+- Do not connect to the user's Chrome or open a remote-debugging port. That exposes every signed-in session. Use the Claude in Chrome extension only if the user asks for it.
+- Do not write Playwright tests unless asked. The setup is for manual verification of UI changes.
 
 ## Architecture
 

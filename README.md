@@ -39,9 +39,13 @@ A LLM-aided probabilistic entity resolution and management tool for Enterprise l
    ```
 
 ### Testing the Tool
-1. **Run Tests**:
+1. **Run the offline test suite** (free, no API calls; see `docs/tests/`):
    ```sh
-   python test.py
+   uv run python check.py
+   ```
+2. **Evaluate a run against ground truth** (precision/recall):
+   ```sh
+   uv run python test.py --file test
    ```
 
 ## Features
