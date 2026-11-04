@@ -62,3 +62,37 @@ def workspace(tmp_path, monkeypatch):
     (tmp_path / "outputs").mkdir()
     monkeypatch.chdir(tmp_path)
     return tmp_path
+
+
+DOC_TEXT = (
+    "Acme Corp. signed the Master Agreement with John Smith. "
+    "John Smith represents Globex Ltd. in all matters."
+)
+
+
+@pytest.fixture
+def fake_llm(monkeypatch):
+    """Replace the OpenAI/Ollama call in run.py with canned JSON. Returns a call log."""
+    import run
+
+    calls = []
+
+    def fake_backend(provider, schema, system_prompt, user_prompt, seed, model=None):
+        calls.append({"provider": provider, "model": model, "prompt": user_prompt})
+        if "Known entities" in user_prompt:  # relationship extraction
+            return {"relationships": [{
+                "source_entity_id": "E0",
+                "target_entity_id": "E1",
+                "relationship_type": "participates_in",
+                "evidence_quote": "Acme Corp. signed the Master Agreement",
+            }]}
+        return {"entities": [
+            {"entity_name": "Acme Corp.", "entity_type": "company", "exact_quote": "Acme Corp."},
+            {"entity_name": "Master Agreement", "entity_type": "agreement", "exact_quote": "Master Agreement"},
+            {"entity_name": "John Smith", "entity_type": "person", "exact_quote": "John Smith"},
+            {"entity_name": "Initech", "entity_type": "company", "exact_quote": "Initech is not in the text"},  # hallucination
+            {"entity_name": "Section 5", "entity_type": "other", "exact_quote": "Acme"},  # junk
+        ]}
+
+    monkeypatch.setattr(run, "_llm_backend", fake_backend)
+    return calls
