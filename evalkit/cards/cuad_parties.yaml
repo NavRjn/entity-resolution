@@ -18,6 +18,7 @@ main: CUADv1.json
 options: {qa_label: Parties, entity_type: other}
 has_types: false
 has_coref: false
+exhaustive_relations: false      # no relation labels at all: relation precision is undefined, not 0
 exhaustive_entity_types: []        # nothing is exhaustively labelled -> precision is N/A
 sources:
   - url: https://github.com/TheAtticusProject/cuad/raw/main/data.zip

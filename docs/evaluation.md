@@ -111,3 +111,28 @@ What the diagnostics say (see `report.md`, "Why entities were missed or invented
 3. **Part of the miss is the dataset:** 7 clause/statute references (`§ 24 Abs. 4 ...`), 3 anonymised placeholders ("B", "K."). Even after removing them and ignoring non-person/company predictions, F1 only reaches 37%.
 4. **Cost overshoot is structural:** 20x prompt overhead (schema + instructions repeated per chunk, plus gleaning and consolidation passes). A straight-line projection to a 300-page matter gives ~$13 and ~59 min sequential, against the roadmap gates of EUR 5 and 5 min. Linear extrapolation from short documents; verify on a long one.
 5. **A crash after paying:** `ler-0025` failed in `save_compatible_files` (`prov.get("chunks")[0]` on a node whose provenance is `{"status": "unresolved"}`), after the LLM work was done. Same family as known issue #3.
+
+## English vs German (2026-11-06)
+Question: how much of the poor German result is language? Same backend (docling-graph, gpt-4o), 5-8 documents per set, scored with the same lenient entity matching. Cost of the two new runs: $0.58 + $0.42 (estimates $0.35-0.82 and $0.09-0.20; the second was low, see "Cost model").
+
+| | LER (German judgments) | E-NER (English SEC filings) | Re-DocRED (English Wikipedia) |
+|---|---|---|---|
+| documents / chars / gold entities | 5 / 40,058 / 40 | 5 / 40,000 / 77 | 8 / 9,611 / 65 |
+| entity precision | 30.8% | 81.8% | 81.1% |
+| entity recall | 30.0% | 35.1% | 46.2% |
+| entity F1 (95% CI) | 30.4% [14.7, 42.9] | 49.1% [23.8, 57.0] | 58.8% [48.2, 70.7] |
+| F1 after label/ontology filters ("ceiling") | 34.5% | 49.5% | 58.6% |
+| extra predictions by type | **agreement 22**, company 3, person 2 | company 6 | person 5, company 2 |
+| typing accuracy on matched entities | 100% | 100% | 77% |
+| relationships extracted | 0 | 13 (2 of 5 docs) | **0 (of 26 gold)** |
+| cost per document / LLM calls per document | $0.116 / 8.8 | $0.116 / 9.2 | $0.052 / 6.0 |
+
+Reading it:
+1. **Precision is where German collapses, and it is one thing: `Agreement`.** 22 of the 27 extra predictions in German are court decisions, procedures and clause references typed as agreements ("Beschluss vom 11. 2. 2015", "Revisionsverfahren"). Neither English set produces a single agreement false positive. Consistent with an English-shaped `Agreement` meeting German legal text, but also with the content itself: judgments talk about decisions, SEC filings do not. LER is also shuffled unrelated sentences, so it is not a coherent document. Language and domain cannot be separated with these data.
+2. **Recall is not a language problem.** 30% / 35% / 46%. In English filings the misses are short names ("SEC", "Tay", "TCP": 6.5% recall for 3-10 character names) and entities mentioned several times (13% recall for 2-3 mentions, 17% for 4+); long names are found 75% of the time.
+3. **Relationships are not a language problem.** On Re-DocRED the model found all entities of "Originally by Ximian, it was later acquired by Novell, and is now developed by Microsoft" and filled none of the relation fields; docling-graph's raw `edges.csv` holds only the document->entity `MENTIONS_*` links, so the converter is not dropping anything. 0 of 26 gold relations, 0 predicted. The 13 relationships on E-NER filings are mostly `related_to`. This needs its own investigation (template edge fields, dense-mode phase 2, prompt), independent of language.
+4. **Cost does not depend on language** at equal size ($0.116 per 8k-character document in both), but has a fixed per-document part (see below).
+5. **Not controlled yet:** a clean language test needs the same content in two languages, for example the LER sentences machine-translated to English (translation cost small, but alignment with gold spans needs care), or an English set of court decisions (InLegalNER is gated; an EUR-Lex or ECHR set could be added as a card). Until then, quote German and English numbers separately. See `docs/roadmap.md` section 9 for the language-agnostic ontology decision.
+
+### Cost model (refit 2026-11-06)
+Three paid runs fit `cost per document = $0.041 + $0.0094 per 1k characters` (gpt-4o, docling backend): 8k-char documents $0.116, 1.2k-char documents $0.052. The fixed part is the schema and instruction prompts sent per document (6-9 LLM calls even for one paragraph), so many short documents cost more than their length suggests. `evalkit run` now prints this estimate (+-30%). A single 300-page (900k character) document would extrapolate to about $8.50, unverified and much lower than the earlier straight-line figure of $13-39; chunking, gleaning and consolidation may not scale linearly.

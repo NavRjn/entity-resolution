@@ -115,14 +115,14 @@ def _truncate(doc: GoldDocument, max_chars: int) -> GoldDocument:
 
 
 def prepare(card: Card, limit: int | None = None, seed: int = 0, max_chars: int | None = None,
-            min_entities: int = 1, raw_path: Path | None = None) -> Path:
+            min_entities: int = 1, min_relations: int = 0, raw_path: Path | None = None) -> Path:
     """Convert raw -> prepared gold + plain-text docs. Deterministic for a given (limit, seed)."""
     main = card.raw.get("main", "")
     src = raw_path or (ROOT / main[1:] if main.startswith("@") else dataset_dir(card) / "raw" / main)
     docs = [d for d in load_dataset(card, src)]
     if max_chars:
         docs = [_truncate(d, max_chars) for d in docs]
-    docs = [d for d in docs if len(d.entities) >= min_entities and d.text.strip()]
+    docs = [d for d in docs if len(d.entities) >= min_entities and len(d.relations) >= min_relations and d.text.strip()]
     if limit and len(docs) > limit:
         docs = sorted(random.Random(seed).sample(docs, limit), key=lambda d: d.doc_id)
     out = dataset_dir(card) / "prepared"

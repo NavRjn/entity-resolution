@@ -218,3 +218,28 @@ There is deliberately no slack week. If one slips, cut in this order: confidence
 3. Which roles/relationships do they care about beyond the six in the ontology?
 4. What data-handling approval is needed (DPA/AVV, EU residency, ZDR)?
 5. Who can give 2-3 hours for a stopwatch comparison on one real (approved) file?
+
+---
+
+## 9. Open architectural decision: a language-agnostic ontology (added 2026-11-06)
+
+**Decision recorded: the ontology must eventually be language-agnostic. Today it is English-only, and the pilot requires German (section 3, "German and English").**
+
+What "English-only" means in this code base today:
+- `engine/template.py` and `ENTITY_RELATIONSHIP_DIRECTION_RULES` in `run.py` define entity classes (`Person`, `Company`, `Agreement`, `Asset`, `OtherEntity`) and relation names (`controls`, `participates_in`, `represents`, `transfers_to`, `governs`, `related_to`) as English words, and the field descriptions that steer the LLM are English prose. docling-graph sends that schema to the model for every chunk.
+- Class boundaries are drawn around English legal concepts. "Agreement" has no clean German counterpart split: *Vertrag* (contract), *Beschluss* / *Urteil* (decision, judgment), *Bescheid*, *Satzung*, *Tarifvertrag* are different things, and the first measured German run typed court decisions and procedures as `Agreement` (22 of 27 extra predictions, `docs/evaluation.md`).
+- Company legal forms (GmbH, AG, KG, UG, e.V.), roles (*Geschaeftsfuehrer*, *Vorstand*, *Prokurist*, *Versicherungsnehmer*) and defined-term patterns (`nachfolgend`, `vormals`) have no place in an English-worded schema.
+- Evaluation labels are mapped to the ontology per dataset (`type_map` / `relation_map` in `evalkit/cards/`), which is already language-neutral on the label side; the pipeline side is not.
+
+What a language-agnostic design needs (not yet designed, not scheduled):
+1. **Canonical concept IDs separate from words.** A concept (`legal_person`, `natural_person`, `contract`, `judicial_decision`, `ownership_control`, ...) has a stable ID, and per-language labels, definitions, examples and prompts attach to it. Output, storage, the UI and the evaluation labels use IDs; only prompts and display use language text.
+2. **Classes that do not lean on one legal system.** At least a separate class for decisions/proceedings/legislation instead of stretching `Agreement`; relations defined by what they mean (control, party-to, represents), not by English verb phrases.
+3. **Per-language prompt and definition packs** selected by detected document language, with mixed-language documents (German contract with English terms) handled per chunk.
+4. **Per-language evaluation sets** with the same concept IDs, so a score for German and for English are comparable (the `evalkit` cards already work this way: one `type_map` per dataset).
+
+What the first experiments do and do not show (details in `docs/evaluation.md`, "English vs German"):
+- Precision fell from about 82% (English SEC filings) to 31% (German court decisions), almost entirely through `Agreement`-typed extras. That is consistent with an English-shaped ontology meeting German legal text, **but it is confounded** with domain (judgments discuss decisions and procedures), so it is not proof that language is the cause.
+- The missing relationships are **not** a German problem: the same pipeline extracted **zero** relationships on eight short English paragraphs that state ownership outright. That is a relationship-extraction problem to fix first and separately.
+- Recall was similar across languages (30% German, 35% English filings), so language does not explain it.
+
+Until this is designed: do not tune the `Agreement` definition to German or add German-only special cases in the template. Fix the type definition in a way that survives the redesign (a decisions/proceedings class), and measure English and German separately every time.

@@ -15,6 +15,7 @@ loader: textract
 main: ""
 options: {annotations_dir: annotations, source_dir: source}
 has_coref: false
+exhaustive_relations: false      # no relation labels at all: relation precision is undefined, not 0
 exhaustive_entity_types: []
 type_map:
   "Law Firm": company

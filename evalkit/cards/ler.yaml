@@ -16,6 +16,7 @@ loader: conll
 main: ler_test.conll
 options: {sentences_per_doc: 40}
 has_coref: false
+exhaustive_relations: false      # no relation labels at all: relation precision is undefined, not 0
 exhaustive_entity_types: [person, company, agreement]
 type_map:
   PER: person

@@ -15,6 +15,7 @@ loader: conll
 main: edgar_all_4.csv
 options: {doc_marker: "-DOCSTART-"}
 has_coref: false
+exhaustive_relations: false      # no relation labels at all: relation precision is undefined, not 0
 exhaustive_entity_types: [person, company]
 type_map:
   PER: person

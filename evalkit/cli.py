@@ -202,7 +202,7 @@ def cmd_fetch(a):
 
 def cmd_prepare(a):
     card = ds.get_card(a.name)
-    out = ds.prepare(card, limit=a.limit, seed=a.seed, max_chars=a.max_chars)
+    out = ds.prepare(card, limit=a.limit, seed=a.seed, max_chars=a.max_chars, min_relations=a.min_relations)
     docs, _ = ds.load_prepared(str(out))
     n_ent = sum(len(d.entities) for d in docs)
     n_rel = sum(len(d.relations) for d in docs)
@@ -250,16 +250,20 @@ def _run_one(backend: str, doc: GoldDocument, prepared: Path, out_dir: Path, use
     return out_dir
 
 
-def estimate_cost(chars: int, model: str = "gpt-4o") -> dict:
-    """Dollar range from litellm's price map. Assumption (unmeasured): the extraction prompt carries the schema and
-    instructions, and docling-graph may make several passes, so input is 1.5x-6x the document tokens and output
-    is 0.2x-0.6x of the document tokens. Replace with measured numbers after the first run (ops.json)."""
+# Measured on three paid docling runs (gpt-4o, 2026-11-05/06): cost per document = fixed + per-1k-chars.
+#   ler (8.0k chars/doc) $0.116, e_ner (8.0k) $0.116, re_docred (1.2k) $0.052  =>  ~$0.041 + $0.0094 per 1k chars.
+# The fixed part is the schema/instruction prompts sent for every document (about 6-9 LLM calls even for a paragraph).
+# A fit on three points: treat as +-30%, and refit after each new run.
+FIXED_USD_PER_DOC = 0.041
+USD_PER_1K_CHARS = 0.0094
+
+
+def estimate_cost(chars: int, n_docs: int = 1, model: str = "gpt-4o") -> dict:
+    """Dollar range for a docling-backend run: n_docs * fixed + chars * variable, +-30%. Prices are gpt-4o only."""
     import litellm
     price = litellm.model_cost[model]
-    tin = chars / 4
-    lo = tin * 1.5 * price["input_cost_per_token"] + tin * 0.2 * price["output_cost_per_token"]
-    hi = tin * 6.0 * price["input_cost_per_token"] + tin * 0.6 * price["output_cost_per_token"]
-    return {"model": model, "doc_tokens": int(tin), "low_usd": lo, "high_usd": hi,
+    mid = n_docs * FIXED_USD_PER_DOC + chars / 1000 * USD_PER_1K_CHARS
+    return {"model": model, "doc_tokens": int(chars / 4), "low_usd": mid * 0.7, "high_usd": mid * 1.3,
             "in_per_m": price["input_cost_per_token"] * 1e6, "out_per_m": price["output_cost_per_token"] * 1e6}
 
 
@@ -267,10 +271,10 @@ def cmd_run(a):
     gold, prepared = ds.load_prepared(a.name)
     gold = gold[: a.limit] if a.limit else gold
     chars = sum(len(d.text) for d in gold)
-    est = estimate_cost(chars)
+    est = estimate_cost(chars, len(gold))
     print(f"{len(gold)} documents, {chars:,} chars (~{est['doc_tokens']:,} document tokens) -> backend '{a.backend}'")
     print(f"estimated cost ({est['model']} ${est['in_per_m']:.2f}/M in, ${est['out_per_m']:.2f}/M out): "
-          f"${est['low_usd']:.3f} - ${est['high_usd']:.3f}  (assumes 1.5-6x input overhead; measured cost is reported after the run)")
+          f"${est['low_usd']:.3f} - ${est['high_usd']:.3f}  (fitted on 3 measured runs: ${FIXED_USD_PER_DOC}/document + ${USD_PER_1K_CHARS}/1k chars, +-30%)")
     if not a.yes:
         sys.exit("this calls a paid LLM API. Re-run with --yes to proceed (use --limit to start small).")
     eval_id = datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{a.name}"
@@ -362,6 +366,7 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("fetch"); s.add_argument("name"); s.add_argument("--force", action="store_true"); s.set_defaults(fn=cmd_fetch)
     s = sub.add_parser("prepare"); s.add_argument("name")
     s.add_argument("--limit", type=int); s.add_argument("--seed", type=int, default=0); s.add_argument("--max-chars", type=int)
+    s.add_argument("--min-relations", type=int, default=0, help="keep only documents with at least N gold relations")
     s.set_defaults(fn=cmd_prepare)
     s = sub.add_parser("score", help="score existing run(s) against labels")
     s.add_argument("--gold", required=True, help="prepared dataset name/dir/gold.jsonl, a *.gt.json, or a raw labels file with --card")
