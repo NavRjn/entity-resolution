@@ -6,6 +6,7 @@
                                           raw -> prepared gold.jsonl + plain-text docs the pipeline can ingest
     score --gold G --run R [--run R2 ...] score EXISTING runs against labels (no pipeline involved)
     run <name> --backend docling --yes    run the pipeline over a prepared dataset, then score (costs API credits)
+    export [eval_id ...]                  copy finished evaluations to outputs/ (run/relpass do this automatically)
     history | compare A B | gate          trend table, two-report diff, regression gate for CI
 """
 from __future__ import annotations
@@ -54,6 +55,23 @@ def find_run(run: str) -> Path:
         if (cand / "output.json").exists():
             return cand
     raise FileNotFoundError(f"no output.json for run {run!r} (looked in outputs/ and eval_runs/*/runs/)")
+
+
+def export_to_outputs(eval_id: str, run_dirs) -> list[Path]:
+    """Copy the UI-relevant files of evaluation runs to outputs/<eval_id>__<doc_id>/ so the web UI lists them.
+    The evaluation's own copy under eval_runs/ stays the source of truth (it also holds docling's raw artifacts)."""
+    import shutil
+    done = []
+    for rd in run_dirs:
+        if not (rd / "output.json").exists():
+            continue                                   # failed run: nothing the UI can show
+        dest = OUTPUTS / f"{eval_id}__{rd.name}"
+        dest.mkdir(parents=True, exist_ok=True)
+        for f in ("manifest.json", "output.json", "document.txt", "ops.json"):
+            if (rd / f).exists():
+                shutil.copy(rd / f, dest / f)
+        done.append(dest)
+    return done
 
 
 def latest_run() -> str:
@@ -290,6 +308,7 @@ def cmd_run(a):
                 print(f"  FAILED: {type(e).__name__}: {e}")
     ok = {k: v for k, v in run_dirs.items() if (v / "output.json").exists()}
     (root / "runs.json").write_text(json.dumps({k: str(v) for k, v in ok.items()}, indent=2), encoding="utf-8")
+    print(f"exported {len(export_to_outputs(eval_id, ok.values()))} runs to outputs/ (visible in the web UI)")
     score_and_report(gold, ok, a.name, eval_id, backend=a.backend, cfg=_cfg(a), out_dir=root, langfuse=not a.no_langfuse,
                      ops_dirs=list(run_dirs.values()))
 
@@ -297,7 +316,6 @@ def cmd_run(a):
 def cmd_reconvert(a):
     """Rebuild output.json/manifest.json/document.txt of a finished evaluation from its stored docling-graph artifacts.
     Free (no LLM call). Use after converter fixes; with --export the runs also appear in the web UI (outputs/)."""
-    import shutil
     from engine.api import save_compatible_files
     root = EVAL_RUNS / a.eval_id
     mapping: dict[str, str] = {}
@@ -310,14 +328,18 @@ def cmd_reconvert(a):
         save_compatible_files(run_dir.name, source, run_dir)
         mapping[run_dir.name] = str(run_dir)
         if a.export:
-            dest = OUTPUTS / f"{a.eval_id}__{run_dir.name}"
-            dest.mkdir(parents=True, exist_ok=True)
-            for f in ("manifest.json", "output.json", "document.txt", "ops.json"):
-                if (run_dir / f).exists():
-                    shutil.copy(run_dir / f, dest / f)
-            print(f"  exported -> {dest}")
+            for dest in export_to_outputs(a.eval_id, [run_dir]):
+                print(f"  exported -> {dest}")
     (root / "runs.json").write_text(json.dumps(mapping, indent=2), encoding="utf-8")
     print(f"reconverted {len(mapping)} runs; re-score with: score --gold <dataset> --eval-run {a.eval_id}")
+
+
+def cmd_export(a):
+    """Free: copy finished evaluations (all of eval_runs/ by default) to outputs/ so the web UI lists them."""
+    ids = a.eval_id or sorted(d.name for d in EVAL_RUNS.glob("*") if (d / "runs").is_dir())
+    for eid in ids:
+        n = len(export_to_outputs(eid, sorted((EVAL_RUNS / eid / "runs").glob("*"))))
+        print(f"{eid}: {n} runs -> outputs/")
 
 
 def cmd_relpass(a):
@@ -356,6 +378,7 @@ def cmd_relpass(a):
             print(f"  {d.name}: {stats}")
             run_dirs[d.name] = dest
     (root / "runs.json").write_text(json.dumps({k: str(v) for k, v in run_dirs.items()}, indent=2), encoding="utf-8")
+    print(f"exported {len(export_to_outputs(eval_id, run_dirs.values()))} runs to outputs/ (visible in the web UI)")
     score_and_report([g for g in gold if g.doc_id in run_dirs], run_dirs, a.dataset, eval_id, backend="docling+relpass",
                      out_dir=root, langfuse=not a.no_langfuse, ops_dirs=list(run_dirs.values()))
 
@@ -426,6 +449,8 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("reconvert", help="free: rebuild a finished evaluation's output.json from stored docling artifacts")
     s.add_argument("eval_id"); s.add_argument("--export", action="store_true", help="also copy runs into outputs/ so the web UI lists them")
     s.set_defaults(fn=cmd_reconvert)
+    s = sub.add_parser("export", help="free: copy finished evaluations (default: all) to outputs/ so the web UI lists them")
+    s.add_argument("eval_id", nargs="*"); s.set_defaults(fn=cmd_export)
     s = sub.add_parser("relpass", help="re-run only the relationship pass over a finished evaluation's stored entities")
     s.add_argument("eval_id"); s.add_argument("dataset"); s.add_argument("--yes", action="store_true"); s.add_argument("--no-langfuse", action="store_true")
     s.set_defaults(fn=cmd_relpass)

@@ -307,3 +307,18 @@ def test_cli_rescoring_keeps_failed_documents_in_gold(workspace, monkeypatch):
     rep = cli.score_and_report([g1, g2], {"d1": ok}, "t", "e", ops_dirs=[ok, bad], langfuse=False, history=False, quiet=True)
     assert rep["missing_predictions"] == ["d2"] and rep["headline"]["entity_recall"] == 0.5
     assert rep["ops"]["wasted_usd_failed_runs"] == 0.5 and rep["headline"]["failed_runs"] == 1
+
+
+def test_export_to_outputs_copies_ui_files_and_skips_failed_runs(tmp_path, monkeypatch):
+    from evalkit import cli
+    monkeypatch.setattr(cli, "OUTPUTS", tmp_path / "outputs")
+    ok, failed = tmp_path / "runs" / "doc-1", tmp_path / "runs" / "doc-2"
+    for d in (ok, failed):
+        d.mkdir(parents=True)
+    for f in ("manifest.json", "output.json", "document.txt", "ops.json"):
+        (ok / f).write_text("{}", encoding="utf-8")
+    (ok / "raw_artifact.csv").write_text("x", encoding="utf-8")          # docling internals stay in eval_runs/
+    (failed / "ops.json").write_text("{}", encoding="utf-8")             # failed run: no output.json
+    done = cli.export_to_outputs("EVAL", [ok, failed])
+    assert done == [tmp_path / "outputs" / "EVAL__doc-1"]
+    assert sorted(p.name for p in done[0].iterdir()) == ["document.txt", "manifest.json", "ops.json", "output.json"]
