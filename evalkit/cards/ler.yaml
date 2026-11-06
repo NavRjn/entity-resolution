@@ -1,0 +1,30 @@
+name: ler
+title: German Legal Entity Recognition (LER)
+language: de
+domain: German federal court decisions (2017-2018)
+annotation: human (expert annotators, published guidelines)
+license: CC-BY-4.0
+home: https://github.com/elenanereiss/Legal-Entity-Recognition
+paper: https://arxiv.org/abs/2003.13016
+mirror_hf: https://huggingface.co/datasets/elenanereiss/german-ler
+provides: [entity mentions, types]
+lacks: [coreference, relations]
+notes: >
+  Court decisions are anonymised, so PER/UN/ORG are partly placeholders. Coverage is exhaustive for the
+  mapped types only; laws, courts, places etc. are dropped because they are outside the ontology.
+loader: conll
+main: ler_test.conll
+options: {sentences_per_doc: 40}
+has_coref: false
+exhaustive_entity_types: [person, company, agreement]
+type_map:
+  PER: person
+  RR: person       # Richter (judge)
+  AN: person       # Anwalt (lawyer)
+  UN: company      # Unternehmen
+  ORG: company     # Organisation
+  INN: company     # Institution
+  VT: agreement    # Vertrag
+sources:
+  - url: https://raw.githubusercontent.com/elenanereiss/Legal-Entity-Recognition/master/data/ler_test.conll
+    dest: ler_test.conll

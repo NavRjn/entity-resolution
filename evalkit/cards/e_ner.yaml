@@ -1,0 +1,24 @@
+name: e_ner
+title: E-NER (EDGAR legal NER)
+language: en
+domain: 52 US SEC EDGAR filings
+annotation: human (hand annotated)
+license: CC-BY-NC-SA-4.0   # NON-COMMERCIAL: fine for research evaluation, not for a commercial product's training/redistribution
+home: https://github.com/terenceau2/E-NER-Dataset
+paper: https://arxiv.org/abs/2212.09306
+provides: [entity mentions, types]
+lacks: [coreference, relations]
+notes: >
+  edgar_all_4.csv is IOB1 (space separated, 'I-' can start an entity); the 4-class file merges
+  Court/Business/Government into ORG. LOC and MISC are outside the ontology and dropped.
+loader: conll
+main: edgar_all_4.csv
+options: {doc_marker: "-DOCSTART-"}
+has_coref: false
+exhaustive_entity_types: [person, company]
+type_map:
+  PER: person
+  ORG: company
+sources:
+  - url: https://raw.githubusercontent.com/terenceau2/E-NER-Dataset/main/edgar_all_4.csv
+    dest: edgar_all_4.csv

@@ -18,6 +18,10 @@ def test_evaluate_perfect_prediction(workspace):
         {"entity_id": f"E{i}", "canonical_name": e["entity_name"], "entity_type": e["entity_type"], "aliases": [], "citations": []}
         for i, e in enumerate(gt["entities"])
     ]
+    for r in gt.get("relationships", []):   # the GT has a relation whose endpoint is missing from its entity list;
+        for name in (r["source"], r["target"]):   # evalkit (rightly) rejects dangling edges, so a perfect prediction needs it
+            if name not in {e["canonical_name"] for e in ents}:
+                ents.append({"entity_id": f"E{len(ents)}", "canonical_name": name, "entity_type": "other", "aliases": [], "citations": []})
     by_name = {e["canonical_name"]: e["entity_id"] for e in ents}
     rels = [
         {

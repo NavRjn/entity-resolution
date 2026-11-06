@@ -1,0 +1,33 @@
+name: re_docred
+title: Re-DocRED (revised DocRED)
+language: en
+domain: Wikipedia (general domain, NOT legal) - used for coreference + ownership relations
+annotation: human (DocRED) + human re-annotation of missing relations (Re-DocRED)
+license: MIT
+home: https://github.com/tonytan48/Re-DocRED
+paper: https://arxiv.org/abs/2205.12696
+original: https://github.com/thunlp/DocRED
+provides: [mention clusters (coreference), entity types, relations]
+lacks: [legal domain]
+notes: >
+  The only public human-labelled set here with coreference clusters AND relations. Only ownership-type
+  Wikidata relations map onto the ontology: P127 owned by, P749 parent organization, P355 subsidiary,
+  P1830 owner of -> 'controls' (flipped where the source relation points child->parent).
+  Other relations are dropped, which is why this measures 'controls' only.
+loader: docred
+main: dev_revised.json
+options: {}
+has_coref: true
+exhaustive_entity_types: [person, company]
+exhaustive_relations: true
+type_map:
+  PER: person
+  ORG: company
+relation_map:
+  P127: {type: controls, flip: true}
+  P749: {type: controls, flip: true}
+  P355: {type: controls}
+  P1830: {type: controls}
+sources:
+  - url: https://raw.githubusercontent.com/tonytan48/Re-DocRED/main/data/dev_revised.json
+    dest: dev_revised.json

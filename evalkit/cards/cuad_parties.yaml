@@ -1,0 +1,25 @@
+name: cuad_parties
+title: CUAD - contract parties
+language: en
+domain: 510 commercial contracts from SEC EDGAR
+annotation: human (law students, reviewed by attorneys)
+license: CC-BY-4.0
+home: https://github.com/TheAtticusProject/cuad
+paper: https://arxiv.org/abs/2103.06268
+hf: https://huggingface.co/datasets/theatticusproject/cuad-qa
+provides: [party names with char offsets in the full contract text]
+lacks: [entity types, coreference, all non-party entities, relations]
+notes: >
+  Only the 'Parties' clause is labelled, so the gold is PARTIAL: report recall (did we find the signing
+  parties), never precision. Answers include defined terms ('the Company'). Contracts are long; use
+  --max-chars to keep API cost sane (parties appear in the preamble).
+loader: squad
+main: CUADv1.json
+options: {qa_label: Parties, entity_type: other}
+has_types: false
+has_coref: false
+exhaustive_entity_types: []        # nothing is exhaustively labelled -> precision is N/A
+sources:
+  - url: https://github.com/TheAtticusProject/cuad/raw/main/data.zip
+    zip: true
+    include: ["CUADv1.json"]

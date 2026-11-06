@@ -1,0 +1,14 @@
+name: synthetic_legacy
+title: In-repo synthetic memo (data/test.txt + data/test.gt.json)
+language: en
+domain: synthetic corporate/insurance memo, LLM-written (see data/generation-prompt.md)
+annotation: synthetic (ground truth first, text second)
+license: project-internal
+provides: [entities, types, relations in the project ontology]
+lacks: [aliases, human labels]
+notes: Optimistic by construction. Use as a smoke/regression set, never as a headline number.
+loader: legacy_gt
+main: "@data/test.gt.json"   # "@" = relative to repo root
+options: {text: test-synthetic.txt}   # NOT test.txt: that is a 1.8 MB SEC HTML filing; only 1/49 gold names occur in it
+has_coref: false
+sources: []

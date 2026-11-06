@@ -22,6 +22,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!frontend/src/lib/
 lib64/
 parts/
 sdist/
@@ -183,3 +184,5 @@ uploads/
 # Understand anything
 .ua/.trash-*
 .ua/intermediate
+eval_data/
+eval_runs/

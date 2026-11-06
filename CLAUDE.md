@@ -26,7 +26,9 @@ uv run python -m uvicorn api.main:app --reload
 cd frontend && npm run dev      # also: npm run build, npm run lint
 ```
 
-**Tests (offline, free, no API credits):** `uv run python check.py` runs the pytest suite plus frontend lint and build (~55 s); `--fast` is pytest only, `--preflight`/`--online` add the readiness report (keys, saved runs, servers, free network checks). Details in `docs/tests/`. `test.py` is separate: an evaluation script (precision/recall vs. ground truth), not pytest.
+**Tests (offline, free, no API credits):** `uv run python check.py` runs the pytest suite plus frontend lint and build (~55 s); `--fast` is pytest only, `--preflight`/`--online` add the readiness report (keys, saved runs, servers, free network checks). Details in `docs/tests/`. `test.py` is a thin shim over `evalkit/` (precision/recall vs. ground truth), not pytest.
+
+**Evaluation and observability:** `uv run python -m evalkit -h` (datasets, `score` an existing run against any labels, paid `run` over a dataset, `history`, `gate`). Gold is source-agnostic (dataset cards in `evalkit/cards/`, `Coverage` marks partial labels so precision is n/a rather than wrong). `observability.py` traces both backends to Langfuse and writes `outputs/<run_id>/ops.json`; prompts/documents are not sent by the new instrumentation unless `OBS_CAPTURE_CONTENT=1`. `evalkit/ontology.py` duplicates the ontology from `run.py` (a test keeps them identical). Details: `docs/evaluation.md`.
 
 ## Browser automation (frontend verification)
 
@@ -43,8 +45,6 @@ cd frontend && npm run dev      # also: npm run build, npm run lint
 - **`run.py`** — the original hand-rolled pipeline and the home of shared Pydantic schemas (`Citation`, `CanonicalEntity`, `Relationship`, …). `EntityResolutionPipeline` does: text extraction → overlap chunking → per-chunk LLM entity extraction (OpenAI or Ollama, config in `config.yaml`) → guardrail validation (each entity's `exact_quote` must appear in the chunk, else counted as hallucination, logged via `debug_logger.py`) → fuzzy canonicalisation/alias merging (rapidfuzz) → relationship extraction validated against `ENTITY_RELATIONSHIP_DIRECTION_RULES`. `api/main.py` also imports `get_run_dir`, `build_networkx_graph` and `FILE_ID` from here.
 - **`engine/`** — the new docling-graph backend. `engine/template.py` defines `OntologyDocument`, the Pydantic template docling-graph extracts into (duplicates the ontology constants from `run.py`; keep them in sync). `engine/api.py:run_full` calls `docling_graph.run_pipeline` (hard-coded OpenAI gpt-4o), then `save_compatible_files` converts docling-graph's `nodes.csv`/`edges.csv`/`metadata.json` into the legacy `manifest.json` + `output.json` format so the API and frontend work unchanged. Note `engine.api.RunContext` is a different class than `run.RunContext`.
 - **`api/main.py`** — FastAPI app. Flow: `POST /api/uploads` stores files in `uploads/<id8>_<name>`; `POST /api/uploads/{id}/run` launches `engine.api.run_full` as a background task and returns a timestamp `run_id`; results are served from `outputs/<run_id>/` via `/api/runs/...` (manifest, entities, graph, document). The `pipeline = EntityResolutionPipeline()` object and legacy `run.py` code paths are still wired in but the run endpoint uses the docling engine.
-- **`frontend/`** — Vite React app (pages: Uploads, UploadNew, Runs, RunDetail, Document, GraphView, Relationships) talking to the API at localhost:8000.
-- **Data dirs** — `data/` input texts + `*.gt.json` ground truth; `outputs/` run artifacts (also a few flat JSON baselines); `uploads/`, `logs/`, `metrics/` are generated.
 
 ## Gotchas
 

@@ -1,0 +1,29 @@
+name: insurance_letters
+title: Life-insurance legal demand letters (AWS sample)
+language: en
+domain: insurance demand letters, real PDFs
+annotation: human-labelled in SageMaker GroundTruth, but the letters themselves are artificially generated
+license: MIT-0
+home: https://github.com/aws-samples/aws-legal-entity-extraction
+blog: https://aws.amazon.com/blogs/machine-learning/extract-entities-from-insurance-documents-using-amazon-comprehend-named-entity-recognition/
+provides: [party/role entities per letter, source PDFs for the real ingestion path]
+lacks: [char offsets, coreference, relations, exhaustive person/company labels]
+notes: >
+  Only 10 role labels exist (Law Firm, Insurance Company, Policy Holder Name, ...), so persons/companies
+  not in those roles are unlabelled: gold is PARTIAL (recall only). Synthetic text => optimistic.
+loader: textract
+main: ""
+options: {annotations_dir: annotations, source_dir: source}
+has_coref: false
+exhaustive_entity_types: []
+type_map:
+  "Law Firm": company
+  "Insurance Company": company
+  "Policy Holder Name": person
+  "Beneficiary Name": person
+  "Sender": person
+sources:
+  - url: https://github.com/aws-samples/aws-legal-entity-extraction/archive/refs/heads/main.zip
+    zip: true
+    strip: 1
+    include: ["*/annotations/*.json", "*/source/*.pdf"]
