@@ -38,6 +38,7 @@ class Coverage(BaseModel):
     """What the annotators labelled. Precision is only meaningful on exhaustively labelled types."""
     exhaustive_entity_types: Optional[list[str]] = None   # None => all types exhaustive
     exhaustive_relations: bool = True
+    relation_types: Optional[list[str]] = None   # only these relation types are labelled; others are not scored
     has_coref: bool = True       # False => aliases/clusters are heuristic (grouped by identical surface text)
     has_types: bool = True       # False => type-agnostic matching only
 

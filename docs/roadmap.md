@@ -243,3 +243,5 @@ What the first experiments do and do not show (details in `docs/evaluation.md`, 
 - Recall was similar across languages (30% German, 35% English filings), so language does not explain it.
 
 Until this is designed: do not tune the `Agreement` definition to German or add German-only special cases in the template. Fix the type definition in a way that survives the redesign (a decisions/proceedings class), and measure English and German separately every time.
+
+**Update 2026-11-06 (relationships):** the missing relationships are a template defect, not a language effect: relation fields nested as `Union` in every entity class give docling-graph a 28-path catalog and are never filled. A separate relation pass (`engine/relations.py`) reaches 78% precision / 50% recall on English ownership relations for about 2% of the extraction cost; see `docs/evaluation.md`, "Relationship extraction investigation". Language neutrality of that pass was confirmed on German text, so section 9 concerns the *entity classes and prompts*, not relation extraction as such.

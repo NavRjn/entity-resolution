@@ -136,3 +136,27 @@ Reading it:
 
 ### Cost model (refit 2026-11-06)
 Three paid runs fit `cost per document = $0.041 + $0.0094 per 1k characters` (gpt-4o, docling backend): 8k-char documents $0.116, 1.2k-char documents $0.052. The fixed part is the schema and instruction prompts sent per document (6-9 LLM calls even for one paragraph), so many short documents cost more than their length suggests. `evalkit run` now prints this estimate (+-30%). A single 300-page (900k character) document would extrapolate to about $8.50, unverified and much lower than the earlier straight-line figure of $13-39; chunking, gleaning and consolidation may not scale linearly.
+
+## Relationship extraction investigation (2026-11-06)
+Question: why does the docling backend extract (almost) no relationships? Total spend for the investigation about **$0.97** (all gpt-4o).
+
+**Root cause: the schema, not the model and not the language.** `engine/template.py` nests full `List[Union[Person, Company, Asset]]` relation fields inside every entity class, which is the anti-pattern docling-graph's own docs (`docs/fundamentals/schema-definition/best-practices.md`) warn against:
+- The dense catalog unwraps a `Union` to its *first* model, so the shipped template produces a **28-path catalog** with phantom nested paths such as `companies[].participates_in[].transfers_to[]` (pinned in `tests/test_relations.py`). Phase 1 only ever discovers the root lists (`persons[]`, `companies[]`, ...), so the relation fields are never populated.
+- docling-graph's remedy is `edge(..., reference=True)` (id-only links filled by the parent's own call). But node ids embed the class name (`Company_<hash>`), and a `Union` reference resolves to the Union's first class, so a company named in `controls` would become a phantom `Person_...` node. Reference fields need one target class each.
+
+Four approaches on the same documents (English Re-DocRED paragraphs that state ownership; scored on `controls` only, the only relation type labelled in the gold):
+
+| approach | relationships | relation P / R / F1 | cost | note |
+|---|---|---|---|---|
+| baseline template (nested Union fields) | 0 of 26 gold | n/a / 0% / 0% | $0.42 (8 docs) | 28 catalog paths |
+| V1 `engine/template_v1.py`: per-target `reference=True` fields (47 fields) | 16 on 2 docs | 11% / 17% / 13% (2 docs) | **$0.65 (2 docs)**, 14.5 calls/doc, 380 prompt tokens per document token | works but noisy (mostly `related_to`, wrong parent entity) and 6-10x the cost |
+| V2 `engine/template_v2.py`: relations as extracted `Relationship` records | 0 | n/a | $0.065 (2 docs) | docling-graph's discovery phase only enumerates *entities*; relation records are never emitted |
+| **relation pass** `engine/relations.py`: one call per chunk over the known entities | 16 on 8 docs | **78% / 50% / 61%** | **$0.027 (8 docs)** | decoupled from docling-graph |
+
+How the relation pass works: entities come from docling-graph as before; then one structured LLM call per ~6,000-character chunk sees the chunk and the list of entities found in it, and returns (subject, relation, object, evidence). Each proposal must resolve both names to known entities, satisfy `ENTITY_RELATIONSHIP_DIRECTION_RULES`, and carry an evidence quote located in the text (letters/digits-only matching, so pre-tokenised sources like LER and E-NER still match); otherwise it is dropped and counted in `manifest.json["relation_pass"]`. Opt-in with `ER_RELATION_PASS=1` (not the default yet); `uv run python -m evalkit relpass <eval_id> <dataset>` re-applies only this pass to a finished evaluation's stored entities (about 2% of the extraction cost), which is how the comparison above was controlled.
+
+What limits the 50% recall: 7 of the 9 missed gold relations have an endpoint entity that was never extracted (US Navy, TMMK, British Army/RAF/Navy, Royal Court Orchestra). That is the entity-recall problem, not a relationship problem. The pass also rejected 14 proposals on direction rules, mostly organisations typed `other` (military units), which the `controls` rule does not allow: an ontology gap.
+
+**Language:** the same pass produced 10 relationships on the German LER documents and 73 on the English filings, so the mechanism is language-neutral and the earlier "no relationships" was not a German effect. Quality still follows the entities: most German relations link "agreements" that are really court decisions or procedures (the `Agreement` problem), and on E-NER 45 of 63 relations are `governs`, many dubious ("Prospectus Supplement governs common stock"), so the relation definitions need tuning. Only Re-DocRED has gold, so 78% precision is the only claim backed by labels, on 8 short documents (CI 15-80% recall side, 14 predictions).
+
+**Recommendations, in order:** (1) turn `ER_RELATION_PASS` on by default once the `governs`/`related_to` definitions are tuned on a held-out set; (2) strip the relation fields from the production template (entities-only, like V2 without `relationships`): it shrinks the catalog from 28 to 6 paths and V2's entity-only run cost $0.032 per tiny document against $0.052 for the baseline; this needs an entity-quality check on all three datasets before adoption; (3) add a decisions/proceedings class and military/public-body handling to the ontology (links to `docs/roadmap.md` section 9).

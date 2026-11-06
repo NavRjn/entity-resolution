@@ -37,6 +37,7 @@ class Card:
         self.coverage = Coverage(
             exhaustive_entity_types=raw.get("exhaustive_entity_types"),
             exhaustive_relations=raw.get("exhaustive_relations", True),
+            relation_types=raw.get("relation_types"),
             has_coref=raw.get("has_coref", True),
             has_types=raw.get("has_types", True),
         )

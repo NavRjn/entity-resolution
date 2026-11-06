@@ -20,6 +20,7 @@ options: {}
 has_coref: true
 exhaustive_entity_types: [person, company]
 exhaustive_relations: true
+relation_types: [controls]       # only ownership relations are mapped from Wikidata; other predicted relations are not scored
 type_map:
   PER: person
   ORG: company

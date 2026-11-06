@@ -8,6 +8,7 @@ from typing import Optional
 from pathlib import Path
 import sys
 import csv
+import os
 import re
 from .template import OntologyDocument
 from dotenv import load_dotenv
@@ -111,6 +112,35 @@ def _evidence(ref: str, a: list[dict], b: list[dict], max_gap: int = 400) -> dic
     return Citation(file_id=fid, chunk_id=cid, start_char=lo, end_char=hi, quote=ref[lo:hi], match="cooccurrence").model_dump()
 
 
+def _norm(text: str) -> str:
+    return re.sub(r"[\W_]+", "", (text or "").casefold())
+
+
+def _resolve_entity(name: str, forms: dict[str, str]) -> Optional[str]:
+    """Entity id for a name the model wrote in a relationship record: exact normalised name or alias, else a unique
+    containment match ('Microsoft' -> 'Microsoft Corporation'). None when unknown or ambiguous."""
+    key = _norm(name)
+    if key in forms:
+        return forms[key]
+    hits = {eid for form, eid in forms.items() if len(key) >= 4 and len(form) >= 4 and (key in form or form in key)}
+    return hits.pop() if len(hits) == 1 else None
+
+
+def _quote_citation(ref: str, quote: str, file_id: str, chunk_id: int) -> Optional[dict]:
+    """Locate a model-copied evidence passage in the reference text (exact, then whitespace-tolerant)."""
+    quote = (quote or "").strip()
+    if not quote or not ref:
+        return None
+    i = ref.find(quote)
+    if i < 0:
+        m = re.search(r"\s+".join(re.escape(w) for w in quote.split()), ref)
+        if not m:
+            return None
+        i, quote = m.start(), ref[m.start():m.end()]
+    return Citation(file_id=file_id, chunk_id=chunk_id, start_char=i, end_char=i + len(quote), quote=quote,
+                    match="verbatim").model_dump()
+
+
 def save_compatible_files(run_id: str, source_file: Path, output_dir: Path):
     """
     Read OUTPUTDIR/*/docling_graph/{nodes,edges}.csv (+ provenance.json) and write OUTPUTDIR/manifest.json,
@@ -172,7 +202,7 @@ def save_compatible_files(run_id: str, source_file: Path, output_dir: Path):
 
     entities = []
     for node in nodes:
-        if node.get("label") == "OntologyDocument":
+        if node.get("label") in ("OntologyDocument", "Relationship"):
             continue
         name = node.get("name", "NA")
         entities.append({
@@ -191,6 +221,26 @@ def save_compatible_files(run_id: str, source_file: Path, output_dir: Path):
         "citation": _evidence(ref, cites.get(edge.get("source"), []), cites.get(edge.get("target"), [])),
     } for edge in edges if "OntologyDocument" not in edge.get("source", "")]
 
+    forms = {}
+    for e in entities:
+        for form in [e["canonical_name"], *e["aliases"]]:
+            forms.setdefault(_norm(form), e["entity_id"])
+    dropped = 0
+    for node in nodes:
+        if node.get("label") != "Relationship":
+            continue
+        src, tgt = _resolve_entity(node.get("subject", ""), forms), _resolve_entity(node.get("object", ""), forms)
+        if not src or not tgt or src == tgt:
+            dropped += 1
+            continue
+        csv_prov = json.loads(node.get("__provenance__") or "{}")
+        cit = _quote_citation(ref, node.get("evidence", ""), csv_prov.get("document_id") or "NA",
+                              int((csv_prov.get("chunks") or [0])[0])) \
+            or _evidence(ref, cites.get(src, []), cites.get(tgt, []))
+        relationships.append({"source_entity_id": src, "target_entity_id": tgt,
+                              "relationship_type": node.get("relation") or "related_to", "citation": cit})
+    manifest["dropped_relationship_records"] = dropped
+
     with open(output_dir / "manifest.json", "w", encoding="utf-8") as f:
         print("Saving manifest.json at ", str(output_dir / "manifest.json"))
         json.dump(manifest, f, indent=2, ensure_ascii=False, default=str)
@@ -199,6 +249,10 @@ def save_compatible_files(run_id: str, source_file: Path, output_dir: Path):
     with open(output_dir / "output.json", "w", encoding="utf-8") as f:
         print("Saving output.json at ", str(output_dir / "output.json"))
         json.dump({"entities": entities, "relationships": relationships}, f, indent=2, ensure_ascii=False, default=str)
+
+
+# Experiments swap the extraction schema without code edits: ER_TEMPLATE=engine.template_v1.OntologyDocument
+TEMPLATE = os.getenv("ER_TEMPLATE", "engine.template.OntologyDocument")
 
 
 def run_full(ctx: RunContext) -> RunContext:
@@ -214,7 +268,7 @@ def run_full(ctx: RunContext) -> RunContext:
 
     cfg = PipelineConfig(
         source=str(file_path),
-        template="engine.template.OntologyDocument",
+        template=TEMPLATE,
         backend="llm",
         inference="remote",
         provider_override="openai",
@@ -224,7 +278,7 @@ def run_full(ctx: RunContext) -> RunContext:
     )
 
     with observability.run_trace(run_id, backend="docling", output_dir=output_dir,
-                                 metadata={"model": cfg.model_override, "file": file_path.name},
+                                 metadata={"model": cfg.model_override, "file": file_path.name, "template": TEMPLATE},
                                  input={"file": file_path.name}):
         observability.instrument_litellm()
         with observability.stage("docling_graph_pipeline"):
@@ -233,6 +287,11 @@ def run_full(ctx: RunContext) -> RunContext:
 
         with observability.stage("convert_outputs"):
             save_compatible_files(run_id, file_path, output_dir)
+
+        if os.getenv("ER_RELATION_PASS") == "1":      # opt-in: see engine/relations.py
+            from .relations import apply_to_run
+            with observability.stage("relation_pass"):
+                apply_to_run(output_dir, cfg.model_override)
     return ctx
 
 

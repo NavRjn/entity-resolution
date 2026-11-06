@@ -269,6 +269,7 @@ def estimate_cost(chars: int, n_docs: int = 1, model: str = "gpt-4o") -> dict:
 
 def cmd_run(a):
     gold, prepared = ds.load_prepared(a.name)
+    gold = [g for g in gold if g.doc_id in a.docs.split(",")] if a.docs else gold
     gold = gold[: a.limit] if a.limit else gold
     chars = sum(len(d.text) for d in gold)
     est = estimate_cost(chars, len(gold))
@@ -317,6 +318,46 @@ def cmd_reconvert(a):
             print(f"  exported -> {dest}")
     (root / "runs.json").write_text(json.dumps(mapping, indent=2), encoding="utf-8")
     print(f"reconverted {len(mapping)} runs; re-score with: score --gold <dataset> --eval-run {a.eval_id}")
+
+
+def cmd_relpass(a):
+    """Re-run ONLY the relationship pass (engine/relations.py) over a finished evaluation's stored entities and score it
+    as a new evaluation. Costs just the relationship calls; the entities are reused, so the comparison is controlled."""
+    import shutil
+    import litellm
+    from engine.relations import SYSTEM, apply_to_run, split_chunks
+    src_root = EVAL_RUNS / a.eval_id
+    gold, _ = ds.load_prepared(a.dataset)
+    price = litellm.model_cost["gpt-4o"]
+    tin = tout = 0
+    runs = sorted(d for d in (src_root / "runs").glob("*") if (d / "output.json").exists() and (d / "document.txt").exists())
+    for d in runs:
+        ents = json.loads((d / "output.json").read_text(encoding="utf-8"))["entities"]
+        for ch in split_chunks((d / "document.txt").read_text(encoding="utf-8")):
+            tin += len(SYSTEM) // 4 + len(ch) // 4 + 25 * len(ents)
+            tout += 120
+    est = tin * price["input_cost_per_token"] + tout * price["output_cost_per_token"]
+    print(f"{len(runs)} documents, ~{tin:,} input / {tout:,} output tokens -> estimated ${est * 0.7:.3f} - ${est * 1.5:.3f} (gpt-4o, one call per chunk)")
+    if not a.yes:
+        sys.exit("this calls a paid LLM API. Re-run with --yes to proceed.")
+    eval_id = datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{a.dataset}_relpass"
+    root = EVAL_RUNS / eval_id
+    run_dirs: dict[str, Path] = {}
+    with observability.eval_context(eval_id, a.dataset):
+        for d in runs:
+            dest = root / "runs" / d.name
+            dest.mkdir(parents=True, exist_ok=True)
+            for f in ("output.json", "manifest.json", "document.txt"):
+                if (d / f).exists():
+                    shutil.copy(d / f, dest / f)
+            with observability.run_trace(d.name, backend="relation-pass", output_dir=dest, tags=["relpass"]):
+                observability.instrument_litellm()
+                stats = apply_to_run(dest)
+            print(f"  {d.name}: {stats}")
+            run_dirs[d.name] = dest
+    (root / "runs.json").write_text(json.dumps({k: str(v) for k, v in run_dirs.items()}, indent=2), encoding="utf-8")
+    score_and_report([g for g in gold if g.doc_id in run_dirs], run_dirs, a.dataset, eval_id, backend="docling+relpass",
+                     out_dir=root, langfuse=not a.no_langfuse, ops_dirs=list(run_dirs.values()))
 
 
 def _read_history() -> list[dict]:
@@ -378,12 +419,16 @@ def build_parser() -> argparse.ArgumentParser:
     common(s); s.set_defaults(fn=cmd_score)
     s = sub.add_parser("run", help="run the pipeline over a prepared dataset and score it")
     s.add_argument("name"); s.add_argument("--backend", default="docling", choices=["docling", "legacy"])
+    s.add_argument("--docs", help="comma-separated doc ids to run (default: all prepared documents)")
     s.add_argument("--limit", type=int); s.add_argument("--yes", action="store_true"); s.add_argument("--pdf", action="store_true")
     s.add_argument("--fuzzy", type=float, default=0.90); s.add_argument("--no-aliases", action="store_true"); s.add_argument("--no-langfuse", action="store_true")
     s.set_defaults(fn=cmd_run)
     s = sub.add_parser("reconvert", help="free: rebuild a finished evaluation's output.json from stored docling artifacts")
     s.add_argument("eval_id"); s.add_argument("--export", action="store_true", help="also copy runs into outputs/ so the web UI lists them")
     s.set_defaults(fn=cmd_reconvert)
+    s = sub.add_parser("relpass", help="re-run only the relationship pass over a finished evaluation's stored entities")
+    s.add_argument("eval_id"); s.add_argument("dataset"); s.add_argument("--yes", action="store_true"); s.add_argument("--no-langfuse", action="store_true")
+    s.set_defaults(fn=cmd_relpass)
     s = sub.add_parser("history"); s.add_argument("--dataset"); s.add_argument("-n", type=int, default=20); s.set_defaults(fn=cmd_history)
     s = sub.add_parser("compare"); s.add_argument("a"); s.add_argument("b"); s.set_defaults(fn=cmd_compare)
     s = sub.add_parser("gate", help="exit 1 if headline metrics regressed vs a baseline report")
