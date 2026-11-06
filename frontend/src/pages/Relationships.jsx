@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom"
+import { useParams, Link } from "react-router-dom"
 import { useEffect, useState, useMemo } from "react"
 
 import {
@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/card"
 
 import { Badge } from "@/components/ui/badge"
+import RunNav from "@/components/RunNav"
+import { spanLink } from "@/lib/entities"
 
 import {
   Table,
@@ -60,6 +62,7 @@ export default function Relationships() {
       entityMap[r.target_entity_id] || r.target_entity_id,
     type: r.relationship_type,
     evidence: r.citation?.quote || "No evidence available",
+    cite: r.citation && r.citation.end_char > r.citation.start_char ? r.citation : null,
   }))
 
   const uniqueTypes = new Set(
@@ -117,6 +120,8 @@ export default function Relationships() {
             Run ID: {runId}
           </p>
         </div>
+
+        <RunNav runId={runId} className="mb-8" />
 
         {/* Metrics */}
 
@@ -191,6 +196,13 @@ export default function Relationships() {
                 </TableHeader>
 
                 <TableBody>
+                  {rows.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-6 text-center text-sm text-muted-foreground">
+                        No relationships were extracted for this run.
+                      </TableCell>
+                    </TableRow>
+                  )}
                   {rows.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell className="font-medium">
@@ -216,6 +228,14 @@ export default function Relationships() {
                         <div className="line-clamp-2">
                           {row.evidence}
                         </div>
+                        {row.cite && (
+                          <Link
+                            to={spanLink(runId, row.cite)}
+                            className="mt-1 inline-block text-xs text-foreground underline"
+                          >
+                            View in document
+                          </Link>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

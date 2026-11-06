@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate, useLocation } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 
 import {
@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/card"
 
 import { Badge } from "@/components/ui/badge"
+import RunNav from "@/components/RunNav"
+import { anchoredCitations, citationLabel, citationLink, typeStyle } from "@/lib/entities"
 
 import {
   Table,
@@ -22,7 +24,6 @@ import {
 export default function RunDetail() {
   const { runId } = useParams()
   const navigate = useNavigate()
-  const location = useLocation()
 
   const [data, setData] = useState(null)
 
@@ -44,45 +45,11 @@ export default function RunDetail() {
 
   const entities = data.entities || []
 
-  const companies = entities.filter(
-    (e) => e.entity_type === "company"
-  ).length
-
-  const people = entities.filter(
-    (e) => e.entity_type === "person"
-  ).length
-
-  const agreements = entities.filter(
-    (e) => e.entity_type === "agreement"
-  ).length
-
-  const badgeClass = (type) => {
-    switch (type) {
-      case "company":
-        return "bg-blue-50 text-blue-700 border-blue-200"
-
-      case "person":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200"
-
-      case "agreement":
-        return "bg-amber-50 text-amber-700 border-amber-200"
-
-      default:
-        return ""
-    }
-  }
-
-  const activeTab = () => {
-    if (location.pathname.includes("relationships")) {
-      return "relationships"
-    }
-
-    if (location.pathname.includes("document")) {
-      return "document"
-    }
-
-    return "entities"
-  }
+  const count = (t) => entities.filter((e) => (e.entity_type || "").toLowerCase() === t).length
+  const companies = count("company")
+  const people = count("person")
+  const agreements = count("agreement")
+  const others = entities.length - companies - people - agreements
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,82 +72,24 @@ export default function RunDetail() {
 
         {/* KPI Cards */}
 
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-3xl font-semibold">
-                {entities.length}
-              </div>
-
-              <div className="mt-1 text-sm text-muted-foreground">
-                Total Entities
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-3xl font-semibold">
-                {companies}
-              </div>
-
-              <div className="mt-1 text-sm text-muted-foreground">
-                Companies
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-3xl font-semibold">
-                {people + agreements}
-              </div>
-
-              <div className="mt-1 text-sm text-muted-foreground">
-                Other Entities
-              </div>
-            </CardContent>
-          </Card>
+        <div className="mb-8 grid gap-4 md:grid-cols-5">
+          {[
+            ["Total entities", entities.length],
+            ["Companies", companies],
+            ["People", people],
+            ["Agreements", agreements],
+            ["Other / assets", others],
+          ].map(([label, n]) => (
+            <Card key={label}>
+              <CardContent className="pt-6">
+                <div className="text-3xl font-semibold">{n}</div>
+                <div className="mt-1 text-sm text-muted-foreground">{label}</div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Navigation */}
-
-        <div className="mb-8 border-b">
-          <nav className="flex gap-8">
-            <Link
-              to={`/runs/${runId}`}
-              className={`pb-3 text-sm font-medium transition-colors ${
-                activeTab() === "entities"
-                  ? "border-b-2 border-foreground text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Entities
-            </Link>
-
-            <Link
-              to={`/runs/${runId}/relationships`}
-              className={`pb-3 text-sm font-medium transition-colors ${
-                activeTab() === "relationships"
-                  ? "border-b-2 border-foreground text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Relationships
-            </Link>
-
-            <Link
-              to={`/runs/${runId}/document`}
-              className={`pb-3 text-sm font-medium transition-colors ${
-                activeTab() === "document"
-                  ? "border-b-2 border-foreground text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Document
-            </Link>
-          </nav>
-        </div>
+        <RunNav runId={runId} className="mb-8" />
 
         {/* Table */}
 
@@ -205,42 +114,42 @@ export default function RunDetail() {
                     <TableHead>
                       Aliases
                     </TableHead>
+
+                    <TableHead className="w-[22%]">
+                      Citations
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
 
                 <TableBody>
-                  {entities.map((entity, idx) => (
-                    <TableRow
-                      key={entity.entity_id || idx}
-                      className="cursor-pointer transition-colors hover:bg-muted/50"
-                      onClick={() =>
-                        navigate(
-                          `/runs/${runId}/document?entity=${encodeURIComponent(
-                            entity.canonical_name
-                          )}`
-                        )
-                      }
-                    >
-                      <TableCell className="font-medium">
-                        {entity.canonical_name}
-                      </TableCell>
+                  {entities.map((entity, idx) => {
+                    const cites = anchoredCitations(entity)
+                    return (
+                      <TableRow
+                        key={entity.entity_id || idx}
+                        className="cursor-pointer transition-colors hover:bg-muted/50"
+                        onClick={() => navigate(citationLink(runId, entity, cites[0]?.index ?? 0))}
+                      >
+                        <TableCell className="font-medium">{entity.canonical_name}</TableCell>
 
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={badgeClass(
-                            entity.entity_type
-                          )}
-                        >
-                          {entity.entity_type}
-                        </Badge>
-                      </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={typeStyle(entity.entity_type).badge}>
+                            {entity.entity_type}
+                          </Badge>
+                        </TableCell>
 
-                      <TableCell className="text-muted-foreground">
-                        {(entity.aliases || []).join(", ")}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        <TableCell className="text-muted-foreground">
+                          {(entity.aliases || []).join(", ")}
+                        </TableCell>
+
+                        <TableCell className="text-xs text-muted-foreground">
+                          {cites.length > 0
+                            ? `${cites.length} in document (${citationLabel(cites[0])})`
+                            : "not located"}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>

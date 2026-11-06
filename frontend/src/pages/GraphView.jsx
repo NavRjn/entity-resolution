@@ -3,6 +3,8 @@ import ForceGraph2D from "react-force-graph-2d"
 import { useParams, useNavigate } from "react-router-dom"
 import { Box, Typography } from "@mui/material"
 import * as d3 from "d3-force"
+import RunNav from "@/components/RunNav"
+import { TYPE_STYLE } from "@/lib/entities"
 
 export default function GraphView() {
   const { runId } = useParams()
@@ -14,18 +16,21 @@ export default function GraphView() {
   const [hoverNode, setHoverNode] = useState(null)
 
   const nodeColors = {
-    person: "#4f46e5",
-    company: "#0ea5e9",
-    location: "#10b981",
-    case: "#f59e0b",
-    default: "#64748b"
+    person: TYPE_STYLE.person.node,
+    company: TYPE_STYLE.company.node,
+    agreement: TYPE_STYLE.agreement.node,
+    asset: TYPE_STYLE.asset.node,
+    other: TYPE_STYLE.other.node,
+    default: TYPE_STYLE.other.node
   }
 
   const edgeColors = {
-    works_at: "#6366f1",
-    owns: "#f97316",
+    controls: "#f97316",
+    participates_in: "#6366f1",
+    represents: "#0ea5e9",
+    transfers_to: "#22c55e",
+    governs: "#a855f7",
     related_to: "#94a3b8",
-    cites: "#22c55e",
     default: "#cbd5e1"
   }
 
@@ -42,7 +47,7 @@ export default function GraphView() {
           links: (data.edges || []).map(e => ({
             source: e.source,
             target: e.target,
-            type: e.relationship_type || "default"
+            type: e.relationship || e.relationship_type || "default"
           }))
         })
       } catch (err) {
@@ -76,7 +81,7 @@ export default function GraphView() {
         const base =
           node.entity_type === "company" ? 26 :
           node.entity_type === "person" ? 22 :
-          node.entity_type === "case" ? 24 : 18
+          node.entity_type === "agreement" ? 24 : 18
 
         return base + 6
       })
@@ -108,33 +113,59 @@ export default function GraphView() {
     return (
       node.entity_type === "company" ? 18 :
       node.entity_type === "person" ? 16 :
-      node.entity_type === "case" ? 18 : 14
+      node.entity_type === "agreement" ? 18 : 14
     )
   }
 
   const isDenseMode = false // keep stable first (IMPORTANT for debugging)
 
+  const nav = (
+    <div className="bg-background px-8 pt-6">
+      <RunNav runId={runId} />
+    </div>
+  )
+
   if (loading) {
     return (
-      <Box sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Typography>Loading graph...</Typography>
-      </Box>
+      <div>
+        {nav}
+        <Box sx={{ height: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Typography>Loading graph...</Typography>
+        </Box>
+      </div>
     )
   }
 
   return (
+    <div>
+    {nav}
     <div
       style={{
-        height: "100vh",
+        height: "calc(100vh - 110px)",
         width: "100%",
         background: "#f8fafc",
-        overflow: "hidden"
+        overflow: "hidden",
+        position: "relative"
       }}
     >
+      <div className="absolute left-4 top-3 z-10 rounded-md border bg-white/90 px-3 py-2 text-xs text-muted-foreground">
+        {graph.nodes.length} entities, {graph.links.length} relationships
+        {graph.links.length === 0 && " (none were extracted for this run)"}
+        <div className="mt-1 flex gap-3">
+          {["company", "person", "agreement", "asset", "other"].map((t) => (
+            <span key={t} className="inline-flex items-center gap-1">
+              <span style={{ background: nodeColors[t], width: 8, height: 8, borderRadius: 8, display: "inline-block" }} />
+              {t}
+            </span>
+          ))}
+        </div>
+      </div>
 
       <ForceGraph2D
         ref={fgRef}
         graphData={graph}
+        width={window.innerWidth - 40}
+        height={window.innerHeight - 110}
 
         /* layout stability */
         d3VelocityDecay={0.35}
@@ -151,11 +182,7 @@ export default function GraphView() {
         onNodeHover={setHoverNode}
 
         onNodeClick={(node) => {
-          navigate(
-            `/runs/${runId}/document?entity=${encodeURIComponent(
-              node.label || node.id
-            )}`
-          )
+          navigate(`/runs/${runId}/document?entity=${encodeURIComponent(node.id)}`)
         }}
 
         /* node size */
@@ -192,6 +219,7 @@ export default function GraphView() {
           ctx.globalAlpha = 1
         }}
       />
+    </div>
     </div>
   )
 }
