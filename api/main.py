@@ -123,14 +123,31 @@ def list_runs():
             with open(manifest_path, "r", encoding="utf-8") as f:
                 manifest = json.load(f)
 
+        status = "completed" if (run_dir / "output.json").exists() else "pending"
+        ops_path = run_dir / "ops.json"
+        if status == "pending" and ops_path.exists():
+            status = json.loads(ops_path.read_text(encoding="utf-8")).get("status", status)
+            status = "pending" if status == "running" else status
+
         runs.append(
             {
                 "run_id": run_dir.name,
                 "source_file": manifest.get("source_file"),
-                "created_at": manifest.get("created_at")
+                "created_at": manifest.get("created_at"),
+                "status": status
             }
         )
     return runs
+
+
+def _normalize_run(data: dict) -> dict:
+    """Make runs written before the converter fix readable: ontology-cased types, no null/blank aliases."""
+    type_map = {"otherentity": "other"}
+    for e in data.get("entities", []):
+        t = str(e.get("entity_type") or "other").lower()
+        e["entity_type"] = type_map.get(t, t)
+        e["aliases"] = [a for a in (e.get("aliases") or []) if isinstance(a, str) and a.strip()]
+    return data
 
 
 @app.get("/api/runs/{run_id}")
@@ -140,7 +157,7 @@ def get_run(run_id: str):
         return {"run_id": run_id, "status": "pending"}
 
     with open(output_file, "r", encoding="utf-8") as f:
-        data = json.load(f)
+        data = _normalize_run(json.load(f))
 
     return {"run_id": run_id, "status": "completed", **data}
 
@@ -185,7 +202,7 @@ def get_graph(run_id: str):
         raise HTTPException(status_code=404, detail="Run not found")
 
     with open(output_file, "r", encoding="utf-8") as f:
-        data = json.load(f)
+        data = _normalize_run(json.load(f))
 
     entities = [CanonicalEntity.model_validate(c) for c in data.get("entities", [])]
     relationships = [Relationship.model_validate(r) for r in data.get("relationships", [])]
@@ -200,32 +217,27 @@ def get_graph(run_id: str):
 
 @app.get("/api/runs/{run_id}/document")
 def get_run_document(run_id: str):
-
-    run_dir = Path("outputs") / run_id
-
+    """Plain text of the run's document. Prefers <run>/document.txt: the exact text citation offsets index into
+    (the source itself for .txt, docling's markdown for PDF/DOCX), so highlights and 'go to citation' always line up."""
+    run_dir = OUTPUT_DIR / run_id
     manifest_path = run_dir / "manifest.json"
     if not manifest_path.exists():
         raise HTTPException(status_code=404, detail="Run not found")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-    import json
-    manifest = json.loads(manifest_path.read_text())
+    doc_file = manifest.get("document_file")
+    if doc_file and (run_dir / doc_file).exists():
+        return {"run_id": run_id, "document": (run_dir / doc_file).read_text(encoding="utf-8"), "offsets_valid": True}
 
-    # OPTION A: direct file path stored in manifest
     source_file = manifest.get("source_file")
-
     if not source_file:
         raise HTTPException(status_code=400, detail="No source file linked to run")
-
-    # resolve file
     file_path = Path(source_file)
-
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Source document not found")
-
-    return {
-        "run_id": run_id,
-        "document": file_path.read_text(encoding="utf-8")
-    }
+    if file_path.suffix.lower() not in (".txt", ".md"):
+        raise HTTPException(status_code=415, detail=f"{file_path.suffix} cannot be shown as text for this run (re-run to generate document.txt)")
+    return {"run_id": run_id, "document": file_path.read_text(encoding="utf-8", errors="replace"), "offsets_valid": False}
 
 @app.get("/api/uploads/{upload_id}/document")
 def get_document(upload_id: str):

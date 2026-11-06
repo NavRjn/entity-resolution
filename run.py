@@ -25,6 +25,7 @@ from rich.logging import RichHandler
 import concurrent.futures
 from collections import defaultdict
 from debug_logger import log_hallucinated_entity, log_relationship_check
+import observability
 # from openai import OpenAI
 from langfuse.openai import OpenAI
 from dotenv import load_dotenv
@@ -60,6 +61,7 @@ class Citation(BaseModel):
     start_char: int
     end_char: int
     quote: str
+    match: Optional[str] = None  # verbatim | name_search | cooccurrence | unanchored (docling path); None for legacy runs
 
 
 class ExtractedEntity(BaseModel):
@@ -793,6 +795,11 @@ class EntityResolutionPipeline:
 
     # Main external API Endpoint for running the full pipeline
     def run_full(self, ctx: RunContext):
+        with observability.run_trace(ctx.run_id, backend="legacy", output_dir=ctx.output_dir,
+                                     metadata={"seed": ctx.seed, "file": str(ctx.file_path)}):
+            return self._run_full(ctx)
+
+    def _run_full(self, ctx: RunContext):
         with LANGFUSE.start_as_current_observation(
                 as_type="span", name="full_pipeline", input=self._run_metadata(ctx)
         ) as root:

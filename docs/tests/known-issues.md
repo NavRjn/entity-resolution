@@ -1,15 +1,13 @@
 # Known issues found by the test suite
 
+**Fixed 2026-11-06 (converter rewrite in `engine/api.py`): former #1 (`aliases=[None]` -> /graph 500), #2 (entity_type casing), #3 (empty/None provenance chunks crashed the run after the LLM spend), #4 (opaque `StopIteration`).** Their xfail tests are now normal tests. Numbering below is unchanged.
+
 Each of the 8 issues below is pinned by `xfail(strict=True)` tests (9 expected failures in total: #1 has two). Fixing the bug turns that test red (XPASS); then remove the marker and the entry here. Product code was deliberately not changed when these were found.
 
 ## Real bugs (have an xfail test)
 
 | # | Where | Symptom | Test | Suggested fix |
 |---|---|---|---|---|
-| 1 | `engine/api.py:70` | No `merged_aliases` column → `aliases=[None]`. `GET /api/runs/{id}/graph` runs `CanonicalEntity.model_validate` → **500 on every docling run** (graph page breaks). | `test_engine_convert::test_output_validates_against_api_models`, `test_e2e_offline::test_graph_for_docling_run` | Build aliases as a list of non-empty strings (`[]` when absent) |
-| 2 | `engine/api.py:69` | `entity_type` is the class name (`"Company"`); frontend compares lowercase (`"company"`), so RunDetail's company/person/agreement groups are empty and GraphView node sizing falls back to the default for docling runs. | `test_engine_convert::test_entity_type_matches_legacy_vocabulary` | `.lower()` it (or use the `entity_type` column) |
-| 3 | `engine/api.py:73` | Node whose provenance has `"chunks": []` → `IndexError`; background task dies and the run stays "pending" forever. | `test_engine_convert::test_node_with_empty_chunk_list_does_not_crash` | Default `chunk_id` to 0 when empty |
-| 4 | `engine/api.py:37-38` | docling-graph produced no output → bare `StopIteration` from `next(glob)`; opaque in a background task. The `if not graph_path.exists()` branch below is unreachable. | `test_engine_convert::test_missing_output_error_is_not_stopiteration` | Raise `FileNotFoundError` with the searched path |
 | 5 | `frontend/src/pages/UploadNew.jsx:28` | POSTs to `/api/runs`, which only serves GET (405). Currently harmless because `RunCreating` starts the run via `/api/uploads/{id}/run`, but it is a dead call. | `test_frontend_contract` (`UploadNew.jsx-POST-/api/runs`) | Delete the call |
 | 6 | `engine/template.py:235` | `OntologyDocument` has `graph_id_fields=["reference_document"]`, which is not a field (the field is `document_name`). May affect root-node identity in docling-graph. | `test_template::test_graph_id_fields_exist[OntologyDocument]` | Use `["document_name"]` |
 | 7 | `run.py:405` | `validate_relationship` ends with `return True`; its checks (quote in chunk, valid type, valid ids) are computed but ignored, so no relationship is ever dropped. The `dropped` counter is always 0. | `test_pipeline_units::test_validate_relationship_rejects_bad_type` | Return `valid` (was probably disabled while tuning) |

@@ -28,7 +28,6 @@ def test_upload_run_results(client, fake_docling, workspace):
     assert manifest["source_file"].endswith("_test.txt")
 
 
-@pytest.mark.xfail(strict=True, reason="docling output has aliases=[None] -> /graph 500 (CanonicalEntity validation); see known-issues")
 def test_graph_for_docling_run(client, fake_docling):
     _, run_id = _upload_and_run(client)
     g = client.get(f"/api/runs/{run_id}/graph")

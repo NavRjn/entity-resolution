@@ -69,7 +69,7 @@ def test_list_runs_reports_manifest_fields(client, legacy_run):
 def test_list_runs_tolerates_dir_without_manifest(client, workspace):
     (workspace / "outputs" / "half_done").mkdir()
     runs = client.get("/api/runs").json()
-    assert runs == [{"run_id": "half_done", "source_file": None, "created_at": None}]
+    assert runs == [{"run_id": "half_done", "source_file": None, "created_at": None, "status": "pending"}]
 
 
 def test_get_run_pending_before_output(client, workspace):
@@ -108,3 +108,28 @@ def test_rerun_relationships_legacy_run(client, legacy_run, fake_llm):
 def test_rerun_relationships_unknown_run_is_500_with_detail(client, fake_llm):
     r = client.post("/api/runs/missing/relationships")
     assert r.status_code == 500 and r.json()["detail"]
+
+
+def test_list_runs_reports_failed_status_from_ops(client, workspace):
+    d = workspace / "outputs" / "crashed"
+    d.mkdir()
+    (d / "ops.json").write_text('{"status": "failed", "error": "boom"}', encoding="utf-8")
+    assert client.get("/api/runs").json()[0]["status"] == "failed"
+
+
+def test_run_document_prefers_document_txt_so_offsets_line_up(client, workspace):
+    d = workspace / "outputs" / "r1"
+    d.mkdir()
+    (d / "document.txt").write_text("the text offsets index into", encoding="utf-8")
+    (d / "manifest.json").write_text('{"run_id": "r1", "source_file": "gone.pdf", "document_file": "document.txt"}', encoding="utf-8")
+    body = client.get("/api/runs/r1/document").json()
+    assert body["document"] == "the text offsets index into" and body["offsets_valid"] is True
+
+
+def test_run_document_pdf_without_document_txt_is_415_not_500(client, workspace):
+    d = workspace / "outputs" / "r2"
+    d.mkdir()
+    pdf = workspace / "x.pdf"
+    pdf.write_bytes(b"%PDF-1.4 \xff\xfe")
+    (d / "manifest.json").write_text('{"run_id": "r2", "source_file": "%s"}' % str(pdf).replace("\\", "/"), encoding="utf-8")
+    assert client.get("/api/runs/r2/document").status_code == 415
