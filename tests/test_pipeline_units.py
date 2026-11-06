@@ -149,7 +149,6 @@ def test_graph_drops_edges_to_unknown_entities():
 
 
 # ---------- relationship validation ----------
-@pytest.mark.xfail(strict=True, reason="validate_relationship ends with `return True` (validation disabled); see known-issues")
 def test_validate_relationship_rejects_bad_type():
     r = _rel("E0", "E1", rtype="not_a_real_type")
     assert run.validate_relationship(r, "q") is False

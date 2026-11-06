@@ -320,6 +320,47 @@ def cmd_reconvert(a):
     print(f"reconverted {len(mapping)} runs; re-score with: score --gold <dataset> --eval-run {a.eval_id}")
 
 
+def cmd_recallpass(a):
+    """Re-run ONLY the recall pass (engine/recall.py) over a finished evaluation's stored entities and score it as a new
+    evaluation. Costs one call per chunk; the entities are reused, so the comparison is controlled."""
+    import shutil
+    import litellm
+    from engine.recall import SYSTEM, apply_to_run
+    from engine.relations import split_chunks
+    src_root = EVAL_RUNS / a.eval_id
+    gold, _ = ds.load_prepared(a.dataset)
+    price = litellm.model_cost["gpt-4o"]
+    tin = tout = 0
+    runs = sorted(d for d in (src_root / "runs").glob("*") if (d / "output.json").exists() and (d / "document.txt").exists())
+    for d in runs:
+        ents = json.loads((d / "output.json").read_text(encoding="utf-8"))["entities"]
+        for ch in split_chunks((d / "document.txt").read_text(encoding="utf-8")):
+            tin += len(SYSTEM) // 4 + len(ch) // 4 + 8 * len(ents)
+            tout += 150
+    est = tin * price["input_cost_per_token"] + tout * price["output_cost_per_token"]
+    print(f"{len(runs)} documents, ~{tin:,} input / {tout:,} output tokens -> estimated ${est * 0.7:.3f} - ${est * 1.5:.3f} (gpt-4o, one call per chunk)")
+    if not a.yes:
+        sys.exit("this calls a paid LLM API. Re-run with --yes to proceed.")
+    eval_id = datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{a.dataset}_recallpass"
+    root = EVAL_RUNS / eval_id
+    run_dirs: dict[str, Path] = {}
+    with observability.eval_context(eval_id, a.dataset):
+        for d in runs:
+            dest = root / "runs" / d.name
+            dest.mkdir(parents=True, exist_ok=True)
+            for f in ("output.json", "manifest.json", "document.txt"):
+                if (d / f).exists():
+                    shutil.copy(d / f, dest / f)
+            with observability.run_trace(d.name, backend="recall-pass", output_dir=dest, tags=["recallpass"]):
+                observability.instrument_litellm()
+                stats = apply_to_run(dest)
+            print(f"  {d.name}: {stats}")
+            run_dirs[d.name] = dest
+    (root / "runs.json").write_text(json.dumps({k: str(v) for k, v in run_dirs.items()}, indent=2), encoding="utf-8")
+    score_and_report([g for g in gold if g.doc_id in run_dirs], run_dirs, a.dataset, eval_id, backend="docling+recallpass",
+                     out_dir=root, langfuse=not a.no_langfuse, ops_dirs=list(run_dirs.values()))
+
+
 def cmd_relpass(a):
     """Re-run ONLY the relationship pass (engine/relations.py) over a finished evaluation's stored entities and score it
     as a new evaluation. Costs just the relationship calls; the entities are reused, so the comparison is controlled."""
@@ -429,6 +470,9 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("relpass", help="re-run only the relationship pass over a finished evaluation's stored entities")
     s.add_argument("eval_id"); s.add_argument("dataset"); s.add_argument("--yes", action="store_true"); s.add_argument("--no-langfuse", action="store_true")
     s.set_defaults(fn=cmd_relpass)
+    s = sub.add_parser("recallpass", help="re-run only the recall pass (missed entities) over a finished evaluation's stored entities")
+    s.add_argument("eval_id"); s.add_argument("dataset"); s.add_argument("--yes", action="store_true"); s.add_argument("--no-langfuse", action="store_true")
+    s.set_defaults(fn=cmd_recallpass)
     s = sub.add_parser("history"); s.add_argument("--dataset"); s.add_argument("-n", type=int, default=20); s.set_defaults(fn=cmd_history)
     s = sub.add_parser("compare"); s.add_argument("a"); s.add_argument("b"); s.set_defaults(fn=cmd_compare)
     s = sub.add_parser("gate", help="exit 1 if headline metrics regressed vs a baseline report")

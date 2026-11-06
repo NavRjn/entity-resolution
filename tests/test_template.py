@@ -71,14 +71,9 @@ def test_edges_respect_direction_rules(model):
             assert not bad, f"{model.__name__}.{name}: targets {bad} not allowed for {label}"
 
 
-_GRAPH_ID_XFAIL = pytest.mark.xfail(
-    strict=True, reason="OntologyDocument.graph_id_fields=['reference_document'] names no field; see known-issues"
-)
-
-
 @pytest.mark.parametrize(
     "model",
-    [m if m is not OntologyDocument else pytest.param(m, marks=_GRAPH_ID_XFAIL) for m in ALL_MODELS],
+    ALL_MODELS,
     ids=lambda m: m.__name__,
 )
 def test_graph_id_fields_exist(model):

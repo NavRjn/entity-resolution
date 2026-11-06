@@ -160,3 +160,20 @@ What limits the 50% recall: 7 of the 9 missed gold relations have an endpoint en
 **Language:** the same pass produced 10 relationships on the German LER documents and 73 on the English filings, so the mechanism is language-neutral and the earlier "no relationships" was not a German effect. Quality still follows the entities: most German relations link "agreements" that are really court decisions or procedures (the `Agreement` problem), and on E-NER 45 of 63 relations are `governs`, many dubious ("Prospectus Supplement governs common stock"), so the relation definitions need tuning. Only Re-DocRED has gold, so 78% precision is the only claim backed by labels, on 8 short documents (CI 15-80% recall side, 14 predictions).
 
 **Recommendations, in order:** (1) turn `ER_RELATION_PASS` on by default once the `governs`/`related_to` definitions are tuned on a held-out set; (2) strip the relation fields from the production template (entities-only, like V2 without `relationships`): it shrinks the catalog from 28 to 6 paths and V2's entity-only run cost $0.032 per tiny document against $0.052 for the baseline; this needs an entity-quality check on all three datasets before adoption; (3) add a decisions/proceedings class and military/public-body handling to the ontology (links to `docs/roadmap.md` section 9).
+
+## Recall pass, alias pass, first insurance-domain number (2026-11-06)
+Added: `engine/recall.py` (one call per chunk lists named entities the extraction missed; each must occur in the chunk, not duplicate a known entity, and carry a located quote), `engine/aliases.py` (free: defined-term patterns in English/German, legal-form-insensitive merging), both on by default in `run_full` (`ER_RECALL_PASS=0` / `ER_RELATION_PASS=0` disable). `uv run python -m evalkit recallpass <eval_id> <dataset>` re-applies only the recall pass to a stored evaluation. The relation pass is now on by default and its LLM calls run in parallel (4 workers). docling-graph itself already runs 4 parallel workers (`parallel_workers`), so the earlier "59 min sequential" projection for a 300-page file overstated latency; unmeasured on a long document.
+
+Same stored entities, before vs after the recall pass (lenient entity match, gpt-4o):
+
+| dataset | docs | P before -> after | R before -> after | F1 before -> after | cost of the pass |
+|---|---|---|---|---|---|
+| Re-DocRED (English Wikipedia) | 8 | 81% -> 83% | 46% -> 77% | 58.8% -> **80.0%** | $0.022 |
+| E-NER (English SEC filings) | 5 | 82% -> 84% | 35% -> 56% | 49.1% -> **67.2%** | $0.205 |
+| LER (German judgments) | 5 | 31% -> 26% | 30% -> 52.5% | 30.4% -> **35.0%** | $0.054 |
+
+Reading: recall gains of +21 to +31 points at roughly flat precision on English; on German the pass finds more but also more of the court-decision noise (precision down, 7.9% of entities without support in the text). Small sets: CIs are wide (E-NER F1 [43%, 77%]). The `Agreement` problem is untouched.
+
+First in-domain run (`insurance_letters`, 5 synthetic life-insurance demand letters, full pipeline with both passes, **$0.318**, 65 s total): entity recall 100% lenient / 96% strict against the labelled roles (policy holder, beneficiary, insurer, law firm, sender). Gold labels only 10 role types, so precision is n/a; 91.2% of quotes are verbatim (8.8% placeholder, below the 99% gate). Synthetic text: optimistic, and this says nothing about precision.
+
+Spend 2026-11-06 session (post-plan): $0.60 (recall passes $0.28, insurance letters $0.32).

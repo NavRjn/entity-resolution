@@ -4,6 +4,7 @@ import json
 import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, APIRouter, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from run import CanonicalEntity, Relationship
 from engine.api import RunContext, run_full
 
@@ -109,6 +110,21 @@ def run_upload(upload_id: str, background_tasks: BackgroundTasks):
     # Immediately return run_id
     return {"run_id": run_id, "status": "pending"}
 
+def _run_status(run_dir: Path) -> tuple[str, str | None]:
+    """(status, error): completed when output.json exists, else failed/pending from ops.json (written by observability)."""
+    if (run_dir / "output.json").exists():
+        return "completed", None
+    ops_path = run_dir / "ops.json"
+    if ops_path.exists():
+        try:
+            ops = json.loads(ops_path.read_text(encoding="utf-8"))
+        except ValueError:
+            return "pending", None
+        if ops.get("status") == "failed":
+            return "failed", ops.get("error") or "Run failed"
+    return "pending", None
+
+
 @app.get("/api/runs")
 def list_runs():
 
@@ -123,11 +139,7 @@ def list_runs():
             with open(manifest_path, "r", encoding="utf-8") as f:
                 manifest = json.load(f)
 
-        status = "completed" if (run_dir / "output.json").exists() else "pending"
-        ops_path = run_dir / "ops.json"
-        if status == "pending" and ops_path.exists():
-            status = json.loads(ops_path.read_text(encoding="utf-8")).get("status", status)
-            status = "pending" if status == "running" else status
+        status, _ = _run_status(run_dir)
 
         runs.append(
             {
@@ -154,12 +166,25 @@ def _normalize_run(data: dict) -> dict:
 def get_run(run_id: str):
     output_file = OUTPUT_DIR / run_id / "output.json"
     if not output_file.exists():
-        return {"run_id": run_id, "status": "pending"}
+        status, error = _run_status(OUTPUT_DIR / run_id)
+        return {"run_id": run_id, "status": status, **({"error": error} if error else {})}
 
     with open(output_file, "r", encoding="utf-8") as f:
         data = _normalize_run(json.load(f))
 
     return {"run_id": run_id, "status": "completed", **data}
+
+
+@app.get("/api/runs/{run_id}/export.xlsx")
+def export_run_xlsx(run_id: str):
+    run_dir = OUTPUT_DIR / run_id
+    if not (run_dir / "output.json").exists():
+        raise HTTPException(status_code=404, detail="Run not found or not completed")
+    from engine.export import build_workbook
+    return Response(
+        build_workbook(run_dir),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="register_{run_id}.xlsx"'})
 
 
 @app.get("/api/runs/{run_id}/manifest")

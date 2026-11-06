@@ -7,6 +7,7 @@ export default function RunCreating() {
   const location = useLocation()
   const { uploadId } = location.state || {}
   const [runId, setRunId] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     if (!uploadId) {
@@ -34,6 +35,9 @@ export default function RunCreating() {
       if (data.status === "completed") {
         clearInterval(interval)
         navigate(`/runs/${runId}`)
+      } else if (data.status === "failed") {
+        clearInterval(interval)
+        setError(data.error || "The run failed.")
       }
     }, 2000)
 
@@ -42,8 +46,18 @@ export default function RunCreating() {
 
   return (
     <Box sx={{ height: "80vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 2 }}>
-      <CircularProgress />
-      <Typography variant="h6">Creating run...</Typography>
+      {error ? (
+        <>
+          <Typography variant="h6" color="error">Run failed</Typography>
+          <Typography variant="body2" sx={{ maxWidth: 560, textAlign: "center" }}>{error}</Typography>
+          <Typography variant="body2">Run ID: {runId}</Typography>
+        </>
+      ) : (
+        <>
+          <CircularProgress />
+          <Typography variant="h6">Creating run...</Typography>
+        </>
+      )}
     </Box>
   )
 }

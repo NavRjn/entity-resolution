@@ -232,7 +232,7 @@ class OntologyDocument(BaseModel):
     Contains all entities identified in the source document.
     """
 
-    model_config = ConfigDict(graph_id_fields=["reference_document"], extra="ignore", populate_by_name=True)
+    model_config = ConfigDict(graph_id_fields=["document_name"], extra="ignore", populate_by_name=True)
 
     document_name: str = Field(
         description="Document title or identifiable document reference"

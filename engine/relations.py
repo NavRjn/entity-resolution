@@ -6,12 +6,13 @@ or filled badly and 6-10x more expensively (per-target reference fields). Here t
 the KNOWN entity names and only decides which stated relations hold, so names resolve exactly and every relation
 carries a verbatim evidence quote that is located in the text.
 
-Opt-in: ER_RELATION_PASS=1 (see engine/api.py run_full). Stats go to manifest.json["relation_pass"].
+On by default; ER_RELATION_PASS=0 disables it (see engine/api.py run_full). Stats go to manifest.json["relation_pass"].
 """
 from __future__ import annotations
 
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from typing import Literal, Optional
 
 import litellm
@@ -107,13 +108,14 @@ class _Index:
 
 
 def extract_relationships(text: str, entities: list[dict], file_id: str = "NA", model: str = "gpt-4o",
-                          max_chars: int = 6000, require_evidence: bool = True) -> tuple[list[dict], dict]:
+                          max_chars: int = 6000, require_evidence: bool = True, workers: int = 4) -> tuple[list[dict], dict]:
     """-> (relationships in output.json format, stats). `entities` are output.json entity dicts."""
     by_id = {e["entity_id"]: e for e in entities}
     stats = {"chunks": 0, "chunks_called": 0, "proposed": 0, "kept": 0, "unresolved": 0, "bad_direction": 0,
              "no_evidence": 0, "duplicate": 0, "errors": 0}
     out: dict[tuple, dict] = {}
     index = _Index(text)
+    jobs = []                                                     # (chunk index, chunk, entity-name forms, prompt)
     for ci, chunk in enumerate(split_chunks(text, max_chars)):
         stats["chunks"] += 1
         chunk_key = _norm(chunk)      # punctuation/spacing-insensitive: entity names and tokenised sources may spell dates and hyphens differently
@@ -126,13 +128,21 @@ def extract_relationships(text: str, entities: list[dict], file_id: str = "NA", 
                 forms.setdefault(_norm(f), e["entity_id"])
         listing = "\n".join(f"- {e['canonical_name']} ({e['entity_type']})" +
                             (f" aka {', '.join(e['aliases'])}" if e.get("aliases") else "") for e in present)
+        jobs.append((ci, forms, f"ENTITIES:\n{listing}\n\nEXCERPT:\n{chunk}"))
+
+    def call(prompt: str):
         try:
             resp = litellm.completion(
                 model=model, temperature=0, response_format=_Rels,
-                messages=[{"role": "system", "content": SYSTEM},
-                          {"role": "user", "content": f"ENTITIES:\n{listing}\n\nEXCERPT:\n{chunk}"}])
-            recs = _Rels.model_validate_json(resp.choices[0].message.content).relationships
+                messages=[{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}])
+            return _Rels.model_validate_json(resp.choices[0].message.content).relationships
         except Exception:
+            return None
+
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:     # calls in parallel, results applied in chunk order
+        results = list(pool.map(lambda j: call(j[2]), jobs))
+    for (ci, forms, _), recs in zip(jobs, results):
+        if recs is None:
             stats["errors"] += 1
             continue
         stats["chunks_called"] += 1

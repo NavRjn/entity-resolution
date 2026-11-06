@@ -43,6 +43,18 @@ export default function RunDetail() {
     )
   }
 
+  if (data.status === "failed" || data.status === "pending") {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="max-w-xl text-center text-sm text-muted-foreground">
+          {data.status === "failed"
+            ? `Run ${runId} failed: ${data.error || "unknown error"}`
+            : `Run ${runId} is still processing.`}
+        </div>
+      </div>
+    )
+  }
+
   const entities = data.entities || []
 
   const count = (t) => entities.filter((e) => (e.entity_type || "").toLowerCase() === t).length
@@ -68,6 +80,13 @@ export default function RunDetail() {
           <p className="mt-2 text-muted-foreground">
             Run ID: {runId}
           </p>
+
+          <a
+            href={`http://localhost:8000/api/runs/${runId}/export.xlsx`}
+            className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+          >
+            Download Excel register
+          </a>
         </div>
 
         {/* KPI Cards */}

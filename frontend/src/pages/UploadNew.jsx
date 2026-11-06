@@ -25,12 +25,6 @@ export default function UploadNew() {
 
       const data = await resp.json()
 
-      await fetch("http://localhost:8000/api/runs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ upload_id: data.upload_id })
-      })
-
       navigate("/runs/creating", {
         state: { uploadId: data.upload_id }
       })

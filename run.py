@@ -404,7 +404,7 @@ def validate_relationship(relationship: Relationship, chunk_text: str) -> bool:
         logger.warning(f"Dropping relationship | Exists: {exists} | Valid Type: {valid_relationship_type} | Valid Source/Target: {valid_source_and_target} | Valid Quote: {valid_quote}")
         if not exists: logger.debug(f"{norm_quote} not found in chunk: {norm_chunk}")
 
-    return True # exists and valid_relationship_type and valid_source_and_target and valid_quote
+    return bool(valid)
 
 
 def normalize_entity_name(name: str) -> str:

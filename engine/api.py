@@ -288,7 +288,16 @@ def run_full(ctx: RunContext) -> RunContext:
         with observability.stage("convert_outputs"):
             save_compatible_files(run_id, file_path, output_dir)
 
-        if os.getenv("ER_RELATION_PASS") == "1":      # opt-in: see engine/relations.py
+        with observability.stage("alias_pass"):               # free: defined terms + legal-form-insensitive merging
+            from .aliases import apply_to_run as resolve_aliases
+            resolve_aliases(output_dir)
+
+        if os.getenv("ER_RECALL_PASS", "1") != "0":       # on by default; ER_RECALL_PASS=0 disables (engine/recall.py)
+            from .recall import apply_to_run as recall_missed
+            with observability.stage("recall_pass"):
+                recall_missed(output_dir, cfg.model_override)
+
+        if os.getenv("ER_RELATION_PASS", "1") != "0":    # on by default; ER_RELATION_PASS=0 disables (engine/relations.py)
             from .relations import apply_to_run
             with observability.stage("relation_pass"):
                 apply_to_run(output_dir, cfg.model_override)

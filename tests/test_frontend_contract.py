@@ -11,7 +11,7 @@ FETCH_RE = re.compile(r"""fetch\(\s*([`"'])(?:http://localhost:8000)?(/api[^`"']
 METHOD_RE = re.compile(r"""method:\s*["'](\w+)["']""")
 
 # (method, path) pairs known to be broken; each is listed in docs/tests/known-issues.md
-KNOWN_BROKEN = {("POST", "/api/runs")}
+KNOWN_BROKEN = set()
 
 
 def _frontend_calls():

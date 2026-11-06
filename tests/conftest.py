@@ -19,6 +19,8 @@ for _k, _v in {
     # litellm (via docling-graph) downloads a price map at import; use the bundled copy
     "LITELLM_LOCAL_MODEL_COST_MAP": "True",
     "HF_HUB_OFFLINE": "1",
+    "ER_RECALL_PASS": "0",
+    "ER_RELATION_PASS": "0",   # no LLM relation pass in mocked engine runs
     "TRANSFORMERS_OFFLINE": "1",
 }.items():
     os.environ[_k] = _v

@@ -1,6 +1,6 @@
 # Known issues found by the test suite
 
-**Fixed 2026-11-06 (converter rewrite in `engine/api.py`): former #1 (`aliases=[None]` -> /graph 500), #2 (entity_type casing), #3 (empty/None provenance chunks crashed the run after the LLM spend), #4 (opaque `StopIteration`).** Their xfail tests are now normal tests. Numbering below is unchanged.
+**Fixed 2026-11-06 (converter rewrite in `engine/api.py`): former #1 (`aliases=[None]` -> /graph 500), #2 (entity_type casing), #3 (empty/None provenance chunks crashed the run after the LLM spend), #4 (opaque `StopIteration`).** Their xfail tests are now normal tests. **Also fixed 2026-11-06: #5 (dead POST in UploadNew), #6 (`graph_id_fields`), #7 (`validate_relationship` now returns its verdict).** Numbering below is unchanged; only #8 remains pinned.
 
 Each of the 8 issues below is pinned by `xfail(strict=True)` tests (9 expected failures in total: #1 has two). Fixing the bug turns that test red (XPASS); then remove the marker and the entry here. Product code was deliberately not changed when these were found.
 
@@ -8,9 +8,6 @@ Each of the 8 issues below is pinned by `xfail(strict=True)` tests (9 expected f
 
 | # | Where | Symptom | Test | Suggested fix |
 |---|---|---|---|---|
-| 5 | `frontend/src/pages/UploadNew.jsx:28` | POSTs to `/api/runs`, which only serves GET (405). Currently harmless because `RunCreating` starts the run via `/api/uploads/{id}/run`, but it is a dead call. | `test_frontend_contract` (`UploadNew.jsx-POST-/api/runs`) | Delete the call |
-| 6 | `engine/template.py:235` | `OntologyDocument` has `graph_id_fields=["reference_document"]`, which is not a field (the field is `document_name`). May affect root-node identity in docling-graph. | `test_template::test_graph_id_fields_exist[OntologyDocument]` | Use `["document_name"]` |
-| 7 | `run.py:405` | `validate_relationship` ends with `return True`; its checks (quote in chunk, valid type, valid ids) are computed but ignored, so no relationship is ever dropped. The `dropped` counter is always 0. | `test_pipeline_units::test_validate_relationship_rejects_bad_type` | Return `valid` (was probably disabled while tuning) |
 | 8 | `run.py:241-245` | A first sentence longer than `max_chars` makes `chunk_text_with_overlap` emit an empty chunk (wasted/odd LLM call on `""`). | `test_pipeline_units::test_chunk_oversized_first_sentence_has_no_empty_chunk` | Skip appending when `current_chunk` is empty |
 
 ## Observed, not pinned by a test
